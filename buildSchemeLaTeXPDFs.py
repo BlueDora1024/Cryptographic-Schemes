@@ -113,12 +113,12 @@ class Builder:
 		self.__schemeFilePath = schemeFilePath
 		if isinstance(self.__schemeFilePath, str) and isinstance(pathWithoutExtensions, str):
 			self.__schemeLaTeXFilePath = pathWithoutExtensions + ".tex"
-			self.__targetFolderPath, self.__schemeLaTeXFileName = split(self.__schemeLaTeXFilePath)
+			self.__targetDirectoryPath, self.__schemeLaTeXFileName = split(self.__schemeLaTeXFilePath)
 			self.__schemePDFFilePath = pathWithoutExtensions + ".pdf"
 			self.__flag = 1
 		else:
 			self.__schemeLaTeXFilePath = None
-			self.__targetFolderPath = None
+			self.__targetDirectoryPath = None
 			self.__schemeLaTeXFileName = None
 			self.__schemePDFFilePath = None
 			self.__flag = 0
@@ -257,7 +257,7 @@ class Builder:
 			try:
 				with open(self.__schemeFilePath, "rb") as f:
 					tree = parse_module(f.read())
-				makedirs(self.__targetFolderPath, exist_ok = True)
+				makedirs(self.__targetDirectoryPath, exist_ok = True)
 				with open(self.__schemeLaTeXFilePath, "w", encoding = tree.encoding) as f:
 					f.write("\\documentclass[a4paper]{article}\n\\setlength{\\parindent}{0pt}\n\\usepackage{amsmath,amssymb}\n\\usepackage{bm}\n\n\\begin{document}\n\n")
 					stack = [tree]
@@ -395,7 +395,7 @@ class Builder:
 			self.__flag = 2
 			startTime = perf_counter()
 			try:
-				result = run(("pdflatex", self.__schemeLaTeXFileName), capture_output = True, text = True, timeout = Builder.__DefaultCompilationTimeout, cwd = self.__targetFolderPath)
+				result = run(("pdflatex", self.__schemeLaTeXFileName), capture_output = True, text = True, timeout = Builder.__DefaultCompilationTimeout, cwd = self.__targetDirectoryPath)
 				if EXIT_SUCCESS == result.returncode:
 					self.__flag = 3
 				else:

@@ -89,6 +89,9 @@ on:
         default: '10'
         type: string
 
+permissions:
+  contents: read
+
 jobs:
   prepare:
     runs-on: ubuntu-latest
@@ -297,7 +300,7 @@ jobs:
             tree
           fi
       
-      - name: Upload result
+      - name: Upload the result
         uses: actions/upload-artifact@v7
         with:
           path: ${{ github.workspace }}/${{ steps.ready.outputs.outputFilePath }}

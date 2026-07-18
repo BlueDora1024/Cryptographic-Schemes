@@ -112,6 +112,9 @@ on:
         default: '10'
         type: string
 
+permissions:
+  contents: read
+
 jobs:
   prepare:
     runs-on: ubuntu-latest
