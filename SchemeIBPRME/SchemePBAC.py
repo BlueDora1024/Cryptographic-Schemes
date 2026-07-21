@@ -1,5 +1,5 @@
 from os import chdir, makedirs, name, sep
-from os.path import abspath, dirname, exists, isdir, join, split, splitext
+from os.path import abspath, dirname, exists, isfile, isdir, join, split, splitext
 from sys import argv, exit
 try:
 	from charm.toolbox.pairinggroup import PairingGroup, G1, GT, ZR, pair, pc_element as Element
@@ -137,7 +137,7 @@ class Parser:
 					integerPartString = integerPartString.lstrip("0")
 					if integerPartString:
 						realNumber += int(integerPartString, base = base)
-					if realNumber.is_integer():
+					if isinstance(realNumber, float) and realNumber.is_integer():
 						realNumber = int(realNumber)
 				if minusSign:
 					realNumber = -realNumber
@@ -1074,18 +1074,18 @@ def main() -> int:
 					averages = conductScheme(curveParameter, run = 1, isVerbose = isVerbose)
 					for run in range(2, runCount + 1):
 						result = conductScheme(curveParameter, run = run, isVerbose = isVerbose)
-						for idx in range(queryLength, queryValidatorLength):
-							averages[idx] += result[idx]
-						for idx in range(queryValidatorLength, length):
-							averages[idx] = averages[idx] + result[idx] if isinstance(averages[idx], (float, int)) and averages[idx] > 0 and result[idx] > 0 else "N/A"
+						for index in range(queryLength, queryValidatorLength):
+							averages[index] += result[index]
+						for index in range(queryValidatorLength, length):
+							averages[index] = averages[index] + result[index] if isinstance(averages[index], (float, int)) and averages[index] > 0 and result[index] > 0 else "N/A"
 					averages[runCountIndex] = runCount
-					for idx in range(queryValidatorLength, length):
-						if isinstance(averages[idx], (float, int)) and averages[idx] > 0:
-							averages[idx] /= runCount
-							if averages[idx].is_integer():
-								averages[idx] = int(averages[idx])
+					for index in range(queryValidatorLength, length):
+						if isinstance(averages[index], (float, int)) and averages[index] > 0:
+							averages[index] /= runCount
+							if isinstance(averages[index], float) and averages[index].is_integer():
+								averages[index] = int(averages[index])
 						else:
-							averages[idx] = "N/A"
+							averages[index] = "N/A"
 					results.append(averages)
 					saver.save(results)
 					if isVerbose:

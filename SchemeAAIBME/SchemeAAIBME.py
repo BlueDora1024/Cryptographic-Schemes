@@ -1,5 +1,5 @@
 from os import chdir, makedirs, name, sep
-from os.path import abspath, dirname, exists, isdir, join, split, splitext
+from os.path import abspath, dirname, exists, isdir, isfile, join, split, splitext
 from sys import argv, exit
 try:
 	from charm.toolbox.pairinggroup import PairingGroup, G1, GT, ZR, pair, pc_element as Element
@@ -137,7 +137,7 @@ class Parser:
 					integerPartString = integerPartString.lstrip("0")
 					if integerPartString:
 						realNumber += int(integerPartString, base = base)
-					if realNumber.is_integer():
+					if isinstance(realNumber, float) and realNumber.is_integer():
 						realNumber = int(realNumber)
 				if minusSign:
 					realNumber = -realNumber
@@ -712,7 +712,7 @@ class SchemeAAIBME:
 		
 		# Unpack #
 		g2, uVec, TVec = self.__mpk[2], self.__mpk[10], self.__mpk[11]
-		g2ToThePowerOfAlpha, t1, t2, t3, t4 = self.__mpk[0], self.__msk[2], self.__msk[3], self.__msk[4], self.__msk[5]
+		g2ToThePowerOfAlpha, t1, t2, t3, t4 = self.__msk[0], self.__msk[2], self.__msk[3], self.__msk[4], self.__msk[5]
 		
 		# Scheme #
 		g = self.__group.init(G1, 1) # $g \gets 1_{\mathbb{G}_1}$
@@ -828,6 +828,9 @@ class SchemeAAIBME:
 		return CT # \textbf{return} $\textit{CT}$
 	def Dec(self:object, dkIDBSPrime:dict, IDB:tuple, IDA:tuple, _SPrimePrime:set, _SPrime:set, cipherText:tuple) -> Element|bool: # $\textbf{Dec}(\textit{dk}_{\textit{ID}_B}(S'), \textit{ID}_B, \textit{ID}_A, S'', S', \textit{CT}) \to M$
 		# Checks #
+		if not self.__flag:
+			print("Dec: The ``Setup`` procedure has not been called yet. The program will call the ``Setup`` first and finish the ``Dec`` subsequently. ")
+			self.Setup()
 		if isinstance(_SPrimePrime, set) and len(_SPrimePrime) == self.__k and all(isinstance(ele, int) and 0 <= ele < self.__n for ele in _SPrimePrime): # hybrid check
 			SPrimePrime = _SPrimePrime
 			if isinstance(_SPrime, set) and len(_SPrime) == self.__d and all(isinstance(ele, int) and 0 <= ele < self.__n for ele in _SPrime): # hybrid check
@@ -859,7 +862,7 @@ class SchemeAAIBME:
 		else:
 			ID_B = tuple(self.__group.random(ZR) for _ in range(self.__n))
 			print("Dec: The variable $\\textit{ID}_A$ should be a tuple containing $n$ elements of $\\mathbb{Z}_r$, but it is not, which has been generated randomly. ")
-			dk_ID_B_S_Prime = self.DKGen(ID_B, SPrime)
+			dk_ID_B_SPrime = self.DKGen(ID_B, SPrime)
 			print("Dec: The variable $\\textit{dk}_{\\textit{ID}_B}(S)'$ has been generated accordingly. ")
 		if isinstance(IDA, tuple) and len(IDA) == self.__n and all(isinstance(ele, Element) and ele.type == ZR for ele in IDA): # hybrid check
 			ID_A = IDA
@@ -1327,18 +1330,18 @@ def main() -> int:
 								averages = conductScheme(curveParameter, n = n, k = k, d = d, run = 1, isVerbose = isVerbose)
 								for run in range(2, runCount + 1):
 									result = conductScheme(curveParameter, n = n, k = k, d = d, run = run, isVerbose = isVerbose)
-									for idx in range(queryLength, queryValidatorLength):
-										averages[idx] += result[idx]
-									for idx in range(queryValidatorLength, length):
-										averages[idx] = averages[idx] + result[idx] if isinstance(averages[idx], (float, int)) and averages[idx] > 0 and result[idx] > 0 else "N/A"
+									for index in range(queryLength, queryValidatorLength):
+										averages[index] += result[index]
+									for index in range(queryValidatorLength, length):
+										averages[index] = averages[index] + result[index] if isinstance(averages[index], (float, int)) and averages[index] > 0 and result[index] > 0 else "N/A"
 								averages[runCountIndex] = runCount
-								for idx in range(queryValidatorLength, length):
-									if isinstance(averages[idx], (float, int)) and averages[idx] > 0:
-										averages[idx] /= runCount
-										if averages[idx].is_integer():
-											averages[idx] = int(averages[idx])
+								for index in range(queryValidatorLength, length):
+									if isinstance(averages[index], (float, int)) and averages[index] > 0:
+										averages[index] /= runCount
+										if isinstance(averages[index], float) and averages[index].is_integer():
+											averages[index] = int(averages[index])
 									else:
-										averages[idx] = "N/A"
+										averages[index] = "N/A"
 								results.append(averages)
 								saver.save(results)
 								if isVerbose:
