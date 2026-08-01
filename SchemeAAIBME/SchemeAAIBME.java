@@ -4,6 +4,7 @@ import java.io.Console;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -44,6 +45,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 final class Parser
 {
 	private static final String SCHEME_NAME = "SchemeAAIBME";
+	private static final Path SCRIPT_DIRECTORY = getScriptDirectory();
 	private static final String[] OPTION_ENCODING = { "e", "/e", "-e", "encoding", "/encoding", "--encoding" };
 	private static final String DEFAULT_ENCODING = "utf-8";
 	private static final String[] OPTION_HELP = { "h", "/h", "-h", "help", "/help", "--help" };
@@ -148,10 +150,13 @@ final class Parser
 	private static String handlePath(final String filePath)
 	{
 		if (filePath == null)
-			return DEFAULT_OUTPUT_FILE_NAME;
+			return handlePath(DEFAULT_OUTPUT_FILE_NAME);
+		if (filePath.isEmpty())
+			return "";
 		try
 		{
-			final Path path = Paths.get(filePath);
+			final Path requestedPath = Paths.get(filePath);
+			final Path path = (requestedPath.isAbsolute() ? requestedPath : SCRIPT_DIRECTORY.resolve(requestedPath)).normalize();
 			if (Files.isDirectory(path) || filePath.endsWith("/") || filePath.endsWith("\\"))
 			{
 				System.out.println("Parser: The output path looks like a folder and will use the default file name " + escapeString(DEFAULT_OUTPUT_FILE_NAME) + ".");
@@ -168,12 +173,45 @@ final class Parser
 				final Path parent = path.getParent();
 				return parent == null ? baseName + DEFAULT_EXTENSION : parent.resolve(baseName + DEFAULT_EXTENSION).toString();
 			}
-			return filePath;
+			return path.toString();
 		}
 		catch (final InvalidPathException exception)
 		{
-			return DEFAULT_OUTPUT_FILE_NAME;
+			return SCRIPT_DIRECTORY.resolve(DEFAULT_OUTPUT_FILE_NAME).toString();
 		}
+	}
+
+	private static Path getScriptDirectory()
+	{
+		final String sourceFilePath = System.getProperty("jdk.launcher.sourcefile");
+		if (sourceFilePath != null && !sourceFilePath.isBlank())
+			try
+			{
+				final Path parent = Paths.get(sourceFilePath).toAbsolutePath().normalize().getParent();
+				if (parent != null)
+					return parent;
+			}
+			catch (final InvalidPathException exception)
+			{
+				/* Fall back to locating the source from the working directory. */
+			}
+		try
+		{
+			final Path classLocation = Paths.get(Parser.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toAbsolutePath().normalize();
+			if (Files.isRegularFile(classLocation) && classLocation.getParent() != null)
+				return classLocation.getParent();
+			if (Files.isDirectory(classLocation))
+				return classLocation;
+		}
+		catch (final RuntimeException | URISyntaxException exception)
+		{
+			/* Fall back to locating the source from the working directory. */
+		}
+		final Path workingDirectory = Paths.get("").toAbsolutePath().normalize();
+		final Path nestedSource = workingDirectory.resolve(SCHEME_NAME).resolve(SCHEME_NAME + ".java");
+		if (Files.isRegularFile(nestedSource))
+			return nestedSource.getParent();
+		return workingDirectory;
 	}
 
 	private static Number parseRealNumber(final String string)
@@ -267,7 +305,7 @@ final class Parser
 	{
 		int flag = 1;
 		String encoding = DEFAULT_ENCODING;
-		String outputFilePath = DEFAULT_OUTPUT_FILE_NAME;
+		String outputFilePath = handlePath(DEFAULT_OUTPUT_FILE_NAME);
 		int decimalPlace = DEFAULT_PLACE;
 		boolean verbose = true;
 		int runCount = DEFAULT_RUN;
@@ -405,7 +443,7 @@ final class Parser
 
 	public static String getDefaultOutputFilePath()
 	{
-		return DEFAULT_OUTPUT_FILE_NAME;
+		return handlePath(DEFAULT_OUTPUT_FILE_NAME);
 	}
 
 	public static int getDefaultPlace()
@@ -523,6 +561,14 @@ final class Saver
 		if (value instanceof Float || value instanceof Double)
 			return String.format(Locale.ROOT, "%." + this.decimalPlace + "f", ((Number)value).doubleValue());
 		return String.valueOf(value);
+	}
+
+	private static boolean isIntegralNumber(final Object value)
+	{
+		if (!(value instanceof Float || value instanceof Double))
+			return false;
+		final double number = ((Number)value).doubleValue();
+		return Double.isFinite(number) && number == Math.rint(number);
 	}
 
 	private boolean handleDirectory()
@@ -713,7 +759,7 @@ final class Saver
 				{
 					final Cell cell = row.createCell(columnIndex);
 					final Object value = result.get(columnIndex);
-					if (value instanceof Integer || value instanceof Long)
+					if (value instanceof Integer || value instanceof Long || isIntegralNumber(value))
 						cell.setCellValue(((Number)value).doubleValue());
 					else if (value instanceof Boolean)
 						cell.setCellValue(((Boolean)value).booleanValue());
@@ -1139,7 +1185,10 @@ public final class SchemeAAIBME
 			else
 			{
 				final double average = sum / runs.size();
-				result.set(index, average == Math.rint(average) ? Integer.valueOf((int)average) : Double.valueOf(average));
+				if (average == Math.rint(average))
+					result.set(index, Integer.valueOf((int)average));
+				else
+					result.set(index, Double.valueOf(average));
 			}
 		}
 		result.set(5, Integer.valueOf(runs.size()));
@@ -1517,16 +1566,38 @@ public final class SchemeAAIBME
 		if (verbose)
 		{
 			System.out.println("Curve: (" + curveName + ", " + securityParameter + ")");
-			System.out.println("n: " + n);
-			System.out.println("k: " + k);
-			System.out.println("d: " + d);
+			System.out.println("$n$: " + n);
+			System.out.println("$k$: " + k);
+			System.out.println("$d$: " + d);
 			System.out.println("run: " + runValue);
 		}
-		if (curveParameter == null || n < 1 || d < 1 || d > k || k > n)
+		if (n < 1 || d < 1 || d > k || k > n)
+		{
+			if (verbose)
+			{
+				System.out.println("Is the system valid? No. The parameters $n$, $k$, and $d$ should be three positive integers satisfying $1 \\leqslant d \\leqslant k \\leqslant n$.");
+				System.out.println();
+			}
 			return RunResult.invalid(curveName, securityParameter, n, k, d, runValue);
+		}
+		final SchemeAAIBME scheme;
 		try
 		{
-			final SchemeAAIBME scheme = new SchemeAAIBME(curveParameter);
+			scheme = new SchemeAAIBME(curveParameter);
+		}
+		catch (final RuntimeException exception)
+		{
+			if (verbose)
+			{
+				System.out.println("Is the system valid? No. Failed to create the ``PairingGroup`` instance due to " + exception + ".");
+				System.out.println();
+			}
+			return RunResult.invalid(curveName, securityParameter, n, k, d, runValue);
+		}
+		if (verbose)
+			System.out.println("Is the system valid? Yes.");
+		try
+		{
 			final int sizeZR = scheme.getLengthOf(scheme.randomScalar());
 			final int sizeG1 = scheme.getLengthOf(scheme.randomG1());
 			final int sizeGT = scheme.getLengthOf(scheme.randomGT());
@@ -1573,11 +1644,13 @@ public final class SchemeAAIBME
 			{
 				System.out.println("Original: " + message);
 				System.out.println("Decrypted: " + decrypted);
-				System.out.println("Is the scheme correct? " + schemeCorrect + ".");
-				System.out.println("Is EKey sane? " + encryptionKeySane + ".");
-				System.out.println("Is DKey sane? " + decryptionKeySane + ".");
-				System.out.println("Is tracing 1 verified? " + tracingOne + ".");
-				System.out.println("Is tracing 2 verified? " + tracingTwo + ".");
+				System.out.println("Is the scheme correct (M == message)? " + (schemeCorrect ? "Yes" : "No") + ".");
+				System.out.println("Is EKey Sanity? " + (encryptionKeySane ? "Yes" : "No") + ".");
+				System.out.println("Is DKey Sanity? " + (decryptionKeySane ? "Yes" : "No") + ".");
+				System.out.println("Is tracing 1 verified (M1 == message1)? " + (tracingOne ? "Yes" : "No") + ".");
+				System.out.println("Is tracing 2 verified (M2 == message2)? " + (tracingTwo ? "Yes" : "No") + ".");
+				System.out.println("Time: (" + timeSetup + ", " + timeEKGen + ", " + timeDKGen + ", " + timeEnc + ", " + timeDec + ", " + timeEKeySanity + ", " + timeDKeySanity + ", " + timeTrace1 + ", " + timeTrace2 + ")");
+				System.out.println("Space: (" + sizeZR + ", " + sizeG1 + ", " + sizeGT + ", " + sizeMpk + ", " + sizeMsk + ", " + sizeEncryptionKey + ", " + sizeDecryptionKey + ", " + sizeCipherText + ")");
 				System.out.println();
 			}
 			return new RunResult(curveName, securityParameter, n, k, d, runValue, true, schemeCorrect, encryptionKeySane, decryptionKeySane, tracingOne, tracingTwo, timeSetup, timeEKGen, timeDKGen, timeEnc, timeDec, timeEKeySanity, timeDKeySanity, timeTrace1, timeTrace2, printableSize(sizeZR), printableSize(sizeG1), printableSize(sizeGT), printableSize(sizeMpk), printableSize(sizeMsk), printableSize(sizeEncryptionKey), printableSize(sizeDecryptionKey), printableSize(sizeCipherText));
