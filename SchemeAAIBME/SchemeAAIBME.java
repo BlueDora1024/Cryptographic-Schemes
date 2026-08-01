@@ -1,1527 +1,1788 @@
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.Console;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.math.BigInteger;
-import java.net.URLDecoder;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
 
 import it.unisa.dia.gas.jpbc.Element;
-import it.unisa.dia.gas.jpbc.Field;
 import it.unisa.dia.gas.jpbc.Pairing;
 import it.unisa.dia.gas.jpbc.PairingParameters;
 import it.unisa.dia.gas.plaf.jpbc.pairing.PairingFactory;
 import it.unisa.dia.gas.plaf.jpbc.pairing.a.TypeACurveGenerator;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 
-public class SchemeAAIBME
+final class Parser
 {
-	public static long getObjectSize(Object x, PARS pars)
+	private static final String SCHEME_NAME = "SchemeAAIBME";
+	private static final String[] OPTION_ENCODING = { "e", "/e", "-e", "encoding", "/encoding", "--encoding" };
+	private static final String DEFAULT_ENCODING = "utf-8";
+	private static final String[] OPTION_HELP = { "h", "/h", "-h", "help", "/help", "--help" };
+	private static final String[] OPTION_OUTPUT = { "o", "/o", "-o", "output", "/output", "--output" };
+	private static final String DEFAULT_EXTENSION = ".xlsx";
+	private static final String DEFAULT_OUTPUT_FILE_NAME = SCHEME_NAME + DEFAULT_EXTENSION;
+	private static final Set<String> PROTECTED_EXTENSION_NAMES = Set.of(
+		"ASM", "BAT", "C", "CMD", "CPP", "CS", "GO", "H", "HPP", "IPYNB", "JAR", "JAVA", "JS", "KT", "LUA", "M", "O", "PHP", "PS1", "PY", "R", "RB", "RS", "S", "SH", "SQL"
+	);
+	private static final String[] OPTION_PLACE = { "p", "/p", "-p", "place", "/place", "--place" };
+	private static final int DEFAULT_PLACE = 9;
+	private static final Map<String, Integer> PLACE_TRANSLATIONS = Map.ofEntries(
+		Map.entry("s", 0),
+		Map.entry("second", 0),
+		Map.entry("ms", 3),
+		Map.entry("millisecond", 3),
+		Map.entry("microsecond", 6),
+		Map.entry("ns", 9),
+		Map.entry("nanosecond", 9),
+		Map.entry("ps", 12),
+		Map.entry("picosecond", 12),
+		Map.entry("fs", 15),
+		Map.entry("femtosecond", 15)
+	);
+	private static final String[] OPTION_QUIET = { "q", "/q", "-q", "quiet", "/quiet", "--quiet" };
+	private static final String[] OPTION_RUN = { "r", "/r", "-r", "run", "/run", "--run" };
+	private static final int DEFAULT_RUN = 10;
+	private static final String[] OPTION_TIME = { "t", "/t", "-t", "time", "/time", "--time" };
+	private static final double DEFAULT_TIME = Double.POSITIVE_INFINITY;
+	private static final String[] OPTION_YES = { "y", "/y", "-y", "yes", "/yes", "--yes" };
+	private final String[] arguments;
+
+	private static boolean contains(final String[] values, final String target)
 	{
-		if (x instanceof Element)
-			return ((Element) x).toBytes().length;
-		else if (x instanceof Integer)
-			return pars.getZp().getLengthInBytes();
-		else if (x instanceof byte[])
-			return ((byte[]) x).length;
-		else if (x instanceof Object[])
-		{
-			long total = 0;
-			for (Object o : (Object[]) x)
-				total += getObjectSize(o, pars);
-			return total;
-		}
-		else if (x instanceof Collection)
-		{
-			long total = 0;
-			for (Object o : (Collection<?>) x)
-				total += getObjectSize(o, pars);
-			return total;
-		}
-		else if (x instanceof Map)
-		{
-			long total = 0;
-			for (Object value : ((Map<?,?>) x).values())
-				total += getObjectSize(value, pars);
-			return total;
-		}
-		else
-			return 0;
-	}
-	public static HashMap<String, Long> test(int n, int k, int d, int timeToTest)
-	{
-		/* Initial */
-		HashMap<String, Long> Key_Value = new HashMap<>();
-		Key_Value.put("Test", (long)timeToTest);
-		Key_Value.put("n", (long)n);
-		Key_Value.put("k", (long)k);
-		Key_Value.put("d", (long)d);
-		
-		PARS pars;
-		Element[] ID_A, ID_B, P_A, P_B, D_i, d_i, D_i_prime, d_i_prime, C_1_i, C_2_i, C_3_i, C_4_i, C_5_i;
-		Element[][] ek = null, dk = null;
-		Element M, C_0, C_1, C_2;
-		List<Element[]> list = null;
-		Timer timer = new Timer();
-		timer.setFormat(0, Timer.FORMAT.MICRO_SECOND);
-		
-		pars = Setup.setup(n, k, d);
-		ID_A = new Element[n];
-		ID_B = new Element[n];
-		P_A = new Element[n];
-		P_B = new Element[n];
-		for (int i = 0; i < n; ++i)
-		{
-			ID_A[i] = pars.getZp().newElement(BigInteger.valueOf(100 + i)).duplicate();
-			ID_B[i] = pars.getZp().newElement(BigInteger.valueOf(100 + i)).duplicate();
-			P_A[i] = ID_A[i].getImmutable();
-			P_B[i] = ID_A[i].getImmutable();
-		}
-		
-		/* EKGen */
-		long runTime = 0;
-		for (int i = 0; i < timeToTest; ++i)
-		{
-			timer.start(0);
-			ek = EKGen.eKGen(pars, P_A);
-			runTime += timer.stop(0);
-		}
-		runTime /= timeToTest;
-		Key_Value.put("EKGen_Time", runTime);
-		Key_Value.put("EKGen_Space", getObjectSize(ek, pars));
-		
-		/* DKGen */
-		runTime = 0;
-		for (int i = 0; i < timeToTest; ++i)
-		{
-			timer.start(0);
-			dk = DKGen.dKGen(pars, ID_B, pars.getMsk());
-			runTime += timer.stop(0);
-		}
-		runTime /= timeToTest;
-		D_i = dk[0];
-		d_i = dk[1];
-		D_i_prime = dk[2];
-		d_i_prime = dk[3];
-		M = pars.getGT().newRandomElement().getImmutable();
-		Key_Value.put("DKGen_Time", runTime);
-		Key_Value.put("DKGen_Space", getObjectSize(dk, pars) + getObjectSize(ID_A, pars) + getObjectSize(P_A, pars) + getObjectSize(ID_B, pars) + getObjectSize(P_B, pars) + getObjectSize(M, pars));
-		//Value.put(M.toString(), (long) M.toString().length()); // comment this line if M is too long
-		
-		/* Enc */
-		runTime = 0;
-		for (int i = 0; i < timeToTest; ++i)
-		{
-			timer.start(0);
-			list = Enc.enc(pars, ID_A, P_B, dk, M);
-			runTime += timer.stop(0);
-		}
-		runTime /= timeToTest;
-		Key_Value.put("Enc_Time", runTime);
-		Key_Value.put("Enc_Space", getObjectSize(list, pars) + getObjectSize(D_i, pars) + getObjectSize(d_i, pars) + getObjectSize(D_i_prime, pars) + getObjectSize(d_i_prime, pars));
-		
-		C_0 = list.get(0)[0].getImmutable();
-		C_1 = list.get(1)[0].getImmutable();
-		C_2 = list.get(2)[0].getImmutable();
-		C_1_i = (Element[]) list.get(3);
-		C_2_i = (Element[]) list.get(4);
-		C_3_i = (Element[]) list.get(5);
-		C_4_i = (Element[]) list.get(6);
-		C_5_i = (Element[]) list.get(7);
-		
-		/* Dec */
-		Element secret = M.duplicate(); // just initial
-		runTime = 0;
-		for (int i = 0; i < timeToTest; ++i)
-		{
-			timer.start(0);
-			secret = Dec.dec(pars, ID_A, P_A, ID_B, P_B, D_i, d_i, D_i_prime, d_i_prime, C_0, C_1, C_2, C_1_i, C_2_i, C_3_i, C_4_i, C_5_i);
-			if (null == secret)
-				secret = M.duplicate();
-			runTime += timer.stop(0);
-		}
-		runTime /= timeToTest;
-		if (runTime < 10000) // Solve Dec null situation
-			runTime += Key_Value.get("Enc_Time") / timeToTest;
-		Key_Value.put("Dec_Time", runTime);
-		//Key_Value.put("Dec_Space", getObjectSize(secret, pars));
-		
-		/* EKeySanity */
-		runTime = 0;
-		Sanity.EKeySantity(pars, ID_A); // no loop needed
-		runTime += timer.stop(0);
-		runTime /= timeToTest;
-		runTime >>= 1; // with DKeySanity should be half
-		Key_Value.put("EKeySanity_Time", runTime);
-		
-		/* DKenSanity */
-		runTime = 0;
-		Sanity.DKeySantity(pars, ID_B); // no loop needed
-		runTime += timer.stop(0);
-		runTime /= timeToTest;
-		runTime >>= 1; // with EKeySanity should be half
-		Key_Value.put("DKeySanity_Time", runTime);
-		
-		/* return */
-		return Key_Value;
-	}
-	public static HashMap<String, Long> test(int n, int k, int d) { return test(n, k, d, 20); }
-	
-	
-	public static String Java2Python(ArrayList<HashMap<String, Long>> results)
-	{
-		StringBuffer sb = new StringBuffer("[");
-		for (HashMap<String, Long> Key_Value : results)
-		{
-			sb.append("{");
-			sb.append("\"Test\":" + Key_Value.get("Test") + ", ");
-			sb.append("\"d\":" + Key_Value.get("d") + ", \"k\":" + Key_Value.get("k") + ", \"n\":" + Key_Value.get("n") + ", ");
-			sb.append("\"EKGen_Time\":" + Key_Value.get("EKGen_Time") + ", \"EKGen_Space\":" + Key_Value.get("EKGen_Space") + ", ");
-			sb.append("\"DKGen_Time\":" + Key_Value.get("DKGen_Time") + ", \"DKGen_Space\":" + Key_Value.get("DKGen_Space") + ", ");
-			sb.append("\"Enc_Time\":" + Key_Value.get("Enc_Time") + ", \"Enc_Space\":" + Key_Value.get("Enc_Space") + ", ");
-			sb.append("\"Dec_Time\":" + Key_Value.get("Dec_Time")/* + ", \"Dec_Space\":" + Key_Value.get("Dec_Space")*/ + ", ");
-			sb.append("\"EKeySanity_Time\":" + Key_Value.get("EKeySanity_Time") + ", \"DKeySanity_Time\":" + Key_Value.get("DKeySanity_Time"));
-			sb.append("}, ");
-		}
-		/* remove the last ", " and append a "]" */
-		sb = sb.deleteCharAt(sb.length() - 1);
-		sb = sb.deleteCharAt(sb.length() - 1);
-		sb.append("]");
-		return sb.toString();
-	}
-	
-	private static String getJavaDirectoryPath(String encoding)
-	{
-		try
-		{
-			final String baseFilePath = System.getProperty("sun.java.command");
-			if (baseFilePath != null && baseFilePath.startsWith("jdk.compiler/com.sun.tools.javac.launcher.SourceLauncher "))
-				return new File(new File(baseFilePath.substring(57)).getParent()).getAbsolutePath();
-			else
-				return new File(URLDecoder.decode(ClassLoader.getSystemResource("").getPath(), encoding)).getAbsolutePath();
-		}
-		catch (Throwable e)
-		{
-			return ".";
-		}
-	}
-	public static boolean dump(String str, String outputFilePath, boolean isAlert, String encoding)
-	{
-        	File newFile = null;
-		try
-		{
-			newFile = new File(outputFilePath);
-			if (!newFile.exists())
-			{
-				File parent = newFile.getParentFile();
-				if (parent != null && !parent.exists())
-					parent.mkdirs();
-				newFile.createNewFile();
-			}
-		}
-		catch (Throwable e)
-		{
-			if (isAlert)
-				System.out.println("Failed to save the results due to \"" + e + "\". ");
+		if (values == null || target == null)
 			return false;
-		}
-		try (FileOutputStream out = new FileOutputStream(newFile, false))
-		{
-			out.write(str.getBytes(encoding));
-			return true;
-		}
-		catch (Throwable e)
-		{
-			if (isAlert)
-				System.out.println("Failed to save the results due to \"" + e + "\". ");
-			return false;
-		}
+		for (final String value : values)
+			if (target.equalsIgnoreCase(value))
+				return true;
+		return false;
 	}
-	public static boolean dump(String str, String outputFilePath, boolean isAlert) { return dump(str, outputFilePath, isAlert, "UTF-8"); }
-	public static boolean dump(String str, String outputFilePath) { return dump(str, outputFilePath, true, "UTF-8"); }
-	
-	public static void main(String[] args)
+
+	private static String formatOption(final String[] options)
 	{
-		/* Get the Java directory */
-		final String javaDirectoryPath = getJavaDirectoryPath("UTF-8"), defaultFileName = "SchemeAAIBME.xlsx";
-		
-		/* Command-line argument parsing */
-		String outputFilePath = defaultFileName;
-		for (int i = 0; i < args.length; ++i)
-			if (("o".equals(args[i]) || "/o".equals(args[i]) || "-o".equals(args[i])) && i + 1 < args.length)
+		return "[" + String.join("|", options) + "]";
+	}
+
+	private static String escapeString(final Object object)
+	{
+		final StringBuilder builder = new StringBuilder("\"");
+		for (final char character : String.valueOf(object).toCharArray())
+		{
+			switch (character)
 			{
-				outputFilePath = args[i + 1];
+			case '\b':
+				builder.append("\\b");
+				break;
+			case '\t':
+				builder.append("\\t");
+				break;
+			case '\n':
+				builder.append("\\n");
+				break;
+			case '\f':
+				builder.append("\\f");
+				break;
+			case '\r':
+				builder.append("\\r");
+				break;
+			case '\"':
+			case '\'':
+			case '\\':
+				builder.append('\\').append(character);
+				break;
+			default:
+				if (character >= 32 && character <= 126)
+					builder.append(character);
+				else
+					builder.append(String.format(Locale.ROOT, "\\u%04x", (int)character));
 				break;
 			}
-		if (!new File(outputFilePath).isAbsolute())
-			outputFilePath = new File(javaDirectoryPath, outputFilePath).getPath();
-		System.out.println("The Java source directory is \"" + javaDirectoryPath + "\". ");
-		System.out.println("The result file path is \"" + outputFilePath + "\". ");
-		
-		/* initial what to figure out */
-		ArrayList<HashMap<String, Long>> results = new ArrayList<>();
-		
-		int n = 10, k = 10, d = 10, UB = 60;
-		String toDump = "";
-		for (n = 10; n <= UB; n += 10)
-		{
-			results.add(test(n, k, d));
-			toDump = Java2Python(results);
-			System.out.println(toDump);
-			dump(toDump, outputFilePath);
 		}
-		
-		n = UB;
-		for (k = 20; k <= UB; k += 10) // keep n = 60
+		return builder.append('\"').toString();
+	}
+
+	private static void printHelp()
+	{
+		System.out.println("This is the official implementation of the AA-IB-ME cryptographic scheme in Java based on JPBC.");
+		System.out.println();
+		System.out.println("Options (case-insensitive):");
+		System.out.println("\t" + formatOption(OPTION_ENCODING) + " [utf-8|utf-16|...]\tSpecify the encoding mode. The default value is " + DEFAULT_ENCODING + ".");
+		System.out.println("\t" + formatOption(OPTION_HELP) + "\tPrint this help document.");
+		System.out.println("\t" + formatOption(OPTION_OUTPUT) + " [path]\tSpecify the output path. The default value is " + escapeString(DEFAULT_OUTPUT_FILE_NAME) + ".");
+		System.out.println("\t" + formatOption(OPTION_PLACE) + " [s|ms|ns|0|3|9|...]\tSpecify the decimal place. The default value is " + DEFAULT_PLACE + ".");
+		System.out.println("\t" + formatOption(OPTION_QUIET) + "\tDisable verbose console output.");
+		System.out.println("\t" + formatOption(OPTION_RUN) + " [1|2|5|10|...]\tSpecify the run count. The default value is " + DEFAULT_RUN + ".");
+		System.out.println("\t" + formatOption(OPTION_TIME) + " [0|0.1|1|...|inf]\tSpecify the waiting time before exiting. The default value is " + DEFAULT_TIME + ".");
+		System.out.println("\t" + formatOption(OPTION_YES) + "\tConfirm overwriting an existing output file.");
+		System.out.println();
+	}
+
+	private static String handlePath(final String filePath)
+	{
+		if (filePath == null)
+			return DEFAULT_OUTPUT_FILE_NAME;
+		try
 		{
-			results.add(test(n, k, d));
-			toDump = Java2Python(results);
-			System.out.println(toDump);
-			dump(toDump, outputFilePath);
-		}
-		
-		k = UB;
-		for (d = 20; d <= UB; d += 10) // keep n = 60 and k = 60
-		{
-			results.add(test(n, k, d));
-			toDump = Java2Python(results);
-			System.out.println(toDump);
-			dump(toDump, outputFilePath);
-		}
-		
-		return;
-	}
-}
-
-class PARS
-{
-	private int n, k, d; // n, k, d
-	private ArrayList<Integer> S, S_pi, S_pi_pi;
-	private Element g, g1, g1_pi, g2, g3; // The elements g, g1, g2, and g3
-	private Element alpha, beta; // $\alpha$ and $\beta$
-	private Element t1, t2, t3, t4; // random numbers from t1 to t4
-	private Element[] T, T_pi, u, u_pi;  // four random vectors
-	private Element Y1, Y2; // Y1 and Y2
-	private Element v1, v2, v3, v4; // four $v$ vars
-	private Element[] mpk, msk; // public key and master key 
-	private Element[] ID_A, ID_B, ID; // IDs
-	private Pairing pairing;
-	private Field<Element> G; // Group
-	private Field<Element> GT; // Paired Group
-	private Field<Element> Zp; // Zp_star
-	private ArrayList<Integer> nbs; // just a buffer for shuffling
-	
-	
-	public void setN(int n)
-	{
-		this.n = n;
-		return;
-	}
-	public int getN()
-	{
-		return this.n;
-	}
-	
-	public void setK(int k)
-	{
-		this.k = k;
-		return;
-	}
-	public int getK()
-	{
-		return this.k;
-	}
-	
-	public void setD(int d)
-	{
-		this.d = d;
-		return;
-	}
-	public int getD()
-	{
-		return this.d;
-	}
-	
-	public void setS(ArrayList<Integer> S)
-	{
-		this.S = S;
-		return;
-	}
-	public ArrayList<Integer> getS()
-	{
-		return this.S;
-	}
-	
-	public void setS_pi(ArrayList<Integer> S_pi)
-	{
-		this.S_pi = S_pi;
-		return;
-	}
-	public ArrayList<Integer> getS_pi()
-	{
-		return this.S_pi;
-	}
-	
-	public void setS_pi_pi(ArrayList<Integer> S_pi_pi)
-	{
-		this.S_pi_pi = S_pi_pi;
-		return;
-	}
-	public ArrayList<Integer> getS_pi_pi()
-	{
-		return this.S_pi_pi;
-	}
-	
-	public void set_g(Element g)
-	{
-		this.g = g;
-		return;
-	}
-	public Element get_g()
-	{
-		return this.g;
-	}
-	
-	public void setG1(Element g1)
-	{
-		this.g1 = g1;
-		return;
-	}
-	public Element getG1()
-	{
-		return this.g1;
-	}
-	
-	public void setG1_pi(Element g1_pi)
-	{
-		this.g1_pi = g1_pi;
-		return;
-	}
-	public Element getG1_pi()
-	{
-		return this.g1_pi;
-	}
-	
-	public void setG2(Element g2)
-	{
-		this.g2 = g2;
-		return;
-	}
-	public Element getG2()
-	{
-		return this.g2;
-	}
-	
-	public void setG3(Element g3)
-	{
-		this.g3 = g3;
-		return;
-	}
-	public Element getG3()
-	{
-		return this.g3;
-	}
-	
-	public void setT1(Element t1)
-	{
-		this.t1 = t1;
-		return;
-	}
-	public Element getT1()
-	{
-		return this.t1;
-	}
-	
-	public void setT2(Element t2)
-	{
-		this.t2 = t2;
-		return;
-	}
-	public Element getT2()
-	{
-		return this.t2;
-	}
-	
-	public void setT3(Element t3)
-	{
-		this.t3 = t3;
-		return;
-	}
-	public Element getT3()
-	{
-		return this.t3;
-	}
-	
-	public void setT4(Element t4)
-	{
-		this.t4 = t4;
-		return;
-	}
-	public Element getT4()
-	{
-		return this.t4;
-	}
-	
-	public void setTn(Element[] t)
-	{
-		if (t.length <= 0)
-			return;
-		switch (t.length)
-		{
-		default:
-			this.t4 = t[3];
-		case 3:
-			this.t3 = t[2];
-		case 2:
-			this.t2 = t[1];
-		case 1:
-			this.t1 = t[0];
-		}
-		return;
-	}
-	public Element[] getTn()
-	{
-		return new Element[] {this.t1, this.t2, this.t3, this.t4};
-	}
-	
-	public void setT(Element[] T)
-	{
-		this.T = T;
-		return;
-	}
-	public Element[] getT()
-	{
-		return this.T;
-	}
-	
-	public void setT_pi(Element[] T_pi)
-	{
-		this.T_pi = T_pi;
-		return;
-	}
-	public Element[] getT_pi()
-	{
-		return this.T_pi;
-	}
-	
-	public void setU(Element[] u)
-	{
-		this.u = u;
-		return;
-	}
-	public Element[] getU()
-	{
-		return this.u;
-	}
-	
-	public void setU_pi(Element[] u_pi)
-	{
-		this.u_pi = u_pi;
-		return;
-	}
-	public Element[] getU_pi()
-	{
-		return this.u_pi;
-	}
-	
-	public void setY1(Element Y1)
-	{
-		this.Y1 = Y1;
-		return;
-	}
-	public Element getY1()
-	{
-		return this.Y1;
-	}
-	
-	public void setY2(Element Y2)
-	{
-		this.Y2 = Y2;
-		return;
-	}
-	public Element getY2()
-	{
-		return this.Y2;
-	}
-	
-	public void setV1(Element v1)
-	{
-		this.v1 = v1;
-		return;
-	}
-	public Element getV1()
-	{
-		return this.v1;
-	}
-	
-	public void setV2(Element v2)
-	{
-		this.v2 = v2;
-		return;
-	}
-	public Element getV2()
-	{
-		return this.v2;
-	}
-	
-	public void setV3(Element v3)
-	{
-		this.v3 = v3;
-		return;
-	}
-	public Element getV3()
-	{
-		return this.v3;
-	}
-	
-	public void setV4(Element v4)
-	{
-		this.v4 = v4;
-		return;
-	}
-	public Element getV4()
-	{
-		return this.v4;
-	}
-	
-	public void setVn(Element[] v)
-	{
-		if (v.length <= 0)
-			return;
-		switch (v.length)
-		{
-		default:
-			this.v4 = v[3];
-		case 3:
-			this.v3 = v[2];
-		case 2:
-			this.v2 = v[1];
-		case 1:
-			this.v1 = v[0];
-		}
-		return;
-	}
-	public Element[] getVn()
-	{
-		return new Element[] {this.v1, this.v2, this.v3, this.v4};
-	}
-	
-	public void setMpk(Element[] mpk)
-	{
-		this.mpk = mpk;
-		return;
-	}
-	public Element[] getMpk()
-	{
-		return this.mpk;
-	}
-	
-	public void setMsk(Element[] msk)
-	{
-		this.msk = msk;
-		return;
-	}
-	public Element[] getMsk()
-	{
-		return this.msk;
-	}
-	
-	public void setAlpha(Element alpha)
-	{
-		this.alpha = alpha;
-		return;
-	}
-	public Element getAlpha()
-	{
-		return this.alpha;
-	}
-	
-	public void setBeta(Element beta)
-	{
-		this.beta = beta;
-		return;
-	}
-	public Element getBeta()
-	{
-		return this.beta;
-	}
-	
-	public void setPairing(Pairing pairing)
-	{
-		this.pairing = pairing;
-		return;
-	}
-	public Pairing getPairing()
-	{
-		return this.pairing;
-	}
-	
-	public void setID_A(Element[] ID_A)
-	{
-		this.ID_A = ID_A;
-		return;
-	}
-	public Element[] getID_A()
-	{
-		return this.ID_A;
-	}
-	
-	public void setID_B(Element[] ID_B)
-	{
-		this.ID_B = ID_B;
-		return;
-	}
-	public Element[] getID_B()
-	{
-		return this.ID_B;
-	}
-	
-	public void setID(Element[] ID)
-	{
-		this.ID = ID;
-		return;
-	}
-	public Element[] getID()
-	{
-		return this.ID;
-	}
-	
-	public void setG(Field<Element> G)
-	{
-		this.G = G;
-		return;
-	}
-	public Field<Element> getG()
-	{
-		return this.G;
-	}
-
-	public void setGT(Field<Element> GT)
-	{
-		this.GT = GT;
-		return;
-	}
-	public Field<Element> getGT()
-	{
-		return this.GT;
-	}
-	
-	public void setZp(Field<Element> Zp)
-	{
-		this.Zp = Zp;
-		return;
-	}
-	public Field<Element> getZp()
-	{
-		return this.Zp;
-	}
-	
-	public Element H1(Element element) // Assume H1 do nothing or you can use other hash functions
-	{
-		return element;
-	}
-	
-	public static Element H(Element[] u, Element[] ID) // len(ID) = n, len(u) = n + 1
-	{
-		Element eRet = u[0].getImmutable();
-		for (int i = 1; i <= ID.length; ++i)
-			eRet = eRet.mul(u[i].powZn(ID[i - 1]));
-		return eRet;
-	}
-	
-	public Element H_pi()
-	{
-		Element eRet = this.u_pi[0].getImmutable();
-		for (int i = 1; i <= this.n; ++i)
-			eRet = eRet.mul(this.u_pi[i].powZn(this.ID[i - 1]));
-		return eRet;
-	}
-	
-	public void initNbs()
-	{
-		this.nbs = new ArrayList<Integer>();
-		for (int i = 0; i < this.n; ++i)
-			this.nbs.add((Integer)(i));
-		return;
-	}
-	
-	public ArrayList<Integer> randNbs()
-	{
-		Collections.shuffle(this.nbs);
-		return this.nbs;
-	}
-	
-	public ArrayList<Integer> getNbs()
-	{
-		return this.nbs;
-	}
-	
-	public static void breakpoint(String string)
-	{
-		System.out.println("Breakpoint: " + string);
-	}
-	
-	public static void breakpoint()
-	{
-		System.out.println("[Breakpoint]");
-	}
-}
-
-class Utils
-{
-    public static Element delta(Element x, Element i, Element[] S, PARS pars)
-    {
-        Element result = pars.getZp().newOneElement().getImmutable();
-        for (Element j : S)
-            if (!i.duplicate().equals(j.duplicate()))
-                result = result.mul(x.duplicate().sub(j.duplicate()).div(i.duplicate().sub(j.duplicate()))).getImmutable();
-        return result;
-    }
-
-    public static Element T(Element x, PARS pars)
-    {
-        Element[] t = pars.getT();
-        int n = t.length;
-        Element result = pars.getG().newOneElement().getImmutable();
-        Element[] N = new Element[n];
-        for (int i = 0; i < n; ++i)
-            N[i] = pars.getZp().newElement(BigInteger.valueOf(i + 1)).getImmutable();
-        for (int i = 0; i < n; ++i)
-            result = result.duplicate().mul(t[i].duplicate().powZn(delta(x, pars.getZp().newElement(BigInteger.valueOf(i + 1)), N, pars))).getImmutable();
-        result = result.duplicate().mul(pars.getG2().duplicate().powZn(x.duplicate().pow(BigInteger.valueOf(n - 1))));
-        return result;
-    }
-
-    /*
-    public static Element H(Element x, PARS pars)
-    {
-        Element[] l = pars.getL();
-        int n = l.length;
-        Element result = pars.getG().newOneElement().getImmutable();
-        Element[] N = new Element[n];
-        for (int i = 0; i < n; i++) {
-            N[i] = pars.getZp().newElement(BigInteger.valueOf(i + 1)).getImmutable();
-        }
-        for (int i = 0; i < n; i++) {
-            result = result.duplicate().mul(l[i].duplicate().powZn(delta(x, pars.getZp().newElement(BigInteger.valueOf(i + 1)), N, pars))).getImmutable();
-        }
-        result = result.duplicate().mul(pars.getG2().duplicate().powZn(x.duplicate().pow(BigInteger.valueOf(n - 1))));
-        return result;
-    }
-    */
-
-    public static Polynomial newRandomPolynomial(int d, PARS pars)
-    {
-        return newRandomPolynomial(d, pars.getZp().newRandomElement(), pars);
-    }
-
-    public static Polynomial newRandomPolynomial(int d, Element root, PARS pars)
-    {
-        Polynomial poly = new Polynomial(pars.getZp().newZeroElement().getImmutable(), 0, pars);
-        for (int i = 1; i < d; ++i)
-            poly = poly.plus(new Polynomial(pars.getZp().newRandomElement(), i, pars));
-        poly = poly.plus(new Polynomial(root, 0, pars));
-        return poly;
-    }
-
-    public static Element[] intersect(Element[] a, Element[] b)
-    {
-        List<Element> result = new ArrayList<>();
-        for (Element a0 : a)
-            for (Element b0 : b)
-                if (a0.isEqual(b0))
-                    result.add(a0);
-        Element[] intersection = new Element[result.size()];
-        for (int i = 0; i < intersection.length; ++i)
-            intersection[i] = result.get(i);
-        return intersection;
-    }
-
-    public static byte[] byteMergerAll(byte[]... values)
-    {
-        int length_byte = 0;
-        for (int i = 0; i < values.length; ++i)
-            length_byte += values[i].length;
-        byte[] all_byte = new byte[length_byte];
-        int countLength = 0;
-        for (int i = 0; i < values.length; ++i)
-        {
-            byte[] b = values[i];
-            System.arraycopy(b, 0, all_byte, countLength, b.length);
-            countLength += b.length;
-        }
-        return all_byte;
-    }
-}
-
-class Start
-{
-	public static void main(String[] args)
-	{
-		int n = 60, k = 30, d = 10;
-		PARS pars = Setup.setup(n, k, d);
-		
-		Element[] ID_A = new Element[n];
-		for (int i = 0; i < ID_A.length; ++i)
-			ID_A[i] = pars.getZp().newElement(BigInteger.valueOf(100 + i)).getImmutable();
-		
-		Element[] ID_B = new Element[n];
-		for (int i = 0; i < ID_B.length; ++i)
-			ID_B[i] = pars.getZp().newElement(BigInteger.valueOf(100 + i)).getImmutable();
-		
-		Element[] P_A = new Element[n];
-		for (int i = 0; i < P_A.length; ++i)
-			P_A[i] = pars.getZp().newElement(BigInteger.valueOf(100 + i)).getImmutable();
-		
-		Element[] P_B = new Element[n];
-		for (int i = 0; i < P_B.length; ++i)
-			P_B[i] = pars.getZp().newElement(BigInteger.valueOf(100 + i)).getImmutable();
-		
-		Element[][] ek = EKGen.eKGen(pars, P_A), dk = DKGen.dKGen(pars, P_B, P_A);
-		Element[] D_i = dk[0];
-		Element[] d_i = dk[1];
-		Element[] D_i_prime = dk[2];
-		Element[] d_i_prime = dk[3];
-		Element M = pars.getGT().newRandomElement().getImmutable();
-		
-		ArrayList<Element[]> list = Enc.enc(pars, ID_A, P_B, ek, M);
-		Element C_0 = list.get(0)[0];
-		Element C_1 = list.get(1)[0];
-		Element C_2 = list.get(2)[0];
-		Element[] C_1_i = list.get(list.size() - 5);
-		Element[] C_2_i = list.get(list.size() - 4);
-		Element[] C_3_i = list.get(list.size() - 3);
-		Element[] C_4_i = list.get(list.size() - 2);
-		Element[] C_5_i = list.get(list.size() - 1);
-		Element M_prime = Dec.dec(pars, ID_A, P_A, ID_B, P_B, D_i, d_i, D_i_prime, d_i_prime, C_0, C_1, C_2, C_1_i, C_2_i, C_3_i, C_4_i, C_5_i);
-		M_prime = null == M_prime ? M : M_prime;
-		
-		System.out.println("M = " + M);
-		System.out.println("M_prime = " + M);
-		System.out.println("Result = " + M.equals(M_prime));
-	}
-}
-
-class Setup
-{
-	public static PARS setup(int n, int k, int d)
-	{
-		/* input the security parameter */
-		int rBits = 160;
-		int qBits = 512;
-		
-		/* the authority selects a bilinear map $e$: $G \times G \rightarrow G_T$ */
-		TypeACurveGenerator pg = new TypeACurveGenerator(rBits, qBits);
-		PairingParameters pairingParameters = pg.generate();
-		Pairing pairing = PairingFactory.getPairing(pairingParameters);
-		PARS pars = new PARS();
-		pars.setN(n);
-		pars.setK(k);
-		pars.setD(d);
-		pars.setPairing(pairing);
-		pars.setG(pairing.getG1());
-		pars.setGT(pairing.getGT());
-		pars.setZp(pairing.getZr());
-		pars.initNbs(); // initial a random set for shuffle
-		
-		/* six random nmbers */
-		pars.setAlpha(pars.getZp().newRandomElement().duplicate().getImmutable());
-		pars.setBeta(pars.getZp().newRandomElement().duplicate().getImmutable());
-		pars.setT1(pars.getZp().newRandomElement().duplicate().getImmutable());
-		pars.setT2(pars.getZp().newRandomElement().duplicate().getImmutable());
-		pars.setT3(pars.getZp().newRandomElement().duplicate().getImmutable());
-		pars.setT4(pars.getZp().newRandomElement().duplicate().getImmutable());
-		
-		/* two random elements: g2 and g3 */
-		pars.setG2(pars.getG().newRandomElement().duplicate().getImmutable());
-		pars.setG3(pars.getG().newRandomElement().duplicate().getImmutable());
-		
-		/* four random vectors */
-		Element[] T = new Element[n + 1];
-		Element[] T_pi = new Element[n + 1];
-		Element[] u = new Element[n + 1];
-		Element[] u_pi = new Element[n + 1];
-		for (int i = 0; i <= n; ++i)
-		{
-			T[i] = pars.getG().newRandomElement().duplicate().getImmutable();
-			T_pi[i] = pars.getG().newRandomElement().duplicate().getImmutable();
-			u[i] = pars.getG().newRandomElement().duplicate().getImmutable();
-			u_pi[i] = pars.getG().newRandomElement().duplicate().getImmutable();
-		}
-		pars.setT(T);
-		pars.setT_pi(T_pi);
-		pars.setU(u);
-		pars.setU_pi(u_pi);
-		
-		/* hash function H1 */
-		// written in pars
-		
-		/* computes */
-		pars.set_g(pars.getG().newRandomElement().duplicate().getImmutable());
-		pars.setG1(pars.get_g().powZn(pars.getAlpha()));
-		pars.setG1_pi(pars.get_g().powZn(pars.getBeta()));
-		pars.setY1(pairing.pairing(pars.getG1(), pars.getG2()).duplicate().powZn(pars.getT1().mul(pars.getT2())).getImmutable());
-		pars.setY2(pars.getY1());//pars.setY2(pairing.pairing(pars.getG3(), pars.get_g()).duplicate().powZn(pars.getBeta()).getImmutable());
-		pars.setV1(pars.get_g().powZn(pars.getT1()));
-		pars.setV2(pars.get_g().powZn(pars.getT2()));
-		pars.setV3(pars.get_g().powZn(pars.getT3()));
-		pars.setV4(pars.get_g().powZn(pars.getT4()));
-		
-		/* identity */
-		Element[] ID = new Element[n];
-		for (int i = 0; i < n - 1; ++i)
-		{
-			ID[i] = pars.getG().newRandomElement(); // avoid nullptr
-			ID[i].set(Math.random() * 2 >= 1 ? 1 : 0);
-		}
-		pars.setID(ID);
-		
-		/* the two keys */
-		Element[] mpk = new Element[n << 2 + 11];
-		mpk[0] = pars.getG1();
-		mpk[1] = pars.getG1_pi();
-		mpk[2] = pars.getG2();
-		mpk[3] = pars.getG3();
-		mpk[4] = pars.getY1();
-		mpk[5] = pars.getY2();
-		mpk[6] = pars.getV1();
-		mpk[7] = pars.getV2();
-		mpk[8] = pars.getV3();
-		mpk[9] = pars.getV4();
-		int pointer = 10;
-		for (int i = 0; i <= n; ++i)
-			mpk[pointer++] = u[i];
-		for (int i = 0; i <= n; ++i)
-			mpk[pointer++] = T[i];
-		for (int i = 0; i <= n; ++i)
-			mpk[pointer++] = u_pi[i];
-		for (int i = 0; i <= n; ++i)
-			mpk[pointer++] = T_pi[i];
-		mpk[pointer] = pars.H1(pars.getG().newRandomElement().getImmutable());
-		pars.setMpk(mpk);
-		
-		Element[] msk = new Element[6];
-		msk[0] = pars.getG2().powZn(pars.getAlpha());
-		msk[1] = pars.getBeta();
-		msk[2] = pars.getT1();
-		msk[3] = pars.getT2();
-		msk[4] = pars.getT3();
-		msk[5] = pars.getT4();
-		pars.setMsk(msk);
-		
-		return pars;
-	}
-}
-
-class Sanity
-{
-	public static boolean EKeySantity(PARS pars, Element[] ID_A)
-	{
-		Polynomial q = Utils.newRandomPolynomial(pars.getD() - 1, pars.getBeta(), pars);
-		
-		for (Integer integer : pars.getS())
-		{
-			Element r_i = pars.getZp().newRandomElement().getImmutable(), r_i_pi = pars.getZp().newRandomElement().getImmutable();
-			if (!
-					(pars.getG3().powZn(q.evaluate(ID_A[integer])).mul((PARS.H(pars.getU_pi(), ID_A).mul(pars.getT_pi()[integer])).powZn(r_i))).div(
-							PARS.H(pars.getU_pi(), ID_A).mul(pars.getT_pi()[integer])
-							).equals(pars.getG3())
-					)
+			final Path path = Paths.get(filePath);
+			if (Files.isDirectory(path) || filePath.endsWith("/") || filePath.endsWith("\\"))
 			{
-				//return false;
+				System.out.println("Parser: The output path looks like a folder and will use the default file name " + escapeString(DEFAULT_OUTPUT_FILE_NAME) + ".");
+				return handlePath(path.resolve(DEFAULT_OUTPUT_FILE_NAME).toString());
 			}
-			if (!pars.get_g().div(pars.get_g().powZn(r_i_pi)).equals(pars.getG1_pi()))
+			final Path fileNamePath = path.getFileName();
+			final String fileName = fileNamePath == null ? filePath : fileNamePath.toString();
+			final int dotIndex = fileName.lastIndexOf('.');
+			final String extension = dotIndex >= 1 ? fileName.substring(dotIndex + 1).toUpperCase(Locale.ROOT) : "";
+			if (PROTECTED_EXTENSION_NAMES.contains(extension))
 			{
-				//return false;
+				System.out.println("Parser: The protected extension will be reset to " + escapeString(DEFAULT_EXTENSION) + ".");
+				final String baseName = dotIndex >= 1 ? fileName.substring(0, dotIndex) : fileName;
+				final Path parent = path.getParent();
+				return parent == null ? baseName + DEFAULT_EXTENSION : parent.resolve(baseName + DEFAULT_EXTENSION).toString();
 			}
-			if (integer.intValue() < 0 || integer.intValue() >= pars.getN())
+			return filePath;
+		}
+		catch (final InvalidPathException exception)
+		{
+			return DEFAULT_OUTPUT_FILE_NAME;
+		}
+	}
+
+	private static Number parseRealNumber(final String string)
+	{
+		if (string == null)
+			return null;
+		try
+		{
+			String value = string.replaceAll("[^+\\-.0-9A-Za-z]", "").toLowerCase(Locale.ROOT);
+			if (!value.contains("x") && value.contains("e") && !value.endsWith("e"))
+				return Double.valueOf(value);
+			boolean negative = false;
+			while (!value.isEmpty() && (value.charAt(0) == '+' || value.charAt(0) == '-'))
 			{
-				//return false;
+				if (value.charAt(0) == '-')
+					negative = !negative;
+				value = value.substring(1);
+			}
+			value = value.replaceFirst("^0+", "");
+			int radix = 10;
+			if (value.startsWith("b"))
+			{
+				radix = 2;
+				value = value.substring(1);
+			}
+			else if (value.startsWith("q"))
+			{
+				radix = 4;
+				value = value.substring(1);
+			}
+			else if (value.startsWith("o"))
+			{
+				radix = 8;
+				value = value.substring(1);
+			}
+			else if (value.startsWith("d") || value.startsWith("l"))
+				value = value.substring(1);
+			else if (value.startsWith("h") || value.startsWith("x"))
+			{
+				radix = 16;
+				value = value.substring(1);
+			}
+			else if (!value.isEmpty())
+			{
+				final char suffix = value.charAt(value.length() - 1);
+				if (suffix == 'b' || suffix == 'q' || suffix == 'o' || suffix == 'd' || suffix == 'l' || suffix == 'h' || suffix == 'x')
+				{
+					radix = suffix == 'b' ? 2 : suffix == 'q' ? 4 : suffix == 'o' ? 8 : suffix == 'h' || suffix == 'x' ? 16 : 10;
+					value = value.substring(0, value.length() - 1);
+				}
+			}
+			if ("inf".equals(value))
+				return negative ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
+			if ("nan".equals(value))
+				return Double.NaN;
+			if (value.isEmpty() || ".".equals(value))
+				return Integer.valueOf(0);
+			final String[] parts = value.split("\\.", -1);
+			if (parts.length > 2)
+				return null;
+			final BigInteger integerPart = parts[0].isEmpty() ? BigInteger.ZERO : new BigInteger(parts[0], radix);
+			double decimalPart = 0.0;
+			if (parts.length == 2)
+				for (int index = parts[1].length() - 1; index >= 0; --index)
+				{
+					final int digit = Character.digit(parts[1].charAt(index), radix);
+					if (digit < 0)
+						return null;
+					decimalPart = (decimalPart + digit) / radix;
+				}
+			if (decimalPart == 0.0 && integerPart.bitLength() <= 31)
+			{
+				final int result = integerPart.intValue();
+				return Integer.valueOf(negative ? -result : result);
+			}
+			final double result = integerPart.doubleValue() + decimalPart;
+			return Double.valueOf(negative ? -result : result);
+		}
+		catch (final RuntimeException exception)
+		{
+			return null;
+		}
+	}
+
+	public Parser(final String[] arguments)
+	{
+		this.arguments = arguments == null ? new String[0] : Arrays.stream(arguments).filter(value -> value != null).toArray(String[]::new);
+	}
+
+	public Result parse()
+	{
+		int flag = 1;
+		String encoding = DEFAULT_ENCODING;
+		String outputFilePath = DEFAULT_OUTPUT_FILE_NAME;
+		int decimalPlace = DEFAULT_PLACE;
+		boolean verbose = true;
+		int runCount = DEFAULT_RUN;
+		double waitingTime = DEFAULT_TIME;
+		boolean overwritingConfirmed = false;
+		final List<String> errors = new ArrayList<>();
+		int index = 1;
+		while (index < this.arguments.length)
+		{
+			final String argument = this.arguments[index].toLowerCase(Locale.ROOT);
+			if (contains(OPTION_ENCODING, argument))
+			{
+				++index;
+				if (index < this.arguments.length && Charset.isSupported(this.arguments[index]))
+					encoding = this.arguments[index];
+				else
+				{
+					flag = -1;
+					errors.add("Parser: The encoding value is missing or invalid at [" + index + "].");
+				}
+			}
+			else if (contains(OPTION_HELP, argument))
+			{
+				printHelp();
+				flag = 0;
+				break;
+			}
+			else if (contains(OPTION_OUTPUT, argument))
+			{
+				++index;
+				if (index < this.arguments.length)
+					outputFilePath = handlePath(this.arguments[index]);
+				else
+				{
+					flag = -1;
+					errors.add("Parser: The output path value is missing at [" + index + "].");
+				}
+			}
+			else if (contains(OPTION_PLACE, argument))
+			{
+				++index;
+				if (index < this.arguments.length)
+				{
+					final String placeValue = this.arguments[index].toLowerCase(Locale.ROOT);
+					if (PLACE_TRANSLATIONS.containsKey(placeValue))
+						decimalPlace = PLACE_TRANSLATIONS.get(placeValue).intValue();
+					else
+					{
+						final Number number = parseRealNumber(this.arguments[index]);
+						if (number instanceof Integer && number.intValue() >= 0)
+							decimalPlace = number.intValue();
+						else
+						{
+							flag = -1;
+							errors.add("Parser: The decimal place must be a non-negative integer at [" + index + "].");
+						}
+					}
+				}
+				else
+				{
+					flag = -1;
+					errors.add("Parser: The decimal place value is missing at [" + index + "].");
+				}
+			}
+			else if (contains(OPTION_QUIET, argument))
+				verbose = false;
+			else if (contains(OPTION_RUN, argument))
+			{
+				++index;
+				final Number number = index < this.arguments.length ? parseRealNumber(this.arguments[index]) : null;
+				if (number instanceof Integer && number.intValue() >= 1)
+					runCount = number.intValue();
+				else
+				{
+					flag = -1;
+					errors.add("Parser: The run count must be a positive integer at [" + index + "].");
+				}
+			}
+			else if (contains(OPTION_TIME, argument))
+			{
+				++index;
+				final Number number = index < this.arguments.length ? parseRealNumber(this.arguments[index]) : null;
+				if (number != null && !Double.isNaN(number.doubleValue()) && number.doubleValue() >= 0.0)
+					waitingTime = number.doubleValue();
+				else
+				{
+					flag = -1;
+					errors.add("Parser: The waiting time must be non-negative at [" + index + "].");
+				}
+			}
+			else if (contains(OPTION_YES, argument))
+				overwritingConfirmed = true;
+			else
+			{
+				flag = -1;
+				errors.add("Parser: The option [" + index + "] = " + escapeString(this.arguments[index]) + " is unknown.");
+			}
+			++index;
+		}
+		if (flag == -1)
+			for (final String error : errors)
+				System.out.println(error);
+		return new Result(flag, encoding, outputFilePath, decimalPlace, verbose, runCount, waitingTime, overwritingConfirmed);
+	}
+
+	public Result checkOverwriting(final Result result)
+	{
+		if (result == null)
+			return null;
+		String outputFilePath = result.outputFilePath();
+		boolean confirmed = result.overwritingConfirmed();
+		while (!outputFilePath.isEmpty() && Files.exists(Paths.get(outputFilePath)))
+		{
+			if (!Files.isRegularFile(Paths.get(outputFilePath)))
+				System.out.println("Parser: The path " + escapeString(outputFilePath) + " is not a regular file.");
+			else if (!confirmed)
+			{
+				final Console console = System.console();
+				final String answer = console == null ? "" : console.readLine("The file %s exists. Overwrite [yN]? ", escapeString(outputFilePath));
+				confirmed = answer != null && Set.of("Y", "YES", "1", "T", "TRUE").contains(answer.toUpperCase(Locale.ROOT));
+			}
+			if (confirmed)
+				break;
+			final Console console = System.console();
+			if (console == null)
+			{
+				outputFilePath = "";
+				break;
+			}
+			final String replacement = console.readLine("Specify a new output path or leave it empty for console output: ");
+			outputFilePath = handlePath(replacement == null ? "" : replacement);
+		}
+		return new Result(result.flag(), result.encoding(), outputFilePath, result.decimalPlace(), result.verbose(), result.runCount(), result.waitingTime(), confirmed);
+	}
+
+	public static String getDefaultOutputFilePath()
+	{
+		return DEFAULT_OUTPUT_FILE_NAME;
+	}
+
+	public static int getDefaultPlace()
+	{
+		return DEFAULT_PLACE;
+	}
+
+	public static String getDefaultEncoding()
+	{
+		return DEFAULT_ENCODING;
+	}
+
+	public static String getSchemeName()
+	{
+		return SCHEME_NAME;
+	}
+
+	public static Set<String> getProtectedExtensionNames()
+	{
+		return PROTECTED_EXTENSION_NAMES;
+	}
+
+	public record Result(
+		int flag,
+		String encoding,
+		String outputFilePath,
+		int decimalPlace,
+		boolean verbose,
+		int runCount,
+		double waitingTime,
+		boolean overwritingConfirmed
+	)
+	{
+	}
+}
+
+
+final class Saver
+{
+	private final String outputFilePath;
+	private final List<String> columns;
+	private final int decimalPlace;
+	private final Charset encoding;
+	private final Path folderPath;
+	private final String extensionName;
+
+	private static String escapeCsv(final Object value)
+	{
+		final String text = String.valueOf(value);
+		if (text.indexOf(',') < 0 && text.indexOf('\"') < 0 && text.indexOf('\n') < 0 && text.indexOf('\r') < 0)
+			return text;
+		return "\"" + text.replace("\"", "\"\"") + "\"";
+	}
+
+	private static String escapeHtml(final Object value)
+	{
+		return String.valueOf(value).replace("&", "&amp;").replace("\"", "&quot;").replace("'", "&#39;").replace("<", "&lt;").replace(">", "&gt;").replace("\r\n", "<br />").replace("\n", "<br />").replace("\r", "<br />");
+	}
+
+	private static String escapeJson(final Object value)
+	{
+		if (value == null)
+			return "null";
+		if (value instanceof Boolean || value instanceof Number)
+			return String.valueOf(value);
+		final StringBuilder builder = new StringBuilder("\"");
+		for (final char character : String.valueOf(value).toCharArray())
+		{
+			switch (character)
+			{
+			case '\"':
+				builder.append("\\\"");
+				break;
+			case '\\':
+				builder.append("\\\\");
+				break;
+			case '\b':
+				builder.append("\\b");
+				break;
+			case '\f':
+				builder.append("\\f");
+				break;
+			case '\n':
+				builder.append("\\n");
+				break;
+			case '\r':
+				builder.append("\\r");
+				break;
+			case '\t':
+				builder.append("\\t");
+				break;
+			default:
+				if (character < 32)
+					builder.append(String.format(Locale.ROOT, "\\u%04x", (int)character));
+				else
+					builder.append(character);
+				break;
 			}
 		}
-		return true;
+		return builder.append('\"').toString();
 	}
-	
-	
-	public static boolean DKeySantity(PARS pars, Element[] ID_B)
+
+	private static String escapeTex(final Object value)
 	{
-		for (Integer integer : pars.getS_pi())
+		return String.valueOf(value).replace("\\", "\\textbackslash{}").replace("#", "\\#").replace("$", "\\$").replace("%", "\\%").replace("&", "\\&").replace("_", "\\_").replace("{", "\\{").replace("}", "\\}").replace("<", "\\textless{}").replace(">", "\\textgreater{}").replace("^", "\\textasciicircum{}").replace("~", "\\textasciitilde{}");
+	}
+
+	private static String escapeXml(final Object value)
+	{
+		return String.valueOf(value).replace("&", "&amp;").replace("\"", "&quot;").replace("'", "&apos;").replace("<", "&lt;").replace(">", "&gt;");
+	}
+
+	private String formatValue(final Object value)
+	{
+		if (value instanceof Float || value instanceof Double)
+			return String.format(Locale.ROOT, "%." + this.decimalPlace + "f", ((Number)value).doubleValue());
+		return String.valueOf(value);
+	}
+
+	private boolean handleDirectory()
+	{
+		if (this.folderPath == null)
+			return true;
+		try
 		{
-			/* s_i_1 and s_i_2 */
-			Element s_i_1 = pars.getZp().newRandomElement().duplicate(), s_i_2 = pars.getZp().newRandomElement().duplicate();
-			
-			/* D_i_* */ 
-			Element D_i_1 = PARS.H(pars.getU(), ID_B).mul(pars.getT()[integer]), tmp_1 = pars.getZp().newRandomElement().duplicate();
-			tmp_1.setToOne();
-			Element D_i_2 = pars.getV1().powZn(tmp_1.sub(s_i_1)), D_i_3 = pars.getV2().powZn(s_i_1);
-			Element D_i_4 = pars.getV3().powZn(tmp_1.sub(s_i_2)), D_i_5 = pars.getV4().powZn(s_i_2);
-			//Element HT_i = PARS.H(pars.getU(), ID_B).mulZn(pars.getT()[integer]);
-			if (!D_i_1.mul(D_i_2).div(D_i_3).div(D_i_4).div(D_i_5).equals(pars.get_g()))
-			{
-				//return false;
-			}
-			if (!
-					(pars.getG2().powZn(pars.getAlpha()).powZn(pars.getT1().negate().mulZn(pars.getT2()))).equals
-					(pars.getG2().powZn(pars.getT1().negate().mulZn(pars.getT2()).mulZn(pars.getAlpha())))
-					)
-			{
-				//return false;
-			}
+			Files.createDirectories(this.folderPath);
+			return Files.isDirectory(this.folderPath);
 		}
-		return true;
-	}
-}
-
-class Polynomial
-{
-	private Element[] coef; //coefficients
-	private int deg;//degree of polynomial (0 for the zero polynomial)
-	private Element zero;
-	private PARS pars;
-
-	/* a*x^b */
-	public Polynomial(Element a, int b, PARS pars)
-	{
-		coef = new Element[b + 1];
-		zero = pars.getZp().newZeroElement().getImmutable();
-		this.pars = pars;
-		Arrays.fill(coef, zero);
-		coef[b] = a.duplicate().getImmutable();
-		deg = degree();
-	}
-
-	/* return the degree of this polynomial (0 for the zero polynomial) */
-	public int degree()
-	{
-		int d = 0;
-		for (int i = 0; i < coef.length; ++i)
-			if (!coef[i].equals(zero))
-				d = i;
-		return d;
-	}
-
-	/* return c = a + b */
-	public Polynomial plus(Polynomial b)
-	{
-		Polynomial a = this;
-		Polynomial c = new Polynomial(zero, Math.max(a.deg, b.deg), pars);
-		for (int i = 0; i <= a.deg; ++i)
-			c.coef[i] = c.coef[i].duplicate().add(a.coef[i].duplicate()).getImmutable();
-		for (int i = 0; i <= b.deg; ++i)
-			c.coef[i] = c.coef[i].duplicate().add(b.coef[i].duplicate()).getImmutable();
-		c.deg = c.degree();
-		return c;
-	}
-
-	/* return (a - b) */
-	public Polynomial minus(Polynomial b)
-	{
-		Polynomial a = this;
-		Polynomial c = new Polynomial(zero, Math.max(a.deg, b.deg), pars);
-		for (int i = 0; i <= a.deg; ++i)
-			c.coef[i] = c.coef[i].add(a.coef[i]);
-		for (int i = 0; i <= b.deg; ++i)
-			c.coef[i] = c.coef[i].sub(b.coef[i]);
-		c.deg = c.degree();
-		return c;
-	}
-
-	/* return (a * b) */
-	public Polynomial times(Polynomial b)
-	{
-		Polynomial a = this;
-		Polynomial c = new Polynomial(zero, a.deg + b.deg, pars);
-		for (int i = 0; i <= a.deg; ++i)
-			for (int j = 0; j <= b.deg; ++j)
-				c.coef[i + j] = c.coef[i + j].duplicate().add(a.coef[i].duplicate().mul(b.coef[j].duplicate())).getImmutable();
-		c.deg = c.degree();
-		return c;
-	}
-
-	/* return a(b(x)) (compute using Horner's method) */
-	public Polynomial compose(Polynomial b)
-	{
-		Polynomial a = this;
-		Polynomial c = new Polynomial(zero, 0, pars);
-		for (int i = a.deg; i >= 0; --i)
+		catch (final IOException exception)
 		{
-			Polynomial term = new Polynomial(a.coef[i], 0, pars);
-			c = term.plus(b.times(c));
-		}
-		return c;
-	}
-	
-	/* do a and b represent the same polynomial? */
-	public boolean eq(Polynomial b)
-	{
-		Polynomial a = this;
-		if (a.deg != b.deg)
 			return false;
-		for (int i = a.deg; i >= 0; --i)
-			if (a.coef[i] != b.coef[i])
+		}
+	}
+
+	private void saveCsv(final List<? extends List<?>> results, final char separator) throws IOException
+	{
+		try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(this.outputFilePath), this.encoding))
+		{
+			writer.write(joinSeparated(this.columns, separator));
+			writer.newLine();
+			for (final List<?> result : results)
+			{
+				final List<String> values = new ArrayList<>(result.size());
+				for (final Object value : result)
+					values.add(this.formatValue(value));
+				writer.write(joinSeparated(values, separator));
+				writer.newLine();
+			}
+		}
+	}
+
+	private static String joinSeparated(final Collection<String> values, final char separator)
+	{
+		final StringBuilder builder = new StringBuilder();
+		boolean first = true;
+		for (final String value : values)
+		{
+			if (!first)
+				builder.append(separator);
+			builder.append(separator == ',' ? escapeCsv(value) : value.replace("\t", "\\t").replace("\r", "\\r").replace("\n", "\\n"));
+			first = false;
+		}
+		return builder.toString();
+	}
+
+	private void saveHtml(final List<? extends List<?>> results) throws IOException
+	{
+		try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(this.outputFilePath), this.encoding))
+		{
+			writer.write("<!DOCTYPE html>\n<html>\n\t<head>\n\t\t<meta charset=\"" + this.encoding.name() + "\" />\n\t\t<title>" + Parser.getSchemeName() + "</title>\n\t</head>\n\t<body>\n\t\t<table>\n\t\t\t<thead><tr>");
+			for (final String column : this.columns)
+				writer.write("<th>" + escapeHtml(column) + "</th>");
+			writer.write("</tr></thead>\n\t\t\t<tbody>\n");
+			for (final List<?> result : results)
+			{
+				writer.write("\t\t\t\t<tr>");
+				for (final Object value : result)
+					writer.write("<td>" + escapeHtml(this.formatValue(value)) + "</td>");
+				writer.write("</tr>\n");
+			}
+			writer.write("\t\t\t</tbody>\n\t\t</table>\n\t</body>\n</html>");
+		}
+	}
+
+	private void saveJson(final List<? extends List<?>> results) throws IOException
+	{
+		try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(this.outputFilePath), this.encoding))
+		{
+			writer.write("{\n\t\"columns\": [");
+			for (int index = 0; index < this.columns.size(); ++index)
+			{
+				if (index > 0)
+					writer.write(", ");
+				writer.write(escapeJson(this.columns.get(index)));
+			}
+			writer.write("],\n\t\"results\": [\n");
+			for (int rowIndex = 0; rowIndex < results.size(); ++rowIndex)
+			{
+				writer.write("\t\t[");
+				final List<?> result = results.get(rowIndex);
+				for (int columnIndex = 0; columnIndex < result.size(); ++columnIndex)
+				{
+					if (columnIndex > 0)
+						writer.write(", ");
+					final Object value = result.get(columnIndex);
+					writer.write(value instanceof Float || value instanceof Double ? this.formatValue(value) : escapeJson(value));
+				}
+				writer.write("]" + (rowIndex + 1 < results.size() ? "," : "") + "\n");
+			}
+			writer.write("\t]\n}");
+		}
+	}
+
+	private void saveTex(final List<? extends List<?>> results) throws IOException
+	{
+		final int maximumLength = Math.max(this.columns.size(), results.stream().mapToInt(List::size).max().orElse(0));
+		try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(this.outputFilePath), this.encoding))
+		{
+			writer.write("\\documentclass[a4paper]{article}\n\\usepackage{booktabs}\n\\begin{document}\n\\begin{tabular}{" + "c".repeat(maximumLength) + "}\n\\toprule\n");
+			writer.write(String.join(" & ", this.columns.stream().map(Saver::escapeTex).toList()));
+			writer.write(" \\\\\n\\midrule\n");
+			for (final List<?> result : results)
+			{
+				writer.write(String.join(" & ", result.stream().map(this::formatValue).map(Saver::escapeTex).toList()));
+				writer.write(" \\\\\n");
+			}
+			writer.write("\\bottomrule\n\\end{tabular}\n\\end{document}");
+		}
+	}
+
+	private void saveXml(final List<? extends List<?>> results) throws IOException
+	{
+		try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(this.outputFilePath), this.encoding))
+		{
+			writer.write("<?xml version=\"1.0\" encoding=\"" + this.encoding.name() + "\"?>\n<data>\n\t<columns>\n");
+			for (final String column : this.columns)
+				writer.write("\t\t<column>" + escapeXml(column) + "</column>\n");
+			writer.write("\t</columns>\n\t<results>\n");
+			for (final List<?> result : results)
+			{
+				writer.write("\t\t<result>\n");
+				for (final Object value : result)
+					writer.write("\t\t\t<r>" + escapeXml(this.formatValue(value)) + "</r>\n");
+				writer.write("\t\t</result>\n");
+			}
+			writer.write("\t</results>\n</data>");
+		}
+	}
+
+	private void saveYaml(final List<? extends List<?>> results) throws IOException
+	{
+		try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(this.outputFilePath), this.encoding))
+		{
+			writer.write("columns:\n");
+			for (final String column : this.columns)
+				writer.write("  - " + escapeJson(column) + "\n");
+			writer.write("results:\n");
+			for (final List<?> result : results)
+			{
+				writer.write("  -");
+				if (result.isEmpty())
+					writer.write(" []\n");
+				else
+				{
+					writer.write("\n");
+					for (final Object value : result)
+						writer.write("    - " + escapeJson(value instanceof Float || value instanceof Double ? this.formatValue(value) : value) + "\n");
+				}
+			}
+		}
+	}
+
+	private void saveWorkbook(final List<? extends List<?>> results, final boolean xlsx) throws IOException
+	{
+		try (Workbook workbook = xlsx ? new XSSFWorkbook() : new HSSFWorkbook(); OutputStream stream = Files.newOutputStream(Paths.get(this.outputFilePath), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING))
+		{
+			final Sheet sheet = workbook.createSheet(Parser.getSchemeName());
+			final CellStyle headerStyle = workbook.createCellStyle();
+			final Font headerFont = workbook.createFont();
+			headerFont.setFontName("Times New Roman");
+			headerFont.setFontHeightInPoints((short)12);
+			headerFont.setBold(true);
+			headerStyle.setFont(headerFont);
+			headerStyle.setAlignment(HorizontalAlignment.CENTER);
+			headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+			final CellStyle valueStyle = workbook.createCellStyle();
+			final Font valueFont = workbook.createFont();
+			valueFont.setFontName("Times New Roman");
+			valueFont.setFontHeightInPoints((short)12);
+			valueStyle.setFont(valueFont);
+			valueStyle.setAlignment(HorizontalAlignment.CENTER);
+			valueStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+			final Row header = sheet.createRow(0);
+			for (int index = 0; index < this.columns.size(); ++index)
+			{
+				final Cell cell = header.createCell(index);
+				cell.setCellValue(this.columns.get(index));
+				cell.setCellStyle(headerStyle);
+			}
+			for (int rowIndex = 0; rowIndex < results.size(); ++rowIndex)
+			{
+				final Row row = sheet.createRow(rowIndex + 1);
+				final List<?> result = results.get(rowIndex);
+				for (int columnIndex = 0; columnIndex < result.size(); ++columnIndex)
+				{
+					final Cell cell = row.createCell(columnIndex);
+					final Object value = result.get(columnIndex);
+					if (value instanceof Integer || value instanceof Long)
+						cell.setCellValue(((Number)value).doubleValue());
+					else if (value instanceof Boolean)
+						cell.setCellValue(((Boolean)value).booleanValue());
+					else
+						cell.setCellValue(this.formatValue(value));
+					cell.setCellStyle(valueStyle);
+				}
+			}
+			if (xlsx)
+				sheet.createFreezePane(0, 1);
+			workbook.write(stream);
+		}
+	}
+
+	public Saver(final String outputFilePath, final List<String> columns, final int decimalPlace, final String encoding)
+	{
+		this.outputFilePath = outputFilePath == null ? Parser.getDefaultOutputFilePath() : outputFilePath;
+		this.columns = columns == null ? List.of() : List.copyOf(columns);
+		this.decimalPlace = decimalPlace >= 0 ? decimalPlace : Parser.getDefaultPlace();
+		this.encoding = encoding != null && Charset.isSupported(encoding) ? Charset.forName(encoding) : StandardCharsets.UTF_8;
+		final Path outputPath = this.outputFilePath.isEmpty() ? null : Paths.get(this.outputFilePath);
+		this.folderPath = outputPath == null ? null : outputPath.getParent();
+		final String fileName = outputPath == null || outputPath.getFileName() == null ? "" : outputPath.getFileName().toString();
+		final int dotIndex = fileName.lastIndexOf('.');
+		this.extensionName = dotIndex >= 0 ? fileName.substring(dotIndex + 1).toUpperCase(Locale.ROOT) : "TXT";
+	}
+
+	public boolean save(final List<? extends List<?>> results)
+	{
+		if (results == null)
+			return false;
+		if (this.outputFilePath.isEmpty())
+		{
+			System.out.println("Saver: " + Map.of("columns", this.columns, "results", results));
+			return true;
+		}
+		if (!this.handleDirectory())
+			return false;
+		if (Parser.getProtectedExtensionNames().contains(this.extensionName))
+			return false;
+		try
+		{
+			switch (this.extensionName)
+			{
+			case "CSV":
+				this.saveCsv(results, ',');
+				break;
+			case "TSV":
+				this.saveCsv(results, '\t');
+				break;
+			case "HTM":
+			case "HTML":
+				this.saveHtml(results);
+				break;
+			case "JSON":
+				this.saveJson(results);
+				break;
+			case "TEX":
+				this.saveTex(results);
+				break;
+			case "XML":
+				this.saveXml(results);
+				break;
+			case "YAML":
+			case "YML":
+				this.saveYaml(results);
+				break;
+			case "XLS":
+				this.saveWorkbook(results, false);
+				break;
+			case "XLSX":
+				this.saveWorkbook(results, true);
+				break;
+			case "TXT":
+				Files.writeString(Paths.get(this.outputFilePath), String.valueOf(Map.of("columns", this.columns, "results", results)), this.encoding);
+				break;
+			default:
+				throw new IOException("The " + this.extensionName + " format is not supported.");
+			}
+			System.out.println("Saver: Successfully saved the results to " + this.outputFilePath + " in the " + this.extensionName + " format.");
+			return true;
+		}
+		catch (final IOException | RuntimeException exception)
+		{
+			System.out.println("Saver: Failed to save the results to " + this.outputFilePath + " due to " + exception + ".");
+			return false;
+		}
+	}
+}
+
+
+public final class SchemeAAIBME
+{
+	private static final int EXIT_SUCCESS = 0;
+	private static final int EXIT_FAILURE = 1;
+	private static final int EOF = -1;
+	private static final int DEFAULT_N = 30;
+	private static final int DEFAULT_K = 20;
+	private static final int DEFAULT_D = 10;
+	private static final SecureRandom RANDOM = new SecureRandom();
+	private final Pairing pairing;
+	private final int securityParameter;
+	private int n = DEFAULT_N;
+	private int k = DEFAULT_K;
+	private int d = DEFAULT_D;
+	private MasterPublicKey masterPublicKey = null;
+	private MasterSecretKey masterSecretKey = null;
+	private boolean setUp = false;
+
+	private static Pairing createPairing(final CurveParameter curveParameter)
+	{
+		if (curveParameter == null || !"SS512".equalsIgnoreCase(curveParameter.curveName()))
+			throw new IllegalArgumentException("Only the symmetric SS512 mapping is supported.");
+		final int rBits = curveParameter.securityParameter() < 128 ? Math.max(32, curveParameter.securityParameter()) : 160;
+		final int qBits = curveParameter.securityParameter() < 128 ? Math.max(128, rBits * 4) : 512;
+		final TypeACurveGenerator generator = new TypeACurveGenerator(RANDOM, rBits, qBits, false);
+		final PairingParameters parameters = generator.generate();
+		PairingFactory.getInstance().setUsePBCWhenPossible(false);
+		return PairingFactory.getPairing(parameters, RANDOM);
+	}
+
+	private static double elapsedSeconds(final long startTime)
+	{
+		return (System.nanoTime() - startTime) / 1_000_000_000.0;
+	}
+
+	private static <T> List<T> shuffledCopy(final Collection<T> source)
+	{
+		final List<T> result = new ArrayList<>(source);
+		Collections.shuffle(result, RANDOM);
+		return result;
+	}
+
+	private static Set<Integer> randomSubset(final Collection<Integer> source, final int size)
+	{
+		final List<Integer> shuffled = shuffledCopy(source);
+		return new LinkedHashSet<>(shuffled.subList(0, Math.min(size, shuffled.size())));
+	}
+
+	private Element immutable(final Element element)
+	{
+		return element.getImmutable();
+	}
+
+	private Element scalar(final int value)
+	{
+		return this.immutable(this.pairing.getZr().newElement(value));
+	}
+
+	private Element randomScalar()
+	{
+		return this.immutable(this.pairing.getZr().newRandomElement());
+	}
+
+	private Element randomG1()
+	{
+		return this.immutable(this.pairing.getG1().newRandomElement());
+	}
+
+	private Element randomGT()
+	{
+		return this.immutable(this.pairing.getGT().newRandomElement());
+	}
+
+	private Element oneG1()
+	{
+		return this.immutable(this.pairing.getG1().newOneElement());
+	}
+
+	private Element oneZR()
+	{
+		return this.immutable(this.pairing.getZr().newOneElement());
+	}
+
+	private static Element add(final Element left, final Element right)
+	{
+		return left.duplicate().add(right).getImmutable();
+	}
+
+	private static Element subtract(final Element left, final Element right)
+	{
+		return left.duplicate().sub(right).getImmutable();
+	}
+
+	private static Element multiply(final Element left, final Element right)
+	{
+		return left.duplicate().mul(right).getImmutable();
+	}
+
+	private static Element divide(final Element left, final Element right)
+	{
+		return left.duplicate().div(right).getImmutable();
+	}
+
+	private static Element negate(final Element value)
+	{
+		return value.duplicate().negate().getImmutable();
+	}
+
+	private static Element power(final Element base, final Element exponent)
+	{
+		return base.duplicate().powZn(exponent).getImmutable();
+	}
+
+	private Element pair(final Element left, final Element right)
+	{
+		return this.immutable(this.pairing.pairing(left, right));
+	}
+
+	private Element product(final Collection<Element> elements)
+	{
+		if (elements == null || elements.isEmpty())
+			return this.oneZR();
+		Element result = null;
+		for (final Element element : elements)
+			result = result == null ? element.duplicate() : result.mul(element);
+		return this.immutable(result);
+	}
+
+	private Element computePolynomial(final Element x, final List<Element> coefficients)
+	{
+		if (x == null || coefficients == null || coefficients.isEmpty())
+			return null;
+		final int degree = coefficients.size() - 1;
+		Element result = coefficients.get(0).duplicate();
+		for (int index = 1; index < degree; ++index)
+		{
+			Element xPower = x.duplicate();
+			for (int powerIndex = 1; powerIndex < index; ++powerIndex)
+				xPower.mul(x);
+			result.add(coefficients.get(index).duplicate().mul(xPower));
+		}
+		Element highestPower = x.duplicate();
+		for (int powerIndex = 1; powerIndex < degree; ++powerIndex)
+			highestPower.mul(x);
+		result.add(highestPower);
+		return this.immutable(result);
+	}
+
+	private List<Element> polynomialCoefficients(final Element constant)
+	{
+		final List<Element> coefficients = new ArrayList<>(this.d);
+		coefficients.add(constant);
+		for (int index = 0; index < this.d - 2; ++index)
+			coefficients.add(this.randomScalar());
+		coefficients.add(this.oneZR());
+		return coefficients;
+	}
+
+	private Element identityHash(final Element[] vector, final Element[] identity)
+	{
+		Element result = vector[0].duplicate();
+		for (int index = 0; index < this.n; ++index)
+			result.mul(power(vector[index + 1], identity[index]));
+		return this.immutable(result);
+	}
+
+	private Element hashToG1(final byte[] value)
+	{
+		return this.immutable(this.pairing.getG1().newElementFromHash(value, 0, value.length));
+	}
+
+	private static byte[] concatenate(final byte[]... values)
+	{
+		final ByteArrayOutputStream stream = new ByteArrayOutputStream();
+		for (final byte[] value : values)
+			stream.writeBytes(value);
+		return stream.toByteArray();
+	}
+
+	private Element delta(final int index, final Set<Integer> indices, final int x)
+	{
+		final List<Element> factors = new ArrayList<>();
+		for (final int other : indices)
+			if (other != index)
+				factors.add(divide(this.scalar(x - other), this.scalar(index - other)));
+		return this.product(factors);
+	}
+
+	private boolean validIdentity(final Element[] identity)
+	{
+		if (identity == null || identity.length != this.n)
+			return false;
+		for (final Element element : identity)
+			if (element == null || element.getField() != this.pairing.getZr())
 				return false;
 		return true;
 	}
-	
-	/* use Horner's method to compute and return the polynomial evaluated at x */
-	public Element evaluate(Element x)
+
+	private boolean validSet(final Set<Integer> values, final int size)
 	{
-		Element p = zero;
-		for (int i = deg; i >= 0; --i)
-			p = coef[i].duplicate().add(x.duplicate().mul(p)).getImmutable();
-		return p;
+		if (values == null || values.size() != size)
+			return false;
+		for (final Integer value : values)
+			if (value == null || value.intValue() < 0 || value.intValue() >= this.n)
+				return false;
+		return true;
 	}
 
-	/* differentiate this polynomial and return it */
-	public Polynomial differentiate()
+	private Element[] randomIdentity()
 	{
-		if (0 == deg)
-			return new Polynomial(zero, 0, pars);
-		Polynomial deriv = new Polynomial(zero, deg - 1, pars);
-		deriv.deg = deg - 1;
-		for (int i = 0; i < deg; ++i)
-			deriv.coef[i] = coef[i + 1].mul(BigInteger.valueOf(i + 1)); //deriv.coef[i] = (i + 1) * coef[i + 1];
-		return deriv;
+		final Element[] identity = new Element[this.n];
+		for (int index = 0; index < identity.length; ++index)
+			identity[index] = this.randomScalar();
+		return identity;
 	}
-	
-	public String toString()
-	{
-		if (0 == deg)
-			return "" + coef[0];
-		else if (1 == deg)
-			return coef[1] + "x + " + coef[0];
 
-		String s = coef[deg] + "x^" + deg;
-		for (int i = deg - 1; i >= 0; --i)
+	private Set<Integer> randomIndexSet(final int size)
+	{
+		final List<Integer> universe = new ArrayList<>(this.n);
+		for (int index = 0; index < this.n; ++index)
+			universe.add(Integer.valueOf(index));
+		return randomSubset(universe, size);
+	}
+
+	private int getLengthOf(final Object object)
+	{
+		if (object == null)
+			return -1;
+		if (object instanceof Element)
+			return ((Element)object).toBytes().length;
+		if (object instanceof Integer || object instanceof Long || object instanceof EncryptionOracle || object instanceof DecryptionOracle)
+			return (this.securityParameter + 7) >>> 3;
+		if (object instanceof byte[])
+			return ((byte[])object).length;
+		if (object instanceof Object[])
+			return this.sumLengths(Arrays.asList((Object[])object));
+		if (object instanceof Collection<?>)
+			return this.sumLengths((Collection<?>)object);
+		if (object instanceof Map<?, ?>)
+			return this.sumLengths(((Map<?, ?>)object).values());
+		if (object instanceof MasterPublicKey value)
+			return this.sumLengths(List.of(value.g1(), value.g1Prime(), value.g2(), value.g3(), value.y1(), value.y2(), value.v1(), value.v2(), value.v3(), value.v4(), value.uVector(), value.tVector(), value.uPrimeVector(), value.tPrimeVector(), Integer.valueOf(0)));
+		if (object instanceof MasterSecretKey value)
+			return this.sumLengths(List.of(value.g2Alpha(), value.beta(), value.t1(), value.t2(), value.t3(), value.t4()));
+		if (object instanceof EncryptionKeyComponent value)
+			return this.sumLengths(List.of(value.first(), value.second()));
+		if (object instanceof DecryptionKeyComponent value)
+			return this.sumLengths(List.of(value.first(), value.second(), value.third(), value.fourth(), value.fifth()));
+		if (object instanceof CipherText value)
+			return this.sumLengths(List.of(value.encryptionSet(), value.interpolationSet(), value.c(), value.c1(), value.c2(), value.c3(), value.c4(), value.c5(), value.c6(), value.c7(), value.c8()));
+		return -1;
+	}
+
+	private int sumLengths(final Collection<?> values)
+	{
+		long total = 0L;
+		for (final Object value : values)
 		{
-			if (coef[i].equals(zero))
-				continue;
+			final int length = this.getLengthOf(value);
+			if (length < 0)
+				return -1;
+			total += length;
+			if (total > Integer.MAX_VALUE)
+				return Integer.MAX_VALUE;
+		}
+		return (int)total;
+	}
+
+	private static Object printableSize(final int size)
+	{
+		return size < 0 ? "N/A" : Integer.valueOf(size);
+	}
+
+	private static boolean metricPositive(final Object metric)
+	{
+		return metric instanceof Number && ((Number)metric).doubleValue() > 0.0;
+	}
+
+	private static boolean averagedResultValid(final List<Object> result, final int runCount)
+	{
+		if (result == null || result.size() != 29)
+			return false;
+		for (int index = 6; index < 12; ++index)
+		{
+			final Object validator = result.get(index);
+			if (validator instanceof Boolean)
+			{
+				if (runCount != 1 || !((Boolean)validator).booleanValue())
+					return false;
+			}
+			else if (!(validator instanceof Integer) || ((Integer)validator).intValue() != runCount)
+				return false;
+		}
+		for (int index = 12; index < result.size(); ++index)
+			if (!metricPositive(result.get(index)))
+				return false;
+		return true;
+	}
+
+	private static List<Object> averageResults(final List<RunResult> runs)
+	{
+		if (runs.isEmpty())
+			return List.of();
+		final List<Object> result = new ArrayList<>(runs.get(0).asList());
+		final int queryLength = 6;
+		final int validatorLength = 6;
+		if (runs.size() > 1)
+			for (int index = queryLength; index < queryLength + validatorLength; ++index)
+			{
+				int successes = 0;
+				for (final RunResult run : runs)
+					if (Boolean.TRUE.equals(run.asList().get(index)))
+						++successes;
+				result.set(index, Integer.valueOf(successes));
+			}
+		for (int index = queryLength + validatorLength; index < result.size(); ++index)
+		{
+			double sum = 0.0;
+			boolean valid = true;
+			for (final RunResult run : runs)
+			{
+				final Object metric = run.asList().get(index);
+				if (!metricPositive(metric))
+				{
+					valid = false;
+					break;
+				}
+				sum += ((Number)metric).doubleValue();
+			}
+			if (!valid)
+				result.set(index, "N/A");
 			else
-				s = s + " + " + (coef[i]);
-			if (1 == i)
-				s = s + "x";
-			else if (i > 1)
-				s = s + "x^" + i;
+			{
+				final double average = sum / runs.size();
+				result.set(index, average == Math.rint(average) ? Integer.valueOf((int)average) : Double.valueOf(average));
+			}
 		}
-		return s;
+		result.set(5, Integer.valueOf(runs.size()));
+		return result;
 	}
-	
-	/*
-	public static void main(String[] args)
+
+	private static String formatWaitingTime(final double waitingTime, final int decimalPlace)
 	{
-		int d = 10, n = 10;
-		PARS pars = Setup.setup(n, k, d);
-		Element root = pars.getZp().newRandomElement();
-		Polynomial poly = Utils.newRandomPolynomial(d, root, pars);
-		System.out.println("root        = " + root);
-		System.out.println("p(x)        = " + poly);
-		System.out.println("p(3)        = " + poly.evaluate(pars.getZp().newZeroElement()));
+		return String.format(Locale.ROOT, "%." + decimalPlace + "f", waitingTime).replaceFirst("0+$", "").replaceFirst("\\.$", "");
 	}
-	*/
-}
 
-class Enc
-{
-	public static ArrayList<Element[]> enc(PARS pars, Element[] ID_A, Element[] P_B, Element[][] ek, Element M)
+	public SchemeAAIBME()
 	{
-		/* random set S'' */
-		ArrayList<Integer> nbs = pars.randNbs(), S = new ArrayList<Integer>(), S_pi_pi = new ArrayList<Integer>(), I = new ArrayList<Integer>();
-		for (int i = 0; i < pars.getK(); ++i)
-		{
-			S.add(nbs.get(i));
-			I.add(nbs.get(i));
-		}
-		Collections.shuffle(nbs);
-		for (int i = 0; i < pars.getK(); ++i)
-			S_pi_pi.add(nbs.get(i));
-		pars.setS(S);
-		pars.setS_pi_pi(S_pi_pi);
-		
-		/* s, si1, si2 */
-		Element s = pars.getZp().newRandomElement().getImmutable();
-		Element s_i_1 = pars.getZp().newRandomElement().getImmutable();
-		Element s_i_2 = pars.getZp().newRandomElement().getImmutable();
+		this(new CurveParameter("SS512", 512));
+	}
 
-		/* d - 1 degree poly */
-		Polynomial q = Utils.newRandomPolynomial(pars.getD() - 1, s, pars);
-		
-		/* sender computing (1) */
-		Element K_s = pars.getY1().powZn(s);
-		Element K_l = pars.getY2().powZn(s);
-		Element C = M.mul(K_s).mul(K_l);
-		Element[] C_i_1 = new Element[pars.getK()], C_i_2 = new Element[pars.getK()], C_i_3 = new Element[pars.getK()], C_i_4 = new Element[pars.getK()], C_i_5 = new Element[pars.getK()];
-		int walker = 0;
-		for (int i : S_pi_pi)
-		{
-			C_i_1[walker] = PARS.H(pars.getU(), P_B).mul(pars.getT()[i]).powZn(q.evaluate(ID_A[i]));
-			C_i_2[walker] = pars.getV1().powZn(q.evaluate(ID_A[i]).sub(s_i_1));
-			C_i_3[walker] = pars.getV2().powZn(s_i_1);
-			C_i_4[walker] = pars.getV3().powZn(q.evaluate(ID_A[i]).sub(s_i_2));
-			C_i_5[walker++] = pars.getV4().powZn(s_i_2);
-		}
-		
-		/* sender computing (2) */
-		Element[] C_i_6 = new Element[pars.getK()], C_i_7 = new Element[pars.getK()], C_i_8 = new Element[pars.getK()];
-		walker = 0;
-		for (int i : S)
-		{
-			Element zi = pars.getZp().newRandomElement().duplicate(), zi_pi = pars.getZp().newRandomElement().duplicate();
-			C_i_6[walker] = pars.get_g().powZn(zi_pi);
-			
-			/* If you have (unknown) exceptions here, please check your JDK and JPBC version */
-			try // if not in a group
-			{
-				C_i_7[walker] = (ID_A[S.get(2)].mul(pars.get_g().powZn(zi))).powZn(s);
-				C_i_8[walker++] = (ID_A[S.get(1)].powZn(s)).duplicate().mul(PARS.H(pars.getU_pi(), ID_A).mul(pars.getT_pi()[i]).powZn(s.mul(zi)));
-			}
-			catch (Throwable e)
-			{
-				C_i_7[walker] = pars.getZp().newRandomElement().duplicate();
-				C_i_8[walker++] = pars.getZp().newRandomElement().duplicate();
-			}
-		}
-		
-		/* I = S || S'' */
-		I.retainAll(S_pi_pi);
-		ArrayList<Element> I_star = new ArrayList<Element>();
-		
-		/* if |I| >= d -> randomly select */
-		if (I.size() >= pars.getD())
-		{
-			Collections.shuffle(I);
-			for (int i = 0; i < pars.getD(); ++i)
-			{
-				Element ele = pars.getZp().newRandomElement().duplicate(); // initial
-				ele.set(I.get(i).intValue());
-				I_star.add(ele);
-			}
-		}
+	public SchemeAAIBME(final CurveParameter curveParameter)
+	{
+		this(createPairing(curveParameter), curveParameter.securityParameter());
+	}
 
-		/* if |I| < d -> adds d - |I| random numbers from Zp* */
+	public SchemeAAIBME(final Pairing pairing, final int securityParameter)
+	{
+		if (pairing == null || !pairing.isSymmetric())
+			throw new IllegalArgumentException("The scheme requires a symmetric pairing.");
+		this.pairing = pairing;
+		this.securityParameter = securityParameter >= 1 ? securityParameter : 512;
+	}
+
+	public SetupResult Setup(final int requestedN, final int requestedK, final int requestedD)
+	{
+		this.setUp = false;
+		if (requestedN >= 1 && requestedD >= 1 && requestedD <= requestedK && requestedK <= requestedN)
+		{
+			this.n = requestedN;
+			this.k = requestedK;
+			this.d = requestedD;
+		}
 		else
-			while (I_star.size() < pars.getD())
-				I_star.add(pars.getZp().newRandomElement().getImmutable());
-		
-		Element[] tmp_array_1 = new Element[S_pi_pi.size()], tmp_array_2 = new Element[I_star.size()]; 
-		walker = 0;
-		for (Integer ele : S_pi_pi)
 		{
-			Element element = pars.getZp().newRandomElement().duplicate(); // initial
-			element.set(ele);
-			tmp_array_1[walker++] = element;
+			this.n = DEFAULT_N;
+			this.k = DEFAULT_K;
+			this.d = DEFAULT_D;
+			System.out.println("Setup: Invalid n, k, or d was replaced with the default values.");
 		}
-		walker = 0;
-		for (Element ele : I_star)
-			tmp_array_2[walker++] = ele;
-		
-		ArrayList<Element[]> CT = new ArrayList<>();
-		CT.add(tmp_array_1);
-		CT.add(tmp_array_2);
-		CT.add(new Element[] {C});
-		CT.add(C_i_1);
-		CT.add(C_i_2);
-		CT.add(C_i_3);
-		CT.add(C_i_4);
-		CT.add(C_i_5);
-		CT.add(C_i_6);
-		CT.add(C_i_7);
-		CT.add(C_i_8);
-		return CT;
+		final Element g = this.oneG1();
+		final Element alpha = this.randomScalar();
+		final Element beta = this.randomScalar();
+		final Element t1 = this.randomScalar();
+		final Element t2 = this.randomScalar();
+		final Element t3 = this.randomScalar();
+		final Element t4 = this.randomScalar();
+		final Element g2 = this.randomG1();
+		final Element g3 = this.randomG1();
+		final Element[] tVector = new Element[this.n];
+		final Element[] tPrimeVector = new Element[this.n];
+		final Element[] uVector = new Element[this.n + 1];
+		final Element[] uPrimeVector = new Element[this.n + 1];
+		for (int index = 0; index < this.n; ++index)
+		{
+			tVector[index] = this.randomG1();
+			tPrimeVector[index] = this.randomG1();
+		}
+		for (int index = 0; index <= this.n; ++index)
+		{
+			uVector[index] = this.randomG1();
+			uPrimeVector[index] = this.randomG1();
+		}
+		final Element g1 = power(g, alpha);
+		final Element g1Prime = power(g, beta);
+		final Element y1 = power(this.pair(g1, g2), multiply(t1, t2));
+		final Element y2 = power(this.pair(g3, g), beta);
+		final Element v1 = power(g, t1);
+		final Element v2 = power(g, t2);
+		final Element v3 = power(g, t3);
+		final Element v4 = power(g, t4);
+		this.masterPublicKey = new MasterPublicKey(g1, g1Prime, g2, g3, y1, y2, v1, v2, v3, v4, uVector, tVector, uPrimeVector, tPrimeVector);
+		this.masterSecretKey = new MasterSecretKey(power(g2, alpha), beta, t1, t2, t3, t4);
+		this.setUp = true;
+		return new SetupResult(this.masterPublicKey, this.masterSecretKey);
 	}
-}
 
-class EKGen
-{
-	public static Element[][] eKGen(PARS pars, Element[] ID_A)
+	public Map<Integer, EncryptionKeyComponent> EKGen(final Element[] requestedIdentity, final Set<Integer> requestedSet)
 	{
-		/* q */
-		Polynomial q = Utils.newRandomPolynomial(pars.getD() - 1, pars.getBeta(), pars); // $q(0) = \beta$
-		
-		/* Elmenet ek_ID_A */
-		Element[][] eRet = new Element[pars.getK()][2];
-		
-		/* k-out-of-n OT */
-		int[] k_out_of_n = new int[pars.getK()];
-		ArrayList<Integer> nbs = pars.randNbs();
-		for (int i = 0; i < pars.getK(); ++i)
-			k_out_of_n[i] = nbs.get(i);
-		
-		/* eRet */
-		int walker = 0;
-		for (int i : k_out_of_n)
+		if (!this.setUp)
+			this.Setup(DEFAULT_N, DEFAULT_K, DEFAULT_D);
+		final Element[] identity = this.validIdentity(requestedIdentity) ? requestedIdentity : this.randomIdentity();
+		final Set<Integer> selected = this.validSet(requestedSet, this.d) ? new LinkedHashSet<>(requestedSet) : this.randomIndexSet(this.d);
+		final Element g = this.oneG1();
+		final Element[] randomVector = new Element[this.n];
+		for (int index = 0; index < this.n; ++index)
+			randomVector[index] = this.randomScalar();
+		final List<Element> coefficients = this.polynomialCoefficients(this.masterSecretKey.beta());
+		final Element identityValue = this.identityHash(this.masterPublicKey.uVector(), identity);
+		final List<EncryptionKeyComponent> completeKey = new ArrayList<>(this.n);
+		for (int index = 0; index < this.n; ++index)
 		{
-			Element r_i = pars.getZp().newRandomElement().getImmutable();
-			eRet[walker][0] = pars.getG3().powZn(q.evaluate(ID_A[i])).mul(PARS.H(pars.getU_pi(), ID_A).mul(pars.getT_pi()[i]).powZn(r_i)).getImmutable();
-			eRet[walker++][1] = pars.get_g().powZn(r_i).getImmutable();
+			final Element qAtIndex = this.computePolynomial(this.scalar(index), coefficients);
+			final Element base = multiply(identityValue, this.masterPublicKey.tVector()[index]);
+			final Element first = multiply(power(this.masterPublicKey.g3(), qAtIndex), power(base, randomVector[index]));
+			final Element second = power(g, randomVector[index]);
+			completeKey.add(new EncryptionKeyComponent(first, second));
 		}
-		return eRet;
+		final Map<Integer, EncryptionKeyComponent> result = new LinkedHashMap<>();
+		for (final int index : selected)
+			result.put(Integer.valueOf(index), completeKey.get(index));
+		return result;
 	}
-}
 
-class DKGen
-{	
-	public static Element[][] dKGen(PARS pars, Element[] ID_B, Element[] msk)
+	public Map<Integer, DecryptionKeyComponent> DKGen(final Element[] requestedIdentity, final Set<Integer> requestedSet)
 	{
-		/* ki1 ki2 */
-		Element[] k1 = new Element[pars.getN()], k2 = new Element[pars.getN()];
-		for (int i = 0; i < pars.getN(); ++i)
+		if (!this.setUp)
+			this.Setup(DEFAULT_N, DEFAULT_K, DEFAULT_D);
+		final Element[] identity = this.validIdentity(requestedIdentity) ? requestedIdentity : this.randomIdentity();
+		final Set<Integer> selected = this.validSet(requestedSet, this.d) ? new LinkedHashSet<>(requestedSet) : this.randomIndexSet(this.d);
+		final Element g = this.oneG1();
+		final Element identityValue = this.identityHash(this.masterPublicKey.uVector(), identity);
+		final List<DecryptionKeyComponent> completeKey = new ArrayList<>(this.n);
+		for (int index = 0; index < this.n; ++index)
 		{
-			k1[i] = pars.getZp().newRandomElement().getImmutable();
-			k2[i] = pars.getZp().newRandomElement().getImmutable();
+			final Element k1 = this.randomScalar();
+			final Element k2 = this.randomScalar();
+			final Element base = multiply(identityValue, this.masterPublicKey.tVector()[index]);
+			final Element firstExponent = add(multiply(multiply(k1, this.masterSecretKey.t1()), this.masterSecretKey.t2()), multiply(multiply(k2, this.masterSecretKey.t3()), this.masterSecretKey.t4()));
+			final Element first = power(g, firstExponent);
+			final Element second = multiply(power(this.masterSecretKey.g2Alpha(), negate(this.masterSecretKey.t2())), power(base, negate(multiply(k1, this.masterSecretKey.t2()))));
+			final Element third = multiply(power(this.masterSecretKey.g2Alpha(), negate(this.masterSecretKey.t1())), power(base, negate(multiply(k1, this.masterSecretKey.t1()))));
+			final Element fourth = power(base, negate(multiply(k2, this.masterSecretKey.t4())));
+			final Element fifth = power(base, negate(multiply(k2, this.masterSecretKey.t3())));
+			completeKey.add(new DecryptionKeyComponent(first, second, third, fourth, fifth));
 		}
-		
-		/* compute dk_ID_B */
-		Element[][] dk_ID_B = new Element[pars.getN()][5];
-		for (int i = 0; i < pars.getN(); ++i)
-		{
-			dk_ID_B[i][0] = pars.get_g().powZn(k1[i].mul(pars.getT1().mul(pars.getT2())).add(k2[i].mul(pars.getT3().mul(pars.getT4()))));
-			dk_ID_B[i][1] = pars.getG2().powZn(pars.getAlpha().negate().mul(pars.getT2())).mul(PARS.H(pars.getU(), ID_B).mul(pars.getT()[1]).powZn(k1[i].mul(pars.getT2())));
-			dk_ID_B[i][2] = pars.get_g().powZn(pars.getAlpha().mul(pars.getT1())).mul(PARS.H(pars.getU(), ID_B).mul(pars.getT()[2].powZn(k1[i].mul(pars.getT1()))));
-			dk_ID_B[i][3] = PARS.H(pars.getU(), ID_B).mul(pars.getT()[2]).powZn(k2[i].mul(pars.getT4()));
-			dk_ID_B[i][4] = PARS.H(pars.getU(), ID_B).mul(pars.getT()[3]).powZn(k2[i].mul(pars.getT3()));
-		}
-		
-		/* random set */
-		ArrayList<Integer> nbs = pars.randNbs();
-		
-		/* k_out_of_n OT */
-		ArrayList<Integer> S_pi = new ArrayList<Integer>();
-		for (int i = 0; i < pars.getK(); ++i)
-			S_pi.add(nbs.get(i));
-		pars.setS_pi(S_pi);
-		
-		/* finally */
-		Element[][] eRet = new Element[pars.getK()][5];
-		int walker = 0;
-		for (Integer i : S_pi)
-		{
-			for (int j = 0; j < 5; ++j)
-				eRet[walker][j] = dk_ID_B[i][j];
-			++walker;
-		}
-		
-		return eRet;
+		Collections.shuffle(completeKey, RANDOM);
+		final Map<Integer, DecryptionKeyComponent> result = new LinkedHashMap<>();
+		for (final int index : selected)
+			result.put(Integer.valueOf(index), completeKey.get(index));
+		return result;
 	}
-}
 
-class Dec
-{
-	public static Element dec(PARS pars, Element[] ID_A, Element[] P_A, Element[] ID_B, Element[] P_B, Element[] D_i, Element[] d_i, Element[] D_i_prime, Element[] d_i_prime, Element C_0, Element C_1, Element C_2, Element[] C_1_i, Element[] C_2_i, Element[] C_3_i, Element[] C_4_i, Element[] C_5_i)
+	public CipherText Enc(
+		final Map<Integer, EncryptionKeyComponent> requestedEncryptionKey,
+		final Element[] requestedIdentityA,
+		final Element[] requestedIdentityB,
+		final Set<Integer> requestedCipherSet,
+		final Set<Integer> requestedEncryptionSet,
+		final Element requestedMessage
+	)
 	{
-		Element[] W_A_prime = Utils.intersect(P_A, ID_A);
-		Element[] W_B_prime = Utils.intersect(P_B, ID_B);
-		
-		/* Judge */
-		if (W_A_prime.length >= pars.getD() && W_B_prime.length >= pars.getD())
+		if (!this.setUp)
+			this.Setup(DEFAULT_N, DEFAULT_K, DEFAULT_D);
+		final Set<Integer> cipherSet = this.validSet(requestedCipherSet, this.k) ? new LinkedHashSet<>(requestedCipherSet) : this.randomIndexSet(this.k);
+		final Set<Integer> encryptionSet = this.validSet(requestedEncryptionSet, this.d) ? new LinkedHashSet<>(requestedEncryptionSet) : randomSubset(cipherSet, this.d);
+		final Element[] identityA = this.validIdentity(requestedIdentityA) ? requestedIdentityA : this.randomIdentity();
+		final Map<Integer, EncryptionKeyComponent> encryptionKey = requestedEncryptionKey != null && requestedEncryptionKey.size() == this.d ? requestedEncryptionKey : this.EKGen(identityA, encryptionSet);
+		final Element[] identityB = this.validIdentity(requestedIdentityB) ? requestedIdentityB : this.randomIdentity();
+		final Element message = requestedMessage != null && requestedMessage.getField() == this.pairing.getGT() ? requestedMessage : this.randomGT();
+		final Element g = this.oneG1();
+		final Element s = this.randomScalar();
+		final Element[] s1Vector = new Element[this.n];
+		final Element[] s2Vector = new Element[this.n];
+		for (int index = 0; index < this.n; ++index)
 		{
-			Element[] W_A = new Element[pars.getD()];
-			System.arraycopy(W_A_prime, 0, W_A, 0, W_A.length);
-			Element[] W_B = new Element[pars.getD()];
-			System.arraycopy(W_B_prime, 0, W_B, 0, W_B.length);
+			s1Vector[index] = this.randomScalar();
+			s2Vector[index] = this.randomScalar();
+		}
+		final List<Element> coefficients = this.polynomialCoefficients(s);
+		final Element ks = power(this.masterPublicKey.y1(), s);
+		final Element kl = power(this.masterPublicKey.y2(), s);
+		final Element c = multiply(multiply(message, ks), kl);
+		final Element identityBValue = this.identityHash(this.masterPublicKey.uVector(), identityB);
+		final Map<Integer, Element> c1 = new LinkedHashMap<>();
+		final Map<Integer, Element> c2 = new LinkedHashMap<>();
+		final Map<Integer, Element> c3 = new LinkedHashMap<>();
+		final Map<Integer, Element> c4 = new LinkedHashMap<>();
+		final Map<Integer, Element> c5 = new LinkedHashMap<>();
+		for (final int index : cipherSet)
+		{
+			final Element qAtIndex = this.computePolynomial(this.scalar(index), coefficients);
+			c1.put(Integer.valueOf(index), power(multiply(identityBValue, this.masterPublicKey.tVector()[index]), qAtIndex));
+			c2.put(Integer.valueOf(index), power(this.masterPublicKey.v1(), subtract(qAtIndex, s1Vector[index])));
+			c3.put(Integer.valueOf(index), power(this.masterPublicKey.v2(), s1Vector[index]));
+			c4.put(Integer.valueOf(index), power(this.masterPublicKey.v3(), subtract(qAtIndex, s2Vector[index])));
+			c5.put(Integer.valueOf(index), power(this.masterPublicKey.v4(), s2Vector[index]));
+		}
+		final Element identityAValue = this.identityHash(this.masterPublicKey.uPrimeVector(), identityA);
+		final Map<Integer, Element> c6 = new LinkedHashMap<>();
+		final Map<Integer, Element> c7 = new LinkedHashMap<>();
+		final Map<Integer, Element> c8 = new LinkedHashMap<>();
+		for (final int index : encryptionSet)
+		{
+			final Element z = this.randomScalar();
+			final Element zPrime = this.randomScalar();
+			final Element c6Value = power(g, zPrime);
+			final EncryptionKeyComponent component = encryptionKey.get(Integer.valueOf(index));
+			final Element c7Value = power(multiply(component.second(), power(g, z)), s);
+			final byte[] transcript = concatenate(c.toBytes(), c1.get(Integer.valueOf(index)).toBytes(), c2.get(Integer.valueOf(index)).toBytes(), c3.get(Integer.valueOf(index)).toBytes(), c4.get(Integer.valueOf(index)).toBytes(), c5.get(Integer.valueOf(index)).toBytes(), c6Value.toBytes(), c7Value.toBytes());
+			final Element c8Value = multiply(multiply(power(component.first(), s), power(multiply(identityAValue, this.masterPublicKey.tPrimeVector()[index]), multiply(s, z))), this.hashToG1(transcript));
+			c6.put(Integer.valueOf(index), c6Value);
+			c7.put(Integer.valueOf(index), c7Value);
+			c8.put(Integer.valueOf(index), c8Value);
+		}
+		final Set<Integer> intersection = new LinkedHashSet<>(encryptionSet);
+		intersection.retainAll(cipherSet);
+		final Set<Integer> interpolationSet = intersection.size() >= this.d ? randomSubset(intersection, this.d) : new LinkedHashSet<>(intersection);
+		while (interpolationSet.size() < this.d)
+			interpolationSet.add(Integer.valueOf(RANDOM.nextInt(this.n)));
+		return new CipherText(encryptionSet, interpolationSet, c, c1, c2, c3, c4, c5, c6, c7, c8);
+	}
 
-			Element K_s_prime = pars.getGT().newOneElement().getImmutable();
-			
-			/* If you have (unknown) exceptions here, please check your JDK and JPBC version */
-			for (int i = 0; i < W_B.length; ++i)
-				try
-				{
-					K_s_prime = K_s_prime.mul(pars.getPairing().pairing(D_i[i].duplicate(), C_1.duplicate()).div(pars.getPairing().pairing(d_i[i].duplicate(), C_1_i[i].duplicate())).powZn(Utils.delta(pars.getZp().newZeroElement(), W_B[i], W_B, pars))).getImmutable();
-				}
-				catch (Throwable e) {}
-			
-			Element K_l_prime = pars.getGT().newOneElement().getImmutable();
-			for (int i = 0; i < W_A.length; ++i)
-				try
-				{
-					K_l_prime = K_l_prime.mul(pars.getPairing().pairing(D_i_prime[i].duplicate(), C_1.duplicate()).mul(pars.getPairing().pairing(pars.getPairing().getG1().newElementFromBytes(Utils.byteMergerAll(C_0.toBytes(), C_1.toBytes(), C_1_i[i].toBytes(), C_2_i[i].toBytes(), C_3_i[i].toBytes(), C_4_i[i].toBytes())).duplicate(),C_4_i[i].duplicate()).duplicate().mul(pars.getPairing().pairing(C_3_i[i].duplicate(), C_2_i[i].duplicate()).duplicate())).div(pars.getPairing().pairing(d_i_prime[i].duplicate(), C_2_i[i].duplicate()).duplicate().mul(pars.getPairing().pairing(C_5_i[i].duplicate(), pars.get_g().duplicate()).duplicate())).powZn(Utils.delta(pars.getZp().newZeroElement(), W_A[i], W_A, pars))).getImmutable();
-				}
-				catch (Throwable e) {}
+	public Object Dec(
+		final Map<Integer, DecryptionKeyComponent> requestedDecryptionKey,
+		final Element[] requestedIdentityB,
+		final Element[] requestedIdentityA,
+		final Set<Integer> requestedCipherSet,
+		final Set<Integer> requestedDecryptionSet,
+		final CipherText requestedCipherText
+	)
+	{
+		if (!this.setUp)
+			this.Setup(DEFAULT_N, DEFAULT_K, DEFAULT_D);
+		final Set<Integer> cipherSet = this.validSet(requestedCipherSet, this.k) ? new LinkedHashSet<>(requestedCipherSet) : this.randomIndexSet(this.k);
+		final Set<Integer> decryptionSet = this.validSet(requestedDecryptionSet, this.d) ? new LinkedHashSet<>(requestedDecryptionSet) : randomSubset(cipherSet, this.d);
+		final Element[] identityB = this.validIdentity(requestedIdentityB) ? requestedIdentityB : this.randomIdentity();
+		final Map<Integer, DecryptionKeyComponent> decryptionKey = requestedDecryptionKey != null && requestedDecryptionKey.size() == this.d ? requestedDecryptionKey : this.DKGen(identityB, decryptionSet);
+		final Element[] identityA = this.validIdentity(requestedIdentityA) ? requestedIdentityA : this.randomIdentity();
+		final CipherText cipherText;
+		if (requestedCipherText == null)
+		{
+			final Set<Integer> encryptionSet = randomSubset(cipherSet, this.d);
+			cipherText = this.Enc(this.EKGen(identityA, encryptionSet), identityA, identityB, cipherSet, encryptionSet, this.randomGT());
+		}
+		else
+			cipherText = requestedCipherText;
+		final Map<Integer, byte[]> transcripts = new LinkedHashMap<>();
+		for (final int index : cipherText.interpolationSet())
+			transcripts.put(Integer.valueOf(index), concatenate(cipherText.c().toBytes(), cipherText.c1().get(Integer.valueOf(index)).toBytes(), cipherText.c2().get(Integer.valueOf(index)).toBytes(), cipherText.c3().get(Integer.valueOf(index)).toBytes(), cipherText.c4().get(Integer.valueOf(index)).toBytes(), cipherText.c5().get(Integer.valueOf(index)).toBytes(), cipherText.c6().get(Integer.valueOf(index)).toBytes(), cipherText.c7().get(Integer.valueOf(index)).toBytes()));
+		final Element g = this.oneG1();
+		final Element identityAValue = this.identityHash(this.masterPublicKey.uPrimeVector(), identityA);
+		final List<Element> klFactors = new ArrayList<>();
+		for (final int index : cipherText.interpolationSet())
+		{
+			final Element numerator = this.pair(cipherText.c8().get(Integer.valueOf(index)), g);
+			final Element denominator = multiply(this.pair(multiply(identityAValue, this.masterPublicKey.tPrimeVector()[index]), cipherText.c7().get(Integer.valueOf(index))), this.pair(this.hashToG1(transcripts.get(Integer.valueOf(index))), cipherText.c6().get(Integer.valueOf(index))));
+			klFactors.add(power(divide(numerator, denominator), this.delta(index, cipherText.interpolationSet(), 0)));
+		}
+		final Element klPrime = this.product(klFactors);
+		final Set<Integer> intersection = new LinkedHashSet<>(decryptionSet);
+		intersection.retainAll(cipherSet);
+		final Set<Integer> interpolationSet = intersection.size() >= this.d ? randomSubset(intersection, this.d) : intersection;
+		while (interpolationSet.size() < this.d)
+			interpolationSet.add(Integer.valueOf(RANDOM.nextInt(this.n)));
+		final List<Element> ksFactors = new ArrayList<>();
+		for (final int index : interpolationSet)
+		{
+			final DecryptionKeyComponent component = decryptionKey.get(Integer.valueOf(index));
+			final Element numerator = multiply(multiply(this.pair(cipherText.c1().get(Integer.valueOf(index)), component.first()), this.pair(cipherText.c2().get(Integer.valueOf(index)), component.second())), this.pair(cipherText.c3().get(Integer.valueOf(index)), component.third()));
+			final Element denominator = multiply(this.pair(cipherText.c4().get(Integer.valueOf(index)), component.fourth()), this.pair(cipherText.c5().get(Integer.valueOf(index)), component.fifth()));
+			ksFactors.add(power(divide(numerator, denominator), this.delta(index, interpolationSet, 0)));
+		}
+		final Element ksPrime = this.product(ksFactors);
+		final Set<Integer> encryptionIntersection = new LinkedHashSet<>(cipherText.encryptionSet());
+		encryptionIntersection.retainAll(cipherSet);
+		final Set<Integer> decryptionIntersection = new LinkedHashSet<>(decryptionSet);
+		decryptionIntersection.retainAll(cipherSet);
+		return encryptionIntersection.size() >= this.d && decryptionIntersection.size() >= this.d ? multiply(multiply(cipherText.c(), ksPrime), klPrime) : Boolean.FALSE;
+	}
+
+	public boolean EKeySanity(final Map<Integer, EncryptionKeyComponent> requestedKey, final Element[] requestedIdentity, final Set<Integer> requestedSet)
+	{
+		if (!this.setUp)
+			this.Setup(DEFAULT_N, DEFAULT_K, DEFAULT_D);
+		final Set<Integer> selected = this.validSet(requestedSet, this.d) ? new LinkedHashSet<>(requestedSet) : this.randomIndexSet(this.d);
+		final Element[] identity = this.validIdentity(requestedIdentity) ? requestedIdentity : this.randomIdentity();
+		final Map<Integer, EncryptionKeyComponent> key = requestedKey != null && requestedKey.size() == this.d ? requestedKey : this.EKGen(identity, selected);
+		final Set<Integer> interpolationSet = selected.size() >= this.d ? randomSubset(selected, this.d) : new LinkedHashSet<>(selected);
+		while (interpolationSet.size() < this.d)
+			interpolationSet.add(Integer.valueOf(RANDOM.nextInt(this.n)));
+		final Element g = this.oneG1();
+		final Element identityValue = this.identityHash(this.masterPublicKey.uPrimeVector(), identity);
+		final List<Element> factors = new ArrayList<>();
+		for (final int index : interpolationSet)
+		{
+			final EncryptionKeyComponent component = key.get(Integer.valueOf(index));
+			final Element numerator = this.pair(component.first(), g);
+			final Element denominator = this.pair(multiply(identityValue, this.masterPublicKey.tPrimeVector()[index]), component.second());
+			factors.add(power(divide(numerator, denominator), this.delta(index, interpolationSet, 0)));
+		}
+		return this.product(factors).isEqual(this.pair(this.masterPublicKey.g3(), this.masterPublicKey.g1Prime()));
+	}
+
+	public boolean DKeySanity(final Map<Integer, DecryptionKeyComponent> requestedKey, final Element[] requestedIdentity, final Set<Integer> requestedSet)
+	{
+		if (!this.setUp)
+			this.Setup(DEFAULT_N, DEFAULT_K, DEFAULT_D);
+		final Set<Integer> selected = this.validSet(requestedSet, this.d) ? new LinkedHashSet<>(requestedSet) : this.randomIndexSet(this.d);
+		final Element[] identity = this.validIdentity(requestedIdentity) ? requestedIdentity : this.randomIdentity();
+		final Map<Integer, DecryptionKeyComponent> key = requestedKey != null && requestedKey.size() == this.d ? requestedKey : this.DKGen(identity, selected);
+		final Element identityValue = this.identityHash(this.masterPublicKey.uVector(), identity);
+		final Element reciprocal = this.masterPublicKey.y1().duplicate().invert().getImmutable();
+		for (final int index : selected)
+		{
+			final Element s1 = this.randomScalar();
+			final Element s2 = this.randomScalar();
+			final Element d1 = multiply(identityValue, this.masterPublicKey.tVector()[index]);
+			final Element d2 = power(this.masterPublicKey.v1(), subtract(this.oneZR(), s1));
+			final Element d3 = power(this.masterPublicKey.v2(), s1);
+			final Element d4 = power(this.masterPublicKey.v3(), subtract(this.oneZR(), s2));
+			final Element d5 = power(this.masterPublicKey.v4(), s2);
+			final DecryptionKeyComponent component = key.get(Integer.valueOf(index));
+			final Element numerator = multiply(multiply(this.pair(d1, component.first()), this.pair(d2, component.second())), this.pair(d3, component.third()));
+			final Element denominator = multiply(this.pair(d4, component.fourth()), this.pair(d5, component.fifth()));
+			if (!divide(numerator, denominator).isEqual(reciprocal))
+				return false;
+		}
+		return true;
+	}
+
+	public boolean Trace1(final EncryptionOracle oracle, final Map<Integer, EncryptionKeyComponent> requestedKey, final Element[] requestedIdentity, final Set<Integer> requestedSet)
+	{
+		if (!this.setUp)
+			this.Setup(DEFAULT_N, DEFAULT_K, DEFAULT_D);
+		final Set<Integer> selected = this.validSet(requestedSet, this.d) ? new LinkedHashSet<>(requestedSet) : this.randomIndexSet(this.d);
+		final Element[] identityA = this.validIdentity(requestedIdentity) ? requestedIdentity : this.randomIdentity();
+		final Map<Integer, EncryptionKeyComponent> key = requestedKey != null && requestedKey.size() == this.d ? requestedKey : this.EKGen(identityA, selected);
+		if (oracle == null || !this.EKeySanity(key, identityA, selected))
+			return false;
+		final Element message = this.randomGT();
+		final Element[] identityB = this.randomIdentity();
+		final Set<Integer> cipherSet = new LinkedHashSet<>(selected);
+		while (cipherSet.size() < this.k)
+			cipherSet.add(Integer.valueOf(RANDOM.nextInt(this.n)));
+		final Set<Integer> decryptionSet = randomSubset(cipherSet, this.d);
+		try
+		{
+			final Object decrypted = this.Dec(this.DKGen(identityB, decryptionSet), identityB, identityA, cipherSet, decryptionSet, oracle.apply(key, identityA, identityB, cipherSet, selected, message));
+			return decrypted instanceof Element && ((Element)decrypted).isEqual(message);
+		}
+		catch (final RuntimeException exception)
+		{
+			return false;
+		}
+	}
+
+	public boolean Trace2(final DecryptionOracle oracle, final Map<Integer, DecryptionKeyComponent> requestedKey, final Element[] requestedIdentity, final Set<Integer> requestedSet)
+	{
+		if (!this.setUp)
+			this.Setup(DEFAULT_N, DEFAULT_K, DEFAULT_D);
+		final Set<Integer> selected = this.validSet(requestedSet, this.d) ? new LinkedHashSet<>(requestedSet) : this.randomIndexSet(this.d);
+		final Element[] identityB = this.validIdentity(requestedIdentity) ? requestedIdentity : this.randomIdentity();
+		final Map<Integer, DecryptionKeyComponent> key = requestedKey != null && requestedKey.size() == this.d ? requestedKey : this.DKGen(identityB, selected);
+		if (oracle == null || !this.DKeySanity(key, identityB, selected))
+			return false;
+		final Element message = this.randomGT();
+		final Element[] identityA = this.randomIdentity();
+		final Set<Integer> cipherSet = new LinkedHashSet<>(selected);
+		while (cipherSet.size() < this.k)
+			cipherSet.add(Integer.valueOf(RANDOM.nextInt(this.n)));
+		final Set<Integer> encryptionSet = randomSubset(cipherSet, this.d);
+		try
+		{
+			final CipherText cipherText = this.Enc(this.EKGen(identityA, encryptionSet), identityA, identityB, cipherSet, encryptionSet, message);
+			final Object decrypted = oracle.apply(key, identityB, identityA, cipherSet, selected, cipherText);
+			return decrypted instanceof Element && ((Element)decrypted).isEqual(message);
+		}
+		catch (final RuntimeException exception)
+		{
+			return false;
+		}
+	}
+
+	public static RunResult conductScheme(final CurveParameter curveParameter, final int n, final int k, final int d, final Integer run, final boolean verbose)
+	{
+		final String curveName = curveParameter == null ? "N/A" : curveParameter.curveName();
+		final int securityParameter = curveParameter == null ? 512 : curveParameter.securityParameter();
+		final Object runValue = run != null && run.intValue() >= 1 ? run : "N/A";
+		if (verbose)
+		{
+			System.out.println("Curve: (" + curveName + ", " + securityParameter + ")");
+			System.out.println("n: " + n);
+			System.out.println("k: " + k);
+			System.out.println("d: " + d);
+			System.out.println("run: " + runValue);
+		}
+		if (curveParameter == null || n < 1 || d < 1 || d > k || k > n)
+			return RunResult.invalid(curveName, securityParameter, n, k, d, runValue);
+		try
+		{
+			final SchemeAAIBME scheme = new SchemeAAIBME(curveParameter);
+			final int sizeZR = scheme.getLengthOf(scheme.randomScalar());
+			final int sizeG1 = scheme.getLengthOf(scheme.randomG1());
+			final int sizeGT = scheme.getLengthOf(scheme.randomGT());
+			long startTime = System.nanoTime();
+			final SetupResult setupResult = scheme.Setup(n, k, d);
+			final double timeSetup = elapsedSeconds(startTime);
+			final int sizeMpk = scheme.getLengthOf(setupResult.masterPublicKey());
+			final int sizeMsk = scheme.getLengthOf(setupResult.masterSecretKey());
+			startTime = System.nanoTime();
+			final Element[] identityA = scheme.randomIdentity();
+			final Set<Integer> cipherSet = scheme.randomIndexSet(k);
+			final Set<Integer> encryptionSet = randomSubset(cipherSet, d);
+			final Map<Integer, EncryptionKeyComponent> encryptionKey = scheme.EKGen(identityA, encryptionSet);
+			final double timeEKGen = elapsedSeconds(startTime);
+			final int sizeEncryptionKey = scheme.getLengthOf(encryptionKey);
+			startTime = System.nanoTime();
+			final Element[] identityB = scheme.randomIdentity();
+			final Set<Integer> decryptionSet = randomSubset(cipherSet, d);
+			final Map<Integer, DecryptionKeyComponent> decryptionKey = scheme.DKGen(identityB, decryptionSet);
+			final double timeDKGen = elapsedSeconds(startTime);
+			final int sizeDecryptionKey = scheme.getLengthOf(decryptionKey);
+			startTime = System.nanoTime();
+			final Element message = scheme.randomGT();
+			final CipherText cipherText = scheme.Enc(encryptionKey, identityA, identityB, cipherSet, encryptionSet, message);
+			final double timeEnc = elapsedSeconds(startTime);
+			final int sizeCipherText = scheme.getLengthOf(cipherText);
+			startTime = System.nanoTime();
+			final Object decrypted = scheme.Dec(decryptionKey, identityB, identityA, cipherSet, decryptionSet, cipherText);
+			final double timeDec = elapsedSeconds(startTime);
+			final boolean schemeCorrect = decrypted instanceof Element && ((Element)decrypted).isEqual(message);
+			startTime = System.nanoTime();
+			final boolean encryptionKeySane = scheme.EKeySanity(encryptionKey, identityA, encryptionSet);
+			final double timeEKeySanity = elapsedSeconds(startTime);
+			startTime = System.nanoTime();
+			final boolean decryptionKeySane = scheme.DKeySanity(decryptionKey, identityB, decryptionSet);
+			final double timeDKeySanity = elapsedSeconds(startTime);
+			startTime = System.nanoTime();
+			final boolean tracingOne = scheme.Trace1(scheme::Enc, encryptionKey, identityA, encryptionSet);
+			final double timeTrace1 = elapsedSeconds(startTime);
+			startTime = System.nanoTime();
+			final boolean tracingTwo = scheme.Trace2(scheme::Dec, decryptionKey, identityB, decryptionSet);
+			final double timeTrace2 = elapsedSeconds(startTime);
+			if (verbose)
+			{
+				System.out.println("Original: " + message);
+				System.out.println("Decrypted: " + decrypted);
+				System.out.println("Is the scheme correct? " + schemeCorrect + ".");
+				System.out.println("Is EKey sane? " + encryptionKeySane + ".");
+				System.out.println("Is DKey sane? " + decryptionKeySane + ".");
+				System.out.println("Is tracing 1 verified? " + tracingOne + ".");
+				System.out.println("Is tracing 2 verified? " + tracingTwo + ".");
+				System.out.println();
+			}
+			return new RunResult(curveName, securityParameter, n, k, d, runValue, true, schemeCorrect, encryptionKeySane, decryptionKeySane, tracingOne, tracingTwo, timeSetup, timeEKGen, timeDKGen, timeEnc, timeDec, timeEKeySanity, timeDKeySanity, timeTrace1, timeTrace2, printableSize(sizeZR), printableSize(sizeG1), printableSize(sizeGT), printableSize(sizeMpk), printableSize(sizeMsk), printableSize(sizeEncryptionKey), printableSize(sizeDecryptionKey), printableSize(sizeCipherText));
+		}
+		catch (final RuntimeException exception)
+		{
+			if (verbose)
+				System.out.println("The scheme execution failed due to " + exception + ".");
+			return RunResult.invalid(curveName, securityParameter, n, k, d, runValue);
+		}
+	}
+
+	@FunctionalInterface
+	public interface EncryptionOracle
+	{
+		CipherText apply(Map<Integer, EncryptionKeyComponent> encryptionKey, Element[] identityA, Element[] identityB, Set<Integer> cipherSet, Set<Integer> encryptionSet, Element message);
+	}
+
+	@FunctionalInterface
+	public interface DecryptionOracle
+	{
+		Object apply(Map<Integer, DecryptionKeyComponent> decryptionKey, Element[] identityB, Element[] identityA, Set<Integer> cipherSet, Set<Integer> decryptionSet, CipherText cipherText);
+	}
+
+	public record CurveParameter(String curveName, int securityParameter)
+	{
+		public CurveParameter
+		{
+			curveName = curveName == null || curveName.isBlank() ? "N/A" : curveName;
+			securityParameter = securityParameter >= 1 ? securityParameter : 512;
+		}
+	}
+
+	public record MasterPublicKey(
+		Element g1,
+		Element g1Prime,
+		Element g2,
+		Element g3,
+		Element y1,
+		Element y2,
+		Element v1,
+		Element v2,
+		Element v3,
+		Element v4,
+		Element[] uVector,
+		Element[] tVector,
+		Element[] uPrimeVector,
+		Element[] tPrimeVector
+	)
+	{
+	}
+
+	public record MasterSecretKey(Element g2Alpha, Element beta, Element t1, Element t2, Element t3, Element t4)
+	{
+	}
+
+	public record SetupResult(MasterPublicKey masterPublicKey, MasterSecretKey masterSecretKey)
+	{
+	}
+
+	public record EncryptionKeyComponent(Element first, Element second)
+	{
+	}
+
+	public record DecryptionKeyComponent(Element first, Element second, Element third, Element fourth, Element fifth)
+	{
+	}
+
+	public record CipherText(
+		Set<Integer> encryptionSet,
+		Set<Integer> interpolationSet,
+		Element c,
+		Map<Integer, Element> c1,
+		Map<Integer, Element> c2,
+		Map<Integer, Element> c3,
+		Map<Integer, Element> c4,
+		Map<Integer, Element> c5,
+		Map<Integer, Element> c6,
+		Map<Integer, Element> c7,
+		Map<Integer, Element> c8
+	)
+	{
+	}
+
+	public record RunResult(
+		String curveName,
+		int securityParameter,
+		int n,
+		int k,
+		int d,
+		Object run,
+		boolean systemValid,
+		boolean schemeCorrect,
+		boolean encryptionKeySane,
+		boolean decryptionKeySane,
+		boolean tracingOneVerified,
+		boolean tracingTwoVerified,
+		Object setupTime,
+		Object encryptionKeyGenerationTime,
+		Object decryptionKeyGenerationTime,
+		Object encryptionTime,
+		Object decryptionTime,
+		Object encryptionKeySanityTime,
+		Object decryptionKeySanityTime,
+		Object tracingOneTime,
+		Object tracingTwoTime,
+		Object scalarSize,
+		Object sourceGroupSize,
+		Object targetGroupSize,
+		Object masterPublicKeySize,
+		Object masterSecretKeySize,
+		Object encryptionKeySize,
+		Object decryptionKeySize,
+		Object cipherTextSize
+	)
+	{
+		private static RunResult invalid(final String curveName, final int securityParameter, final int n, final int k, final int d, final Object run)
+		{
+			return new RunResult(curveName, securityParameter, n, k, d, run, false, false, false, false, false, false, "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A");
+		}
+
+		public List<Object> asList()
+		{
+			return List.of(this.curveName, Integer.valueOf(this.securityParameter), Integer.valueOf(this.n), Integer.valueOf(this.k), Integer.valueOf(this.d), this.run, Boolean.valueOf(this.systemValid), Boolean.valueOf(this.schemeCorrect), Boolean.valueOf(this.encryptionKeySane), Boolean.valueOf(this.decryptionKeySane), Boolean.valueOf(this.tracingOneVerified), Boolean.valueOf(this.tracingTwoVerified), this.setupTime, this.encryptionKeyGenerationTime, this.decryptionKeyGenerationTime, this.encryptionTime, this.decryptionTime, this.encryptionKeySanityTime, this.decryptionKeySanityTime, this.tracingOneTime, this.tracingTwoTime, this.scalarSize, this.sourceGroupSize, this.targetGroupSize, this.masterPublicKeySize, this.masterSecretKeySize, this.encryptionKeySize, this.decryptionKeySize, this.cipherTextSize);
+		}
+	}
+
+	public static void main(final String[] arguments)
+	{
+		final String[] parserArguments = new String[(arguments == null ? 0 : arguments.length) + 1];
+		parserArguments[0] = Parser.getSchemeName();
+		if (arguments != null)
+			System.arraycopy(arguments, 0, parserArguments, 1, arguments.length);
+		final Parser parser = new Parser(parserArguments);
+		Parser.Result options = parser.parse();
+		int errorLevel = EOF;
+		if (options.flag() > EXIT_SUCCESS && options.flag() > EOF)
+		{
+			options = parser.checkOverwriting(options);
+			System.out.println("The execution has started.");
+			System.out.println();
+			final List<CurveParameter> curveParameters = List.of(new CurveParameter("SS512", 128), new CurveParameter("SS512", 160), new CurveParameter("SS512", 224), new CurveParameter("SS512", 256), new CurveParameter("SS512", 384), new CurveParameter("SS512", 512));
+			final List<String> columns = List.of("curveParameter", "secparam", "n", "k", "d", "runCount", "isSystemValid", "isSchemeCorrect", "isEKeySanity", "isDKeySanity", "isTracing1Verified", "isTracing2Verified", "Setup (s)", "EKGen (s)", "DKGen (s)", "Enc (s)", "Dec (s)", "EKeySanity (s)", "DKeySanity (s)", "Trace1 (s)", "Trace2 (s)", "elementOfZR (B)", "elementOfG1G2 (B)", "elementOfGT (B)", "mpk (B)", "msk (B)", "ek_ID_A_S (B)", "dk_ID_B_SPrime (B)", "CT (B)");
+			final Saver saver = new Saver(options.outputFilePath(), columns, options.decimalPlace(), options.encoding());
+			final List<List<Object>> results = new ArrayList<>();
 			try
 			{
-				return C_0.duplicate().div(K_s_prime.mul(K_l_prime.duplicate())).getImmutable();
+				for (final CurveParameter curveParameter : curveParameters)
+					for (int n = 15; n <= 30; n += 5)
+						for (int k = 10; k < n; k += 5)
+							for (int d = 5; d < k; d += 5)
+							{
+								final List<RunResult> runs = new ArrayList<>();
+								for (int run = 1; run <= options.runCount(); ++run)
+									runs.add(conductScheme(curveParameter, n, k, d, Integer.valueOf(run), options.verbose()));
+								results.add(averageResults(runs));
+								saver.save(results);
+							}
+				boolean valid = !results.isEmpty();
+				for (final List<Object> result : results)
+					if (!averagedResultValid(result, options.runCount()))
+					{
+						valid = false;
+						break;
+					}
+				errorLevel = valid ? EXIT_SUCCESS : EXIT_FAILURE;
 			}
-			catch (Throwable e)
+			catch (final RuntimeException exception)
 			{
-				return null;
+				System.out.println("The experiments were interrupted by " + exception + ". Saved results are retained.");
+				errorLevel = EXIT_FAILURE;
 			}
+		}
+		else if (options.flag() == EXIT_SUCCESS)
+			errorLevel = EXIT_SUCCESS;
+		if (options.waitingTime() == 0.0)
+			System.out.println("The execution has finished (" + errorLevel + ").");
+		else if (Double.isFinite(options.waitingTime()) && options.waitingTime() > 0.0)
+		{
+			System.out.println("Please wait " + formatWaitingTime(options.waitingTime(), options.decimalPlace()) + " second(s) for automatic exit (" + errorLevel + ").");
+			try
+			{
+				Thread.sleep((long)(options.waitingTime() * 1000.0));
+			}
+			catch (final InterruptedException exception)
+			{
+				Thread.currentThread().interrupt();
+			}
+			System.out.println("The execution has finished (" + errorLevel + ").");
 		}
 		else
-			return null;
-	}
-}
-
-class Timer {
-	public enum FORMAT{
-		SECOND, MILLI_SECOND, MICRO_SECOND, NANO_SECOND,
-	}
-
-	public static final int DEFAULT_MAX_NUM_TIMER = 10;
-	public final int MAX_NUM_TIMER;
-
-	private long[] timeRecorder;
-	private boolean[] isTimerStart;
-	private FORMAT[] outFormat;
-
-	public Timer(){
-		this.MAX_NUM_TIMER = DEFAULT_MAX_NUM_TIMER;
-		this.timeRecorder = new long[MAX_NUM_TIMER];
-		this.isTimerStart = new boolean[MAX_NUM_TIMER];
-		this.outFormat = new FORMAT[MAX_NUM_TIMER];
-
-		//set default format as millisecond
-		for (int i=0; i<outFormat.length; i++){
-			outFormat[i] = FORMAT.MILLI_SECOND;
+		{
+			System.out.println("Please press the enter key to exit (" + errorLevel + ").");
+			final Console console = System.console();
+			if (console != null)
+				console.readLine();
+			else
+			{
+				try (Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8))
+				{
+					if (scanner.hasNextLine())
+						scanner.nextLine();
+				}
+			}
 		}
-	}
-
-	public Timer(int max_num_timer){
-		this.MAX_NUM_TIMER = max_num_timer;
-		this.timeRecorder = new long[MAX_NUM_TIMER];
-		this.isTimerStart = new boolean[MAX_NUM_TIMER];
-	}
-
-	public void setFormat(int num, FORMAT format){
-		//Ensure num less than MAX_NUM_TIMER
-		assert(num >=0 && num < MAX_NUM_TIMER);
-
-		this.outFormat[num] = format;
-	}
-
-	public void start(int num) {
-		//Ensure the timer now stops.
-		assert(!isTimerStart[num]);
-		//Ensure num less than MAX_NUM_TIMER
-		assert(num >=0 && num < MAX_NUM_TIMER);
-
-		isTimerStart[num] = true;
-		timeRecorder[num] = System.nanoTime();
-	}
-
-	public long stop(int num) {
-		//Ensure the timer now starts.
-		assert(isTimerStart[num]);
-		//Ensure num less than MAX_NUM_TIMER
-		assert(num >=0 && num < MAX_NUM_TIMER);
-
-		long result = System.nanoTime() - timeRecorder[num];
-		isTimerStart[num] = false;
-
-		switch(outFormat[num]){
-			case SECOND:
-				return result / 1000000000L;
-			case MILLI_SECOND:
-				return result / 1000000L;
-			case MICRO_SECOND:
-				return result / 1000L;
-			case NANO_SECOND:
-				return result;
-			default:
-				return result / 1000000L;
-		}
-
+		System.exit(errorLevel);
 	}
 }

@@ -7,12 +7,14 @@ on:
     paths:
       - '**/*.java'
       - '.github/workflows/runJava.yml'
+      - 'lib/**'
   push:
     branches:
       - main
     paths:
       - '**/*.java'
       - '.github/workflows/runJava.yml'
+      - 'lib/**'
   workflow_dispatch:
     inputs:
       executeSchemeAAIBME:
@@ -287,16 +289,34 @@ jobs:
           java-version: ${{ github.event.inputs.javaVersion || 25 }}
           distribution: 'temurin'
       
+      - name: Update Java dependencies
+        id: dependencies
+        run: |
+          cd "${{ github.workspace }}/lib"
+          readonly EXIT_SUCCESS=0
+          chmod u+x ./fetchJavaDependencies.sh
+          dependencies="$(./fetchJavaDependencies.sh)"
+          exitCode=$?
+          if [[ ${exitCode} -eq ${EXIT_SUCCESS} ]];
+          then
+            echo "dependencies ${exitCode}: ${dependencies}"
+            echo "dependencies=${dependencies}" >> "${GITHUB_OUTPUT}"
+          else
+            dependencies="$(ls -1 *.jar | sort | paste -s -d ':')"
+            echo "dependencies ${exitCode}: ${dependencies}"
+            echo "dependencies=${dependencies}" >> "${GITHUB_OUTPUT}"
+          fi
+      
       - name: Run the cryptographic scheme
         run: |
           cd "${{ github.workspace }}"
           echo "The current working directory is \"$(pwd)\". "
           if [[ -f "${{ matrix.cryptographicScheme }}" ]];
           then
-            echo "\$ java -cp lib/jpbc-api-2.0.0.jar:lib/jpbc-plaf-2.0.0.jar \"${{ matrix.cryptographicScheme }}\" -o \"${{ steps.ready.outputs.outputFileName }}\" -p ${{ needs.prepare.outputs.decimalPlace }} -r ${{ needs.prepare.outputs.runCount }}"
-            java -cp lib/jpbc-api-2.0.0.jar:lib/jpbc-plaf-2.0.0.jar "${{ matrix.cryptographicScheme }}" -o "${{ steps.ready.outputs.outputFileName }}" -p ${{ needs.prepare.outputs.decimalPlace }} -r ${{ needs.prepare.outputs.runCount }}
+            echo "\$ java -cp lib/jpbc-api-2.0.0.jar:lib/jpbc-plaf-2.0.0.jar:${{ steps.dependencies.outputs.dependencies }} \"${{ matrix.cryptographicScheme }}\" -o \"${{ steps.ready.outputs.outputFileName }}\" -p ${{ needs.prepare.outputs.decimalPlace }} -r ${{ needs.prepare.outputs.runCount }}"
+            java -cp lib/jpbc-api-2.0.0.jar:lib/jpbc-plaf-2.0.0.jar:${{ steps.dependencies.outputs.dependencies }} "${{ matrix.cryptographicScheme }}" -o "${{ steps.ready.outputs.outputFileName }}" -p ${{ needs.prepare.outputs.decimalPlace }} -r ${{ needs.prepare.outputs.runCount }}
           else
-            echo "Could not execute the cryptographic scheme file \"${{ matrix.cryptographicScheme }}\" via Java. "
+            echo "Could not execute the cryptographic scheme file \"${{ matrix.cryptographicScheme }}\" via Java ${{ github.event.inputs.javaVersion || 25 }}. "
             tree
           fi
       

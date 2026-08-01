@@ -350,7 +350,7 @@ jobs:
             echo "\$ python buildSchemeLaTeXPDFs.py \"${{ matrix.cryptographicScheme }}\""
             python buildSchemeLaTeXPDFs.py "${{ matrix.cryptographicScheme }}"
           else
-            echo "Could not execute the LaTeX and PDF builder \"buildSchemeLaTeXPDFs.py\" via Python ${{ steps.ready.outputs.pythonVersion }}. "
+            echo "Could not execute the LaTeX and PDF builder \"buildSchemeLaTeXPDFs.py\" via Python ${{ github.event.inputs.pythonVersion || '3.x' }}. "
             tree
           fi
         env:
@@ -404,7 +404,7 @@ jobs:
             echo "\$ python \"${{ matrix.cryptographicScheme }}\" -o \"${{ steps.ready.outputs.outputFileName }}\" -p ${{ needs.prepare.outputs.decimalPlace }} -r ${{ needs.prepare.outputs.runCount }} -t 0 -y"
             python "${{ matrix.cryptographicScheme }}" -o "${{ steps.ready.outputs.outputFileName }}" -p ${{ needs.prepare.outputs.decimalPlace }} -r ${{ needs.prepare.outputs.runCount }} -t 0 -y
           else
-            echo "Could not execute the cryptographic scheme file \"${{ matrix.cryptographicScheme }}\" via Python ${{ steps.ready.outputs.pythonVersion }}. "
+            echo "Could not execute the cryptographic scheme file \"${{ matrix.cryptographicScheme }}\" via Python ${{ github.event.inputs.pythonVersion || '3.x' }}. "
             tree
           fi
       
