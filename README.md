@@ -929,7 +929,7 @@ The current Java implementation and its current dependencies require JDK 17 or a
 
 The two discontinued JPBC libraries, ``jpbc-api-2.0.0.jar`` and ``jpbc-plaf-2.0.0.jar``, are kept under the ``lib`` directory.
 The Excel saver additionally uses Apache POI and its supporting libraries: Commons Collections, Commons Compress, Commons IO, Log4j API, Log4j Core, POI, POI OOXML, POI OOXML Lite, and XMLBeans.
-The latest available versions, including pre-release versions, can be downloaded directly from Maven Central by the pure shell script ``lib/fetchJavaDependencies.sh``; the Maven build tool is not required.
+The latest available versions, including pre-release versions, can be downloaded directly from Maven Central by the pure shell script ``lib/fetchJavaDependencies.sh``; the Maven build tool is not required. Log4j is restricted to the latest matching 2.x API/Core release because Log4j 3 pre-releases require additional runtime modules that are outside the fixed 11-JAR dependency set.
 
 For example, the following commands update the dependencies and run one Java implementation from the root directory of this repository.
 
