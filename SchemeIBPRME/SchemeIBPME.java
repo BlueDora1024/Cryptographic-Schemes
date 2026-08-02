@@ -1469,7 +1469,7 @@ public final class SchemeIBPME
 			System.out.println("The execution has started.");
 			System.out.println();
 			final List<CurveParameter> curves = List.of(
-				new CurveParameter("MNT201", 512), new CurveParameter("MNT224", 512), new CurveParameter("BN254", 128),
+				new CurveParameter("BN254", 128),
 				new CurveParameter("SS512", 128), new CurveParameter("SS512", 256), new CurveParameter("SS512", 512),
 				new CurveParameter("SS1024", 512), new CurveParameter("SS1024", 1024));
 			final List<String> columns = List.of(
