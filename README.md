@@ -908,17 +908,36 @@ Subsequently, as the JDK has gradually evolved, the Java official has twice remo
 Furthermore, we were told to use the object length as the space complexity, and the websites storing the original JPBC libraries seemed down. 
 Therefore, before the related statements here are removed, please try to use Python instead of Java implementations for any purposes, including experiments and production. 
 
-As the JPBC library can be called without installation, we have gathered the necessary JPBC library files under the ``lib`` directory. 
-Please directly use the commmand ``java -cp lib/jpbc-api-2.0.0.jar:lib/jpbc-plaf-2.0.0.jar Scheme*/Scheme*.java`` to run the ``Scheme*/Scheme*.java`` file, 
-where the ``*`` here can refer to different strings excluding the path separators. 
+### 2.1 Java environment, dependencies, inputs, and outputs
 
-### 2.1 Time complexity
+The current Java implementation and its current dependencies require JDK 17 or above and are executed in source-file mode. The [``runJava`` workflow](./.github/workflows/runJava.yml) uses Eclipse Temurin and defaults to JDK 25.
+
+The two discontinued JPBC libraries, ``jpbc-api-2.0.0.jar`` and ``jpbc-plaf-2.0.0.jar``, are kept under the ``lib`` directory.
+The Excel saver additionally uses Apache POI and its supporting libraries: Commons Collections, Commons Compress, Commons IO, Log4j API, Log4j Core, POI, POI OOXML, POI OOXML Lite, and XMLBeans.
+The latest available versions, including pre-release versions, can be downloaded directly from Maven Central by the pure shell script ``lib/fetchJavaDependencies.sh``; the Maven build tool is not required.
+
+For example, the following commands update the dependencies and run ``SchemeAAIBME.java`` from the root directory of this repository.
+
+```shell
+chmod u+x ./lib/fetchJavaDependencies.sh
+dependencies="$(./lib/fetchJavaDependencies.sh)"
+java -cp "${dependencies}" SchemeAAIBME/SchemeAAIBME.java
+```
+
+The default output format is ``.xlsx``, the default output file name is ``SchemeAAIBME.xlsx``, the default decimal place is 9, and the default run count is 10.
+The output formats currently supported are CSV, HTM, HTML, JSON, LaTeX, TSV, TXT, XLS, XLSX, XML, YAML, and YML.
+If an output path passed through the command line is relative, it is resolved against the directory containing ``SchemeAAIBME.java`` instead of the current working directory.
+Pass ``-h`` to view all case-insensitive command-line options, including the encoding, output path, decimal place, quiet mode, run count, waiting time, and overwrite confirmation options.
+
+The Java program exits with ``EXIT_SUCCESS`` ($0$) when results are obtained and all validation checks pass, and with ``EXIT_FAILURE`` ($1$) otherwise. Invalid arguments result in ``EOF`` ($-1$; normally observed as $255$ on POSIX shells).
+
+### 2.2 Time complexity
 
 The Java implementations here use ``System.nanoTime()`` to obtain the starting time and the ending time for each procedure. 
 Subsequently, the time delta is computed as the ending time minus the starting time. 
 This time consumption measurement will not be affected by manual wall clock adjustments. 
 
-### 2.2 Space complexity
+### 2.3 Space complexity
 
 Before JDK 11, people used ``getObjectSize(x)`` (``import static jdk.nashorn.internal.ir.debug.ObjectSizeCalculator.getObjectSize;``) 
 happily and conveniently to measure the memory consumption of a Java variable ``x``, whatever the type of ``x`` is. 
