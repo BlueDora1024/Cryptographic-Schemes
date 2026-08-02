@@ -915,21 +915,37 @@ If it is necessary to log in while pushing, please try the ``gh auth login`` com
 
 ## 2. Java
 
-The Java programming language was once used to implement the cryptographic schemes here in earlier days (~2019). 
-Each of them was implemented in a separate repository, resulting in many non-systematic repositories. 
-Although we have tried our best to update and link the repositories with each other, we still think that the best way is to merge them into a collection here together. 
+The Java programming language was first used to implement the cryptographic schemes here for experimental purposes in earlier days (~2019). 
+At that time, each of them was implemented in a separate repository. 
+As the JDK has gradually evolved, the Java official has twice removed the APIs for object memory computation, forcing us to write three versions of the space complexity computation for each cryptographic scheme. 
+These result in many non-systematic repositories. 
+Although we have tried our best to update and link the repositories with each other, it is still inconvenient to jump from one repository to another, especially for cryptographic schemes that have many and repeated baselines. 
 
-Subsequently, as the JDK has gradually evolved, the Java official has twice removed the APIs to compute the space complexity, forcing us to rewrite the code three times. 
-Furthermore, we were told to use the object length as the space complexity, and the websites storing the original JPBC libraries seemed down. 
-Every Python implementation whose file name starts with ``Scheme`` now has a corresponding single-file Java implementation. Both implementations retain the same experiment stages, command-line interface, result columns, and console validation wording where the underlying libraries permit equivalent behavior.
+Subsequently, we were told to use the object's length as the space complexity. 
+Meanwhile, the official websites storing the original JPBC libraries seemed down. 
+Therefore, we started to write Python implementations for new cryptographic schemes based on the [Python Charm-Crypto framework](https://github.com/JHUISI/charm). 
+As this repository becomes more and more systematic, we think that it is time to merge the non-systematic Java implementation repositories into a collection here. 
+Moreover, we have decided to remove the outdated object memory computation implementations and unify the space complexity computation to how Python implementations do in this repository. 
+Every Python implementation whose file name starts with ``Scheme`` now has a corresponding single-file Java implementation. Both implementations retain the same experiment stages, command-line interface, result columns, and console validation wording where the underlying libraries permit equivalent behavior. 
 
 ### 2.1 Java environment, dependencies, inputs, and outputs
 
-The current Java implementation and its current dependencies require JDK 17 or above and are executed in source-file mode. The [``runJava`` workflow](./.github/workflows/runJava.yml) uses Eclipse Temurin and defaults to JDK 25.
+The current Java implementation and its dependencies require JDK 17 or above and are executed in source-file mode. The [``runJava`` workflow](./.github/workflows/runJava.yml) uses Eclipse Temurin and defaults to JDK 25. 
 
-The two discontinued JPBC libraries, ``jpbc-api-2.0.0.jar`` and ``jpbc-plaf-2.0.0.jar``, are kept under the ``lib`` directory.
-The Excel saver additionally uses Apache POI and its supporting libraries: Commons Collections, Commons Compress, Commons IO, Log4j API, Log4j Core, POI, POI OOXML, POI OOXML Lite, and XMLBeans.
-The latest available versions, including pre-release versions, can be downloaded directly from Maven Central by the pure shell script ``lib/fetchJavaDependencies.sh``; the Maven build tool is not required.
+The two discontinued JPBC libraries, ``jpbc-api-2.0.0.jar`` and ``jpbc-plaf-2.0.0.jar``, are kept under the ``lib`` directory. 
+Meanwhile, the Excel saver additionally uses Apache POI and its supporting libraries, which are listed as follows. 
+
+- commons-collections4: [https://repo1.maven.org/maven2/org/apache/commons/commons-collections4/](https://repo1.maven.org/maven2/org/apache/commons/commons-collections4/)
+- commons-compress: [https://repo1.maven.org/maven2/org/apache/commons/commons-compress/](https://repo1.maven.org/maven2/org/apache/commons/commons-compress/)
+- commons-io: [https://repo1.maven.org/maven2/commons-io/commons-io/](https://repo1.maven.org/maven2/commons-io/commons-io/)
+- log4j-api: [https://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-api/](https://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-api/)
+- log4j-core: [https://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-core/](https://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-core/)
+- poi: [https://repo1.maven.org/maven2/org/apache/poi/poi/](https://repo1.maven.org/maven2/org/apache/poi/poi/)
+- poi-ooxml: [https://repo1.maven.org/maven2/org/apache/poi/poi-ooxml/](https://repo1.maven.org/maven2/org/apache/poi/poi-ooxml/)
+- poi-ooxml-lite: [https://repo1.maven.org/maven2/org/apache/poi/poi-ooxml-lite/](https://repo1.maven.org/maven2/org/apache/poi/poi-ooxml-lite/)
+- xmlbeans: [https://repo1.maven.org/maven2/org/apache/xmlbeans/xmlbeans/](https://repo1.maven.org/maven2/org/apache/xmlbeans/xmlbeans/)
+
+The latest versions of these dependencies in the JAR form can be fetched via the pure shell script ``lib/fetchJavaDependencies.sh``. 
 
 For example, the following commands update the dependencies and run one Java implementation from the root directory of this repository.
 

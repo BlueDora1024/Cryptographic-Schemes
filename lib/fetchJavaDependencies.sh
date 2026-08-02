@@ -6,6 +6,7 @@ set -o pipefail
 readonly EXIT_SUCCESS=0
 readonly EXIT_FAILURE=1
 readonly SCRIPT_NAME='fetchJavaDependencies.sh'
+readonly LOG4J_SUPPORTED_MAJOR='2'
 readonly -a DOWNLOADABLE_ARTIFACTS=(
 	'commons-collections4'
 	'commons-compress'
@@ -125,6 +126,21 @@ read_latest_version()
 	sed -n 's:.*<latest>\([^<]*\)</latest>.*:\1:p' "$1" | awk 'NR == 1 { print; exit }'
 }
 
+read_latest_supported_version()
+{
+	local metadata_path="$1"
+	local artifact="$2"
+
+	case "$artifact" in
+	'log4j-api'|'log4j-core')
+		sed -n 's:.*<version>\([^<]*\)</version>.*:\1:p' "$metadata_path" | awk -v prefix="${LOG4J_SUPPORTED_MAJOR}." 'index($0, prefix) == 1 { version = $0 } END { if (version) print version; else exit 1 }'
+		;;
+	*)
+		read_latest_version "$metadata_path"
+		;;
+	esac
+}
+
 read_version_rank()
 {
 	awk -v wanted="$2" '
@@ -206,7 +222,7 @@ select_artifact_version()
 
 	base_url="$(base_url_for "$artifact")" || fail "no repository URL is configured for ${artifact}"
 	download_file "${base_url}maven-metadata.xml" "$metadata_path" || fail "failed to download metadata for ${artifact}"
-	latest_version="$(read_latest_version "$metadata_path")" || fail "failed to parse the latest version for ${artifact}"
+	latest_version="$(read_latest_supported_version "$metadata_path" "$artifact")" || fail "failed to parse the latest supported version for ${artifact}"
 	[[ "$latest_version" =~ ^[0-9][0-9A-Za-z._+-]*$ ]] || fail "invalid latest version for ${artifact}: ${latest_version}"
 	latest_rank="$(read_version_rank "$metadata_path" "$latest_version")" || fail "latest version is absent from metadata for ${artifact}: ${latest_version}"
 
@@ -216,6 +232,10 @@ select_artifact_version()
 		if [[ "$filename" =~ ^${artifact}-([0-9][0-9A-Za-z._+-]*)\.jar$ ]]
 		then
 			local_version="${BASH_REMATCH[1]}"
+			if [[ "$artifact" == 'log4j-api' || "$artifact" == 'log4j-core' ]] && [[ ! "$local_version" =~ ^${LOG4J_SUPPORTED_MAJOR}\. ]]
+			then
+				continue
+			fi
 			local_rank="$(read_version_rank "$metadata_path" "$local_version")" || fail "local version is absent from metadata for ${artifact}: ${local_version}"
 			if ((local_rank > highest_local_rank))
 			then
@@ -300,6 +320,16 @@ downloadable_artifact_index()
 	return 1
 }
 
+validate_log4j_selection()
+{
+	local api_index=''
+	local core_index=''
+
+	api_index="$(downloadable_artifact_index 'log4j-api')" || fail 'failed to locate log4j-api'
+	core_index="$(downloadable_artifact_index 'log4j-core')" || fail 'failed to locate log4j-core'
+	[[ "${SELECTED_VERSIONS[$api_index]}" == "${SELECTED_VERSIONS[$core_index]}" ]] || fail "selected Log4j versions are incompatible: api=${SELECTED_VERSIONS[$api_index]}, core=${SELECTED_VERSIONS[$core_index]}"
+}
+
 commit_fixed_artifact()
 {
 	local artifact="$1"
@@ -339,6 +369,7 @@ main()
 		artifact="${DOWNLOADABLE_ARTIFACTS[$artifact_index]}"
 		select_artifact_version "$artifact_index" "$artifact"
 	done
+	validate_log4j_selection
 
 	for artifact in "${ORDERED_ARTIFACTS[@]}"
 	do
