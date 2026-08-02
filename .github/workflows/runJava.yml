@@ -22,6 +22,36 @@ on:
         required: true
         default: true
         type: boolean
+      executeSchemeCANIFPPCT:
+        description: 'SchemeCANIFPPCT'
+        required: true
+        default: true
+        type: boolean
+      executeSchemeHIBME:
+        description: 'SchemeHIBME'
+        required: true
+        default: true
+        type: boolean
+      executeSchemeIBMEMR:
+        description: 'SchemeIBMEMR'
+        required: true
+        default: true
+        type: boolean
+      executeSchemeIBMETR:
+        description: 'SchemeIBMETR'
+        required: true
+        default: true
+        type: boolean
+      executeSchemeIBPRME:
+        description: 'SchemeIBPRME'
+        required: true
+        default: true
+        type: boolean
+      executeSchemeVLPSICA:
+        description: 'SchemeVLPSICA'
+        required: true
+        default: false
+        type: boolean
       javaVersion:
         description: 'Java version'
         required: true
@@ -109,11 +139,29 @@ jobs:
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]];
           then
             executeSchemeAAIBME="${{ github.event.inputs.executeSchemeAAIBME }}"
+            executeSchemeCANIFPPCT="${{ github.event.inputs.executeSchemeCANIFPPCT }}"
+            executeSchemeHIBME="${{ github.event.inputs.executeSchemeHIBME }}"
+            executeSchemeIBMEMR="${{ github.event.inputs.executeSchemeIBMEMR }}"
+            executeSchemeIBMETR="${{ github.event.inputs.executeSchemeIBMETR }}"
+            executeSchemeIBPRME="${{ github.event.inputs.executeSchemeIBPRME }}"
+            executeSchemeVLPSICA="${{ github.event.inputs.executeSchemeVLPSICA }}"
           else
             executeSchemeAAIBME="true"
+            executeSchemeCANIFPPCT="true"
+            executeSchemeHIBME="true"
+            executeSchemeIBMEMR="true"
+            executeSchemeIBMETR="true"
+            executeSchemeIBPRME="true"
+            executeSchemeVLPSICA="false"
           fi
           matrix=()
-          [[ "true" == "${executeSchemeAAIBME}" ]] && matrix+=("SchemeAAIBME/SchemeAAIBME.java")
+          [[ "true" == "${executeSchemeAAIBME}" ]] && matrix+=("SchemeAAIBME/SchemeAAIBME.java" "SchemeAAIBME/SchemeFuzzyME.java")
+          [[ "true" == "${executeSchemeCANIFPPCT}" ]] && matrix+=("SchemeCANIFPPCT/SchemeCANIFPPCT.java")
+          [[ "true" == "${executeSchemeHIBME}" ]] && matrix+=("SchemeHIBME/SchemeAnonymousME.java" "SchemeHIBME/SchemeHIBME.java")
+          [[ "true" == "${executeSchemeIBMEMR}" ]] && matrix+=("SchemeIBMEMR/SchemeIBBME.java" "SchemeIBMEMR/SchemeIBMEMR.java")
+          [[ "true" == "${executeSchemeIBMETR}" ]] && matrix+=("SchemeIBMETR/SchemeAIBE.java" "SchemeIBMETR/SchemeARES.java" "SchemeIBMETR/SchemeIBME.java" "SchemeIBMETR/SchemeIBMECH.java" "SchemeIBMETR/SchemeIBMETR.java")
+          [[ "true" == "${executeSchemeIBPRME}" ]] && matrix+=("SchemeIBPRME/SchemeIBPME.java" "SchemeIBPRME/SchemeIBPRME.java" "SchemeIBPRME/SchemePBAC.java")
+          [[ "true" == "${executeSchemeVLPSICA}" ]] && matrix+=("SchemeVLPSICA/SchemeVLPSICA.java")
           if [[ ${#matrix[@]} -ge 1 ]];
           then
             echo "matrix=$(printf '%s\n' "${matrix[@]}" | jq -R . | jq -s -c 'unique')" >> "${GITHUB_OUTPUT}"
@@ -302,7 +350,7 @@ jobs:
             echo "dependencies ${exitCode}: ${dependencies}"
             echo "dependencies=${dependencies}" >> "${GITHUB_OUTPUT}"
           else
-            dependencies="$(ls -1 *.jar | sort | paste -s -d ':')"
+            dependencies="$(find . -maxdepth 1 -type f -name '*.jar' -printf 'lib/%f\n' | sort | paste -s -d ':')"
             echo "dependencies ${exitCode}: ${dependencies}"
             echo "dependencies=${dependencies}" >> "${GITHUB_OUTPUT}"
           fi
@@ -313,8 +361,8 @@ jobs:
           echo "The current working directory is \"$(pwd)\". "
           if [[ -f "${{ matrix.cryptographicScheme }}" ]];
           then
-            echo "\$ java -cp lib/jpbc-api-2.0.0.jar:lib/jpbc-plaf-2.0.0.jar:${{ steps.dependencies.outputs.dependencies }} \"${{ matrix.cryptographicScheme }}\" -o \"${{ steps.ready.outputs.outputFileName }}\" -p ${{ needs.prepare.outputs.decimalPlace }} -r ${{ needs.prepare.outputs.runCount }}"
-            java -cp lib/jpbc-api-2.0.0.jar:lib/jpbc-plaf-2.0.0.jar:${{ steps.dependencies.outputs.dependencies }} "${{ matrix.cryptographicScheme }}" -o "${{ steps.ready.outputs.outputFileName }}" -p ${{ needs.prepare.outputs.decimalPlace }} -r ${{ needs.prepare.outputs.runCount }}
+            echo "\$ java -cp ${{ steps.dependencies.outputs.dependencies }} \"${{ matrix.cryptographicScheme }}\" -o \"${{ steps.ready.outputs.outputFileName }}\" -p ${{ needs.prepare.outputs.decimalPlace }} -r ${{ needs.prepare.outputs.runCount }}"
+            java -cp "${{ steps.dependencies.outputs.dependencies }}" "${{ matrix.cryptographicScheme }}" -o "${{ steps.ready.outputs.outputFileName }}" -p ${{ needs.prepare.outputs.decimalPlace }} -r ${{ needs.prepare.outputs.runCount }}
           else
             echo "Could not execute the cryptographic scheme file \"${{ matrix.cryptographicScheme }}\" via Java ${{ github.event.inputs.javaVersion || 25 }}. "
             tree
