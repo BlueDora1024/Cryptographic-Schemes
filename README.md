@@ -7,30 +7,45 @@ We are currently merging cryptographic schemes from our other repositories. Cryp
 - [SchemeAAIBME](./SchemeAAIBME/)
   - [SchemeAAIBME.java](./SchemeAAIBME/SchemeAAIBME.java)
   - [SchemeAAIBME.py](./SchemeAAIBME/SchemeAAIBME.py)
+  - [SchemeFuzzyME.java](./SchemeAAIBME/SchemeFuzzyME.java)
   - [SchemeFuzzyME.py](./SchemeAAIBME/SchemeFuzzyME.py)
   - [SchemeIBMECH.py](./SchemeAAIBME/SchemeIBMECH.py) -> [SchemeIBMECH.py](./SchemeIBMETR/SchemeIBMECH.py)
 - [SchemeCANIFPPCT](./SchemeCANIFPPCT/)
+  - [SchemeCANIFPPCT.java](./SchemeCANIFPPCT/SchemeCANIFPPCT.java)
   - [SchemeCANIFPPCT.py](./SchemeCANIFPPCT/SchemeCANIFPPCT.py)
 - [SchemeHIBME](./SchemeHIBME/)
+  - [SchemeAnonymousME.java](./SchemeHIBME/SchemeAnonymousME.java)
   - [SchemeAnonymousME.py](./SchemeHIBME/SchemeAnonymousME.py)
+  - [SchemeHIBME.java](./SchemeHIBME/SchemeHIBME.java)
   - [SchemeHIBME.py](./SchemeHIBME/SchemeHIBME.py)
 - [SchemeIBMEMR](./SchemeIBMEMR/)
+  - [SchemeIBBME.java](./SchemeIBMEMR/SchemeIBBME.java)
   - [SchemeIBBME.py](./SchemeIBMEMR/SchemeIBBME.py)
   - [SchemeIBME.py](./SchemeIBMEMR/SchemeIBME.py) -> [SchemeIBME.py](./SchemeIBMETR/SchemeIBME.py)
+  - [SchemeIBMEMR.java](./SchemeIBMEMR/SchemeIBMEMR.java)
   - [SchemeIBMEMR.py](./SchemeIBMEMR/SchemeIBMEMR.py)
 - [SchemeIBMETR](./SchemeIBMETR/)
+  - [SchemeAIBE.java](./SchemeIBMETR/SchemeAIBE.java)
   - [SchemeAIBE.py](./SchemeIBMETR/SchemeAIBE.py)
+  - [SchemeARES.java](./SchemeIBMETR/SchemeARES.java)
   - [SchemeARES.py](./SchemeIBMETR/SchemeARES.py)
+  - [SchemeIBME.java](./SchemeIBMETR/SchemeIBME.java)
   - [SchemeIBME.py](./SchemeIBMETR/SchemeIBME.py)
+  - [SchemeIBMECH.java](./SchemeIBMETR/SchemeIBMECH.java)
   - [SchemeIBMECH.py](./SchemeIBMETR/SchemeIBMECH.py)
+  - [SchemeIBMETR.java](./SchemeIBMETR/SchemeIBMETR.java)
   - [SchemeIBMETR.py](./SchemeIBMETR/SchemeIBMETR.py)
 - [SchemeIBPRME](./SchemeIBPRME/)
   - [SchemeIBME.py](./SchemeIBPRME/SchemeIBME.py) -> [SchemeIBME.py](./SchemeIBMETR/SchemeIBME.py)
   - [SchemeIBMECH.py](./SchemeIBPRME/SchemeIBMECH.py) -> [SchemeIBMECH.py](./SchemeIBMETR/SchemeIBMECH.py)
+  - [SchemeIBPME.java](./SchemeIBPRME/SchemeIBPME.java)
   - [SchemeIBPME.py](./SchemeIBPRME/SchemeIBPME.py)
+  - [SchemeIBPRME.java](./SchemeIBPRME/SchemeIBPRME.java)
   - [SchemeIBPRME.py](./SchemeIBPRME/SchemeIBPRME.py)
+  - [SchemePBAC.java](./SchemeIBPRME/SchemePBAC.java)
   - [SchemePBAC.py](./SchemeIBPRME/SchemePBAC.py)
 - [SchemeVLPSICA](./SchemeVLPSICA/)
+  - [SchemeVLPSICA.java](./SchemeVLPSICA/SchemeVLPSICA.java)
   - [SchemeVLPSICA.py](./SchemeVLPSICA/SchemeVLPSICA.py)
 - [FS-MUAEKS](./FS-MUAEKS/)
   - [FS-MUAEKS.py](./FS-MUAEKS/FS-MUAEKS.py)
@@ -906,19 +921,42 @@ Although we have tried our best to update and link the repositories with each ot
 
 Subsequently, as the JDK has gradually evolved, the Java official has twice removed the APIs to compute the space complexity, forcing us to rewrite the code three times. 
 Furthermore, we were told to use the object length as the space complexity, and the websites storing the original JPBC libraries seemed down. 
-Therefore, before the related statements here are removed, please try to use Python instead of Java implementations for any purposes, including experiments and production. 
+Every Python implementation whose file name starts with ``Scheme`` now has a corresponding single-file Java implementation. Both implementations retain the same experiment stages, command-line interface, result columns, and console validation wording where the underlying libraries permit equivalent behavior.
 
-As the JPBC library can be called without installation, we have gathered the necessary JPBC library files under the ``lib`` directory. 
-Please directly use the commmand ``java -cp lib/jpbc-api-2.0.0.jar:lib/jpbc-plaf-2.0.0.jar Scheme*/Scheme*.java`` to run the ``Scheme*/Scheme*.java`` file, 
-where the ``*`` here can refer to different strings excluding the path separators. 
+### 2.1 Java environment, dependencies, inputs, and outputs
 
-### 2.1 Time complexity
+The current Java implementation and its current dependencies require JDK 17 or above and are executed in source-file mode. The [``runJava`` workflow](./.github/workflows/runJava.yml) uses Eclipse Temurin and defaults to JDK 25.
+
+The two discontinued JPBC libraries, ``jpbc-api-2.0.0.jar`` and ``jpbc-plaf-2.0.0.jar``, are kept under the ``lib`` directory.
+The Excel saver additionally uses Apache POI and its supporting libraries: Commons Collections, Commons Compress, Commons IO, Log4j API, Log4j Core, POI, POI OOXML, POI OOXML Lite, and XMLBeans.
+The latest available versions, including pre-release versions, can be downloaded directly from Maven Central by the pure shell script ``lib/fetchJavaDependencies.sh``; the Maven build tool is not required.
+
+For example, the following commands update the dependencies and run one Java implementation from the root directory of this repository.
+
+```shell
+chmod u+x ./lib/fetchJavaDependencies.sh
+dependencies="$(./lib/fetchJavaDependencies.sh)"
+java -cp "${dependencies}" SchemeIBMETR/SchemeAIBE.java
+```
+
+The default output format is ``.xlsx``, the default output file name is the Java class name followed by ``.xlsx``, the default decimal place is 9, and the default run count is 10.
+The output formats currently supported are CSV, HTM, HTML, JSON, LaTeX, TSV, TXT, XLS, XLSX, XML, YAML, and YML.
+If an output path passed through the command line is relative, it is resolved against the directory containing the executed Java source file instead of the current working directory.
+Pass ``-h`` to view all case-insensitive command-line options, including the encoding, output path, decimal place, quiet mode, run count, waiting time, and overwrite confirmation options.
+
+The Java program exits with ``EXIT_SUCCESS`` ($0$) when results are obtained and all validation checks pass, and with ``EXIT_FAILURE`` ($1$) otherwise. Invalid arguments result in ``EOF`` ($-1$; normally observed as $255$ on POSIX shells).
+
+JPBC 2.0.0 bundles generators for the symmetric Type A and asymmetric Type F pairings used here. Accordingly, the Java implementations map ``SS512`` and ``SS1024`` to Type A parameters and ``BN254`` to Type F parameters. Exact ``MNT201`` and ``MNT224`` parameter resources are not included in the distributed JPBC JARs, so those experiment rows are reported as unavailable instead of silently substituting another curve.
+
+The [``runJava`` workflow](./.github/workflows/runJava.yml) exposes the seven scheme categories as manual inputs and executes each selected ``Scheme*.java`` file independently. On pull requests and pushes, all categories except the particularly large VLPSICA parameter matrix are enabled by default.
+
+### 2.2 Time complexity
 
 The Java implementations here use ``System.nanoTime()`` to obtain the starting time and the ending time for each procedure. 
 Subsequently, the time delta is computed as the ending time minus the starting time. 
 This time consumption measurement will not be affected by manual wall clock adjustments. 
 
-### 2.2 Space complexity
+### 2.3 Space complexity
 
 Before JDK 11, people used ``getObjectSize(x)`` (``import static jdk.nashorn.internal.ir.debug.ObjectSizeCalculator.getObjectSize;``) 
 happily and conveniently to measure the memory consumption of a Java variable ``x``, whatever the type of ``x`` is. 
