@@ -48,6 +48,14 @@ done < <(find "$psi_ca_dir" -mindepth 1 ! -type d -print0)
 
 printf 'PASS: PSI-CA contains exactly the seven expected C++ source files.\n'
 
+for filename in "${expected_files[@]}"; do
+  source_path="$psi_ca_dir/$filename"
+  if grep -Eq '(^|[^[:alnum:]_])(memset|strlen)[[:space:]]*\(' "$source_path" && ! grep -Fxq '#include <cstring>' "$source_path"; then
+    printf 'Missing explicit <cstring> include for C string functions: PSI-CA/%s\n' "$filename" >&2
+    exit 1
+  fi
+done
+
 parser_saver_header="$psi_ca_dir/ParserSaver.hpp"
 if grep -Fq 'remove_all' "$parser_saver_header"; then
   printf 'ParserSaver.hpp must not recursively delete temporary paths.\n' >&2
