@@ -47,7 +47,7 @@ The B flow runs only on symmetric pairings. The complete flow supports the symme
 
 The result identifies the curve, security parameter, `n`, `m`, and run count. Validators report system validity, B-flow correctness when applicable, complete-flow correctness, and tracing verification. Metrics report procedure times, element sizes, public and secret key sizes, ciphertext sizes, and token sizes.
 
-The default matrix matches `SchemeCANIFPPCT`: MNT201, MNT224, BN254, three SS512 security-parameter entries, and two SS1024 entries; `n` ranges from 10 through 30 in increments of 5; `m` ranges from 5 to less than `n` in increments of 5; and the command-line run count controls repetitions. Expected unavailable JPBC curves are represented consistently rather than failing the whole Java program.
+Each default matrix matches the current implementation of `SchemeCANIFPPCT` in the same language. Java runs the six JPBC configurations verified by the repository: BN254, three SS512 security-parameter entries, and two SS1024 entries. Python additionally runs MNT201 and MNT224 through Charm-Crypto. In both languages, `n` ranges from 10 through 30 in increments of 5, `m` ranges from 5 to less than `n` in increments of 5, and the command-line run count controls repetitions.
 
 The command-line parser, script-relative output resolution, supported formats, overwrite handling, averaging, integer formatting, exit status, and console messages follow the corresponding existing language implementation.
 

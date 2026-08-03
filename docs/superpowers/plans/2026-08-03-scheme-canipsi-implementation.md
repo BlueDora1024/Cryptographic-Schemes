@@ -166,7 +166,7 @@ bpk (B), bsk (B), bsk_IDs (B), BCT_TPs (B), BTokens (B),
 mpk (B), msk (B), sk_IDs (B), ek_IDs (B), CT_TPs (B), Tokens (B)
 ```
 
-Use the eight existing curve entries, `n = 10..30` by 5, `m = 5..<n` by 5, and the parsed run count. Save after each averaged parameter group so interrupted experiments retain results.
+Use the six curve entries currently verified in `SchemeCANIFPPCT.java` (BN254, three SS512 entries, and two SS1024 entries), `n = 10..30` by 5, `m = 5..<n` by 5, and the parsed run count. Save after each averaged parameter group so interrupted experiments retain results.
 
 - [ ] **Step 6: Run the Java contract until green**
 
@@ -293,7 +293,7 @@ Use Charm `Element` type checks and `pair`, preserve B-flow symmetric-group gati
 
 - [ ] **Step 3: Translate `conductScheme` and `main`**
 
-Return the same 35-column row order specified for Java. Keep the existing Python averaging behavior, numeric integer normalization, partial-result saving, output messages, exit-code calculation, curve matrix, and `n/m` loops.
+Return the same 35-column row order specified for Java. Keep the existing Python averaging behavior, numeric integer normalization, partial-result saving, output messages, exit-code calculation, the eight-entry Python curve matrix including MNT201 and MNT224, and the `n/m` loops.
 
 - [ ] **Step 4: Run Python syntax and behavior tests until green**
 
