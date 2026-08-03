@@ -263,18 +263,18 @@ jobs:
       - name: Compile the cryptographic scheme
         run: |
           cd "${{ github.workspace }}"
-          g++ -std=c++${cppVersion} -Wall -Wextra -Wpedantic "${sourcePath}" -o "${binaryPath}"
+          g++ -std=c++${cppVersion} -Wall -Wextra -Wpedantic "${sourceFilePath}" -o "${binaryFilePath}"
         env:
           cppVersion: ${{ github.event.inputs.cppVersion || 23 }}
-          sourcePath: ${{ steps.ready.outputs.sourcePath }}
-          binaryPath: ${{ steps.ready.outputs.binaryPath }}
+          sourceFilePath: ${{ steps.ready.outputs.sourceFilePath }}
+          binaryFilePath: ${{ steps.ready.outputs.binaryFilePath }}
       
       - name: Run the cryptographic scheme
         run: |
-          "${binaryPath}" -t 0 -h
-          "${binaryPath}" -o "${outputFileName}" -p "${decimalPlace}" -r "${runCount}" -t 0 -y
+          "${binaryFilePath}" -t 0 -h
+          "${binaryFilePath}" -o "${outputFileName}" -p "${decimalPlace}" -r "${runCount}" -t 0 -y
         env:
-          binaryPath: ${{ steps.ready.outputs.binaryPath }}
+          binaryFilePath: ${{ steps.ready.outputs.binaryFilePath }}
           outputFileName: ${{ steps.ready.outputs.outputFileName }}
           decimalPlace: ${{ needs.prepare.outputs.decimalPlace }}
           runCount: ${{ needs.prepare.outputs.runCount }}
