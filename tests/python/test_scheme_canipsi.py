@@ -24,6 +24,7 @@ class SchemeCANIPSITest(unittest.TestCase):
 		identity = group.random(module.ZR)
 
 		scheme.BSetup(3, 1)
+		self.assertFalse(scheme.BQuery(None, None))
 		basic_user_key = scheme.BKGen(identity)
 		basic_ciphertext = scheme.BEncryption(keyword, secrets, secrets[0])
 		self.assertTrue(scheme.BQuery(basic_ciphertext, scheme.BTokenGen(keyword, basic_user_key)))
@@ -31,6 +32,8 @@ class SchemeCANIPSITest(unittest.TestCase):
 
 		tracing_list = []
 		scheme.Setup(3, 1)
+		self.assertFalse(scheme.Query(None, None, secrets))
+		self.assertFalse(scheme.Trace(None, []))
 		secret_key, encryption_key = scheme.KGen(identity, tracing_list)
 		ciphertext = scheme.Encryption(keyword, secret_key, encryption_key, secrets, secrets[0])
 		self.assertTrue(scheme.Query(ciphertext, scheme.TokenGen(keyword, secret_key), secrets))

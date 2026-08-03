@@ -21,6 +21,7 @@ public final class SchemeCANIPSITest
 		final Element identity = scheme.randomSecrets(1).get(0);
 
 		scheme.BSetup(3, 1);
+		require(!scheme.BQuery(null, null), "A malformed basic query must fail.");
 		final Element basicUserKey = scheme.BKGen(identity);
 		final SchemeCANIPSI.BasicCipherText basicCipherText = scheme.BEncryption(keyword, secrets, secrets.get(0));
 		require(scheme.BQuery(basicCipherText, scheme.BTokenGen(keyword, basicUserKey)), "The matching basic query must succeed.");
@@ -28,6 +29,8 @@ public final class SchemeCANIPSITest
 
 		final List<SchemeCANIPSI.TraceEntry> tracingList = new ArrayList<>();
 		scheme.Setup(3, 1);
+		require(!scheme.Query(null, null, secrets), "A malformed complete query must fail.");
+		require(scheme.Trace(null, new ArrayList<>()) == null, "Malformed tracing input must not produce an identity.");
 		final SchemeCANIPSI.UserKeys userKeys = scheme.KGen(identity, tracingList);
 		final SchemeCANIPSI.CipherText cipherText = scheme.Encryption(keyword, userKeys.secretKey(), userKeys.encryptionKey(), secrets, secrets.get(0));
 		require(scheme.Query(cipherText, scheme.TokenGen(keyword, userKeys.secretKey()), secrets), "The matching complete query must succeed.");
