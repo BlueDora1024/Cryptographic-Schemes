@@ -568,7 +568,7 @@ class Saver:
 
 class SchemeCANIPSI:
 	__DefaultN, __DefaultM = 30, 10
-	def __init__(self:object, group:None|PairingGroup = None) -> object: # This scheme is applicable to symmetric and asymmetric groups of prime orders. 
+	def __init__(self:object, group:None|PairingGroup = None) -> object: # This scheme is applicable to symmetric and asymmetric groups of prime orders.
 		self.__group = group if isinstance(group, PairingGroup) else PairingGroup("SS512", secparam = 512)
 		if self.__group.secparam < 1:
 			self.__group = PairingGroup(self.__group.groupType())
@@ -644,7 +644,7 @@ class SchemeCANIPSI:
 				"BSetup: The variables $n$ and $m$ should be two positive integers satisfying $1 \\leqslant m \\leqslant n$, but they are not, "		\
 				+ "which have been defaulted to ${0}$ and ${1}$, respectively. ".format(SchemeCANIPSI.__DefaultN, SchemeCANIPSI.__DefaultM)		\
 			)
-		
+
 		# Scheme #
 		g = self.__group.random(G1) # generate $g \in \mathbb{G}_1$ randomly
 		g1 = self.__group.random(G1) # generate $g_1 \in \mathbb{G}_1$ randomly
@@ -659,7 +659,7 @@ class SchemeCANIPSI:
 		v4 = g ** t4 # $v_4 \gets g^{t_4}$
 		self.__bpk = (g, g1, H1, H2, Omega, v1, v2, v3, v4) # $\textit{bpk} \gets (g, g_1, H_1, H_2, \Omega, v_1, v_2, v_3, v_4)$
 		self.__bsk = (omega, t1, t2, t3, t4) # $\textit{bsk} \gets (\omega, t_1, t_2, t_3, t_4)$
-		
+
 		# Return #
 		self.__bFlag = True
 		return (self.__bpk, self.__bsk) # \textbf{return} $(\textit{bpk}, \textit{bsk})$
@@ -668,14 +668,14 @@ class SchemeCANIPSI:
 		if not self.__bFlag:
 			print("BKGen: The ``BSetup`` procedure has not been called yet. The program will call the ``BSetup`` first and finish the ``BKGen`` subsequently. ")
 			self.BSetup()
-		
+
 		# Unpack #
 		pass
-		
+
 		# Scheme #
 		k_i = self.__group.random(ZR) # generate $k_i \in \mathbb{Z}_r$ randomly
 		bsk_ID_i = k_i # $\textit{bsk}_{\textit{ID}_i} \gets k_i$
-		
+
 		# Return #
 		return bsk_ID_i # \textbf{return} $\textit{bsk}_{\textit{ID}_i}$
 	def BEncryption(self:object, TPi:bytes, _s:tuple|list, si:Element) -> tuple: # $\textbf{BEncryption}(\textit{TP}_i) \to \textit{BCT}_{\textit{TP}_i}$
@@ -700,10 +700,10 @@ class SchemeCANIPSI:
 			print("BEncryption: The variable $s$ should be a tuple or a list containing $n$ elements of \\mathbb{Z}_r, but it is not, which has been generated randomly. ")
 			s_i = s[randbelow(self.__n)]
 			print("BEncryption: The variable $s_i$ has been generated accordingly. ")
-		
+
 		# Unpack #
 		g1, H1, H2, Omega, v1, v2, v3, v4 = self.__bpk[1:]
-		
+
 		# Scheme #
 		s1_i, s2_i = self.__group.random(ZR), self.__group.random(ZR) # generate $s_{1_i}, s_{2_i} \in \mathbb{Z}_r$ randomly
 		VVec = tuple(H2(Omega ** s[i]) for i in range(self.__n)) # $V_i \gets H_2(\Omega^{s_i}), \forall i \in \{1, 2, \cdots, n\}$
@@ -714,7 +714,7 @@ class SchemeCANIPSI:
 		C4_i = v4 ** s2_i # $C_{4_i} \gets v_2^{s_{1_i}}$
 		aVec = self.__computeCoefficients(VVec) # Compute $a_0, a_1, a_2, \cdots, a_n$ that satisfy $\forall x \in \mathbb{Z}_r$, we have $f(x) = \prod\limits_{i = 1}^n (x - V_i) = a_0 + \sum\limits_{i = 1}^n a_i x^i$
 		BCT_TP_i = ((C0_i, C1_i, C2_i, C3_i, C4_i), aVec) # $\textit{BCT}_{\textit{TPs}} \gets ((C_{0_i}, C_{1_i}, C_{2_i}, C_{3_i}, C_{4_i}), \vec{a})$
-		
+
 		# Return #
 		return BCT_TP_i # \textbf{return} $\textit{BCT}_{\textit{TP}_i}$
 	def BTokenGen(self:object, QTPi:tuple, bskIDi:Element) -> tuple: # $\textbf{BTokenGen}(\textit{QTP}_i, \textit{bsk}_{\textit{ID}_i}) \to \textit{btoken}_i$
@@ -732,11 +732,11 @@ class SchemeCANIPSI:
 		else:
 			bsk_ID_i = self.BKGen(self.__group.random(ZR))
 			print("BTokenGen: The variable $\\textit{bsk}_{\\textit{ID}_i}$ should be an element of $\\mathbb{Z}_r$, but it is not, which has been generated randomly. ")
-		
+
 		# Unpack #
 		g, g1, H1, v1, v2 = self.__bpk[0], self.__bpk[1], self.__bpk[2], self.__bpk[5], self.__bpk[6]
 		omega, t1, t2, t3, t4 = self.__bsk
-		
+
 		# Scheme #
 		r1_i , r2_i = self.__group.random(ZR), self.__group.random(ZR) # generate $r_{1_i}, r_{2_i} \in \mathbb{Z}_r$ randomly
 		T0_i = g ** (r1_i * t1 * t2 + r2_i * t3 * t4) # $T_{0_i} \gets g^{r_{1_i} t_1 t_2 + r_{2_i} t_3 t_4}$
@@ -745,7 +745,7 @@ class SchemeCANIPSI:
 		T3_i = (g1 * H1(QTP_i)) ** (-r2_i * t4) # $T_{3_i} \gets (g_1 H_1(\textit{qt}_i || \textit{qp}_i))^{-r_{2_i} t_4}$
 		T4_i = (g1 * H1(QTP_i)) ** (-r2_i * t3) # $T_{4_i} \gets (g_1 H_1(\textit{qt}_i || \textit{qp}_i))^{-r_{2_i} t_3}$
 		btoken_i = (T0_i, T1_i, T2_i, T3_i, T4_i) # $\textit{btoken} \gets (T_{0_i}, T_{1_i}, T_{2_i}, T_{3_i}, T_{4_i})$
-		
+
 		# Return #
 		return btoken_i # \textbf{return} $\textit{btoken}_i$
 	def BQuery(self:object, BCTTPi:tuple, btokeni:tuple) -> bool: # $\textbf{BQuery}(\textit{BCT}_{\textit{TP}_i}, \textit{btoken}_i) \to y, y \in \{0, 1\}$
@@ -758,13 +758,13 @@ class SchemeCANIPSI:
 			return False
 		if not (isinstance(btokeni, tuple) and len(btokeni) == 5 and all(isinstance(ele, Element) for ele in btokeni)):
 			return False
-		
+
 		# Unpack #
 		H2 = self.__bpk[3]
 		CVec_i, aVec = BCTTPi
 		C0_i, C1_i, C2_i, C3_i, C4_i = CVec_i
 		T0_i, T1_i, T2_i, T3_i, T4_i = btokeni
-		
+
 		# Scheme #
 		try:
 			VPrime_i = H2(pair(T0_i, C0_i) * pair(T1_i, C1_i) * pair(T2_i, C2_i) * pair(T3_i, C3_i) * pair(T4_i, C4_i))
@@ -782,7 +782,7 @@ class SchemeCANIPSI:
 				"Setup: The variables $n$ and $m$ should be two positive integers satisfying $1 \\leqslant m \\leqslant n$, but they are not, "		\
 				+ "which have been defaulted to ${0}$ and ${1}$, respectively. ".format(SchemeCANIPSI.__DefaultN, SchemeCANIPSI.__DefaultM)		\
 			)
-		
+
 		# Scheme #
 		g1 = self.__group.random(G1) # generate $g_1 \in \mathbb{G}_1$ randomly
 		g2 = self.__group.random(G2) # generate $g_2 \in \mathbb{G}_2$ randomly
@@ -803,7 +803,7 @@ class SchemeCANIPSI:
 		v4 = g2 ** t4 # $v_4 \gets g_2^{t_4}$
 		self.__mpk = (g1, g2, g3, H1, H2, H3, H4, R, S, T, Omega, v1, v2, v3, v4) # $\textit{mpk} \gets (g_1, g_2, g_3, H_1, H_2, H_3, H_4, R, S, T, \Omega, v_1, v_2, v_3, v_4)$
 		self.__msk = (r, s, t, omega, t1, t2, t3, t4) # $\textit{msk} \gets (r, s, t, \omega, t_1, t_2, t_3, t_4)$
-		
+
 		# Return #
 		self.__flag = True
 		return (self.__mpk, self.__msk) # \textbf{return} $(\textit{mpk}, \textit{msk})$
@@ -817,11 +817,11 @@ class SchemeCANIPSI:
 		else:
 			L = []
 			print("KGen: The variable $L$ should be a list, but it is not, which has been initialized as an empty list. ")
-		
+
 		# Unpack #
 		g1, H4 = self.__mpk[0], self.__mpk[6]
 		r, s = self.__msk[0], self.__msk[1]
-		
+
 		# Scheme #
 		k_i, x_i = self.__group.random(ZR), self.__randomNonZeroScalar() # generate $k_i \in \mathbb{Z}_r$ and $x_i \in \mathbb{Z}_r^*$
 		z_i = (r - x_i) * (s * x_i) ** (-1) # $z_i \gets \frac{r - x_i}{s x_i}$
@@ -830,7 +830,7 @@ class SchemeCANIPSI:
 		ek_ID_i = (x_i, Z_i) # $\textit{ek}_{\textit{ID}_i} \gets (x_i, Z_i)$
 		tag_i = H4(Z_i ** x_i) # $\textit{tag}_i \gets H_4(Z_i^{x_i})$
 		L.append((ID_i, k_i, tag_i)) # $L \gets L || ((\textit{ID}_i, k_i, \textit{tag}_i))$
-		
+
 		# Return #
 		return (sk_ID_i, ek_ID_i) # \textbf{return} $(\textit{sk}_{\textit{ID}_i}, \textit{ek}_{\textit{ID}_i})$
 	def Encryption(self:object, TPi:bytes, skIDi:Element, ekIDi:tuple, _s:tuple|list, si:Element) -> tuple: # $\textbf{Encryption}(\textit{TP}_i, \textit{sk}_{\textit{ID}_i}, \textit{ek}_{\textit{ID}_i}, s, s_i) \to \textit{CT}_{\textit{TP}_i}$
@@ -865,14 +865,14 @@ class SchemeCANIPSI:
 			print("Encryption: The variable $s$ should be a tuple or a list containing $n$ elements of \\mathbb{Z}_r, but it is not, which has been generated randomly. ")
 			s_i = s[randbelow(self.__n)]
 			print("Encryption: The variable $s_i$ has been generated accordingly. ")
-		
+
 		# Unpack #
 		g1, g3, H1, H2, H3, S, T, Omega, v1, v2, v3, v4 = (													\
 			self.__mpk[0], self.__mpk[2], self.__mpk[3], self.__mpk[4], self.__mpk[5], self.__mpk[8], 		\
 			self.__mpk[9], self.__mpk[10], self.__mpk[11], self.__mpk[12], self.__mpk[13], self.__mpk[14]	\
 		)
 		x_i, Z_i = ek_ID_i
-		
+
 		# Scheme #
 		s1_i, s2_i = self.__group.random(ZR), self.__group.random(ZR) # generate $s_{1_i}, s_{2_i} \in \mathbb{Z}_r$ randomly
 		VVec = tuple(H2(Omega ** s[i]) for i in range(self.__n)) # $V_i \gets H_2(\Omega^{s_i}), \forall i \in \{1, 2, \cdots, n\}$
@@ -891,7 +891,7 @@ class SchemeCANIPSI:
 		) # $C_4 \gets H_3(C_{0_1} || C_{0_2} || \cdots || C_{0_n} || C_{1_1} || C_{1_2} || \cdots || C_{1_n} || \cdots || C_{4_1} || C_{4_2} || \cdots || C_{4_n} || a_0 || a_1 || \cdots || a_{n - 1} || C_1 || C_2 || C_3)$
 		C5 = sk_ID_i * C4 + x_i # $C_5 \gets \textit{sk}_{\textit{ID}_i} C_4 + x_i$
 		CT_TP_i = (C0_i, C1_i, C2_i, C3_i, C4_i, C1, C2, C3, C4, C5) # $\textit{CT}_{\textit{TPs}} \gets (C_{0_i}, C_{1_i}, C_{2_i}, C_{3_i}, C_{4_i}, C_1, C_2, C_3, C_4, C_5)$
-		
+
 		# Return #
 		return CT_TP_i # \textbf{return} $\textit{CT}_{\textit{TP}_i}$
 	def TokenGen(self:object, QTPi:tuple, skIDi:Element) -> tuple: # $\textbf{TokenGen}(\textit{QTP}_i, \textit{sk}_{\textit{ID}_i}) \to \textit{token}_i$
@@ -909,11 +909,11 @@ class SchemeCANIPSI:
 		else:
 			sk_ID_i = self.KGen(self.__group.random(ZR), [])[0]
 			print("TokenGen: The variable $\\textit{sk}_{\\textit{ID}_i}$ should be an element of $\\mathbb{Z}_r$, but it is not, which has been generated randomly. ")
-		
+
 		# Unpack #
 		g1, g2, g3, H1 = self.__mpk[0], self.__mpk[1], self.__mpk[2], self.__mpk[3]
 		omega, t1, t2, t3, t4 = self.__msk[3], self.__msk[4], self.__msk[5], self.__msk[6], self.__msk[7]
-		
+
 		# Scheme #
 		r1_i , r2_i = self.__group.random(ZR), self.__group.random(ZR) # generate $r_{1_i}, r_{2_i} \in \mathbb{Z}_r$ randomly
 		T0_i = g2 ** (r1_i * t1 * t2 + r2_i * t3 * t4) # $T_{0_i} \gets g_2^{r_{1_i} t_1 t_2 + r_{2_i} t_3 t_4}$
@@ -922,7 +922,7 @@ class SchemeCANIPSI:
 		T3_i = (g3 * H1(QTP_i)) ** (-r2_i * t4) # $T_{3_i} \gets (g_3 H_1(\textit{qt}_i || \textit{qp}_i))^{-r_{2_i} t_4}$
 		T4_i = (g3 * H1(QTP_i)) ** (-r2_i * t3) # $T_{4_i} \gets (g_3 H_1(\textit{qt}_i || \textit{qp}_i))^{-r_{2_i} t_3}$
 		token_i = (T0_i, T1_i, T2_i, T3_i, T4_i) # $\textit{token} \gets (T_{0_i}, T_{1_i}, T_{2_i}, T_{3_i}, T_{4_i})$
-		
+
 		# Return #
 		return token_i # \textbf{return} $\textit{token}_i$
 	def Query(self:object, CTTPi:tuple, tokeni:tuple, _s:tuple|list) -> bool: # $\textbf{Query}(\textit{CT}_{\textit{TP}_i}, \textit{token}_i, s) \to y, y \in \{0, 1\}$
@@ -939,12 +939,12 @@ class SchemeCANIPSI:
 			return False
 		if not (isinstance(tokeni, tuple) and len(tokeni) == 5 and all(isinstance(ele, Element) for ele in tokeni)):
 			return False
-		
+
 		# Unpack #
 		H2, Omega = self.__mpk[4], self.__mpk[10]
 		C0_i, C1_i, C2_i, C3_i, C4_i = CTTPi[0], CTTPi[1], CTTPi[2], CTTPi[3], CTTPi[4]
 		T0_i, T1_i, T2_i, T3_i, T4_i = tokeni
-		
+
 		# Scheme #
 		try:
 			VVec = tuple(H2(Omega ** s[i]) for i in range(self.__n))
@@ -962,12 +962,12 @@ class SchemeCANIPSI:
 			return False
 		if not isinstance(_L, list):
 			return False
-		
+
 		# Unpack #
 		H4 = self.__mpk[6]
 		t = self.__msk[2]
 		C1, C2 = CTTPi[5], CTTPi[6]
-		
+
 		# Scheme #
 		try:
 			tag_i = H4(C2 / (C1 ** t))
@@ -976,7 +976,7 @@ class SchemeCANIPSI:
 		for element in _L:
 			if isinstance(element, tuple) and len(element) == 3 and tag_i == element[2]:
 				return element
-		
+
 		# Return #
 		return False
 	def getLengthOf(self:object, obj:Element|int|bytes|tuple|list|set|dict|str) -> int|str:
@@ -1007,7 +1007,7 @@ def conductScheme(curveParameter:tuple|list|dict|str, n:int = 30, m:int = 10, ru
 	sizeZR, sizeG1, sizeG2, sizeGT = ("N/A", ) * 4
 	sizeBpk, sizeBsk, sizeBskIDs, sizeBCTTPs, sizeBTokens = ("N/A", ) * 5
 	sizeMpk, sizeMsk, sizeSkIDs, sizeEkIDs, sizeCTTPs, sizeTokens = ("N/A", ) * 6
-	
+
 	# Checks #
 	if isinstance(curveParameter, (tuple, list)):
 		if len(curveParameter) >= 1 and isinstance(curveParameter[0], str) and curveParameter[0].isalnum():
@@ -1051,7 +1051,7 @@ def conductScheme(curveParameter:tuple|list|dict|str, n:int = 30, m:int = 10, ru
 	elif not isinstance(isVerbose, bool) or isVerbose:
 		print("Is the system valid? No. The parameters $m$ and $n$ should be two positive integers satisfying $1 \\leqslant m \\leqslant n$. ")
 		print()
-	
+
 	# Execution #
 	if isSystemValid:
 		# Initialization #
@@ -1060,13 +1060,13 @@ def conductScheme(curveParameter:tuple|list|dict|str, n:int = 30, m:int = 10, ru
 			scheme.getLengthOf(group.random(ZR)), scheme.getLengthOf(group.random(G1)), 	\
 			scheme.getLengthOf(group.random(G2)), scheme.getLengthOf(group.random(GT))		\
 		)
-		
+
 		try:
 			pair(group.random(G1), group.random(G1))
 			isAsymmetric = False
 		except:
 			isAsymmetric = True
-		
+
 		if isAsymmetric:
 			isBSchemeCorrect = "N/A"
 		else:
@@ -1076,7 +1076,7 @@ def conductScheme(curveParameter:tuple|list|dict|str, n:int = 30, m:int = 10, ru
 			endTime = perf_counter()
 			timeBSetup = endTime - startTime
 			sizeBpk, sizeBsk = scheme.getLengthOf(bpk), scheme.getLengthOf(bsk)
-			
+
 			# BKGen #
 			startTime = perf_counter()
 			IDVec, bsk_IDs = tuple(group.random(ZR) for _ in range(n)), []
@@ -1085,7 +1085,7 @@ def conductScheme(curveParameter:tuple|list|dict|str, n:int = 30, m:int = 10, ru
 			endTime = perf_counter()
 			timeBKGen = (endTime - startTime) / n
 			sizeBskIDs = scheme.getLengthOf(bsk_IDs)
-			
+
 			# BEncryption #
 			startTime = perf_counter()
 			TPs = tuple(randbelow(1 << group.secparam).to_bytes((group.secparam + 7) >> 3, byteorder = "big") for _ in range(n))
@@ -1096,7 +1096,7 @@ def conductScheme(curveParameter:tuple|list|dict|str, n:int = 30, m:int = 10, ru
 			endTime = perf_counter()
 			timeBEncryption = (endTime - startTime) / n
 			sizeBCTTPs = scheme.getLengthOf(BCT_TPs)
-			
+
 			# BTokenGen #
 			startTime = perf_counter()
 			QTP = tuple(randbelow(1 << group.secparam).to_bytes((group.secparam + 7) >> 3, byteorder = "big") for _ in range(m))
@@ -1106,7 +1106,7 @@ def conductScheme(curveParameter:tuple|list|dict|str, n:int = 30, m:int = 10, ru
 			endTime = perf_counter()
 			timeBTokenGen = (endTime - startTime) / m
 			sizeBTokens = scheme.getLengthOf(BTokens)
-			
+
 			# BQuery #
 			startTime = perf_counter()
 			bys = []
@@ -1115,14 +1115,14 @@ def conductScheme(curveParameter:tuple|list|dict|str, n:int = 30, m:int = 10, ru
 			endTime = perf_counter()
 			isBSchemeCorrect = bys and all(bys)
 			timeBQuery = (endTime - startTime) / m
-		
+
 		# Setup #
 		startTime = perf_counter()
 		mpk, msk = scheme.Setup(n, m)
 		endTime = perf_counter()
 		timeSetup = endTime - startTime
 		sizeMpk, sizeMsk = scheme.getLengthOf(mpk), scheme.getLengthOf(msk)
-		
+
 		# KGen #
 		startTime = perf_counter()
 		IDVec, L, sk_IDs, ek_IDs = tuple(group.random(ZR) for _ in range(n)), [], [], []
@@ -1134,7 +1134,7 @@ def conductScheme(curveParameter:tuple|list|dict|str, n:int = 30, m:int = 10, ru
 		timeKGen = (endTime - startTime) / n
 		sizeSkIDs = scheme.getLengthOf(sk_IDs)
 		sizeEkIDs = scheme.getLengthOf(ek_IDs)
-		
+
 		# Encryption #
 		startTime = perf_counter()
 		TPs = tuple(randbelow(1 << group.secparam).to_bytes((group.secparam + 7) >> 3, byteorder = "big") for _ in range(n))
@@ -1145,7 +1145,7 @@ def conductScheme(curveParameter:tuple|list|dict|str, n:int = 30, m:int = 10, ru
 		endTime = perf_counter()
 		timeEncryption = (endTime - startTime) / n
 		sizeCTTPs = scheme.getLengthOf(CT_TPs)
-		
+
 		# TokenGen #
 		startTime = perf_counter()
 		QTP = tuple(randbelow(1 << group.secparam).to_bytes((group.secparam + 7) >> 3, byteorder = "big") for _ in range(m))
@@ -1155,7 +1155,7 @@ def conductScheme(curveParameter:tuple|list|dict|str, n:int = 30, m:int = 10, ru
 		endTime = perf_counter()
 		timeTokenGen = (endTime - startTime) / m
 		sizeTokens = scheme.getLengthOf(Tokens)
-		
+
 		# Query #
 		startTime = perf_counter()
 		ys = []
@@ -1164,7 +1164,7 @@ def conductScheme(curveParameter:tuple|list|dict|str, n:int = 30, m:int = 10, ru
 		endTime = perf_counter()
 		isSchemeCorrect = ys and all(ys)
 		timeQuery = (endTime - startTime) / m
-		
+
 		# Trace #
 		startTime = perf_counter()
 		identities = []
@@ -1173,7 +1173,7 @@ def conductScheme(curveParameter:tuple|list|dict|str, n:int = 30, m:int = 10, ru
 		endTime = perf_counter()
 		isTracingVerified = identities and all(identity is not False for identity in identities)
 		timeTrace = (endTime - startTime) / m
-		
+
 		# Destruction #
 		del scheme
 		if not isinstance(isVerbose, bool) or isVerbose:
@@ -1192,7 +1192,7 @@ def conductScheme(curveParameter:tuple|list|dict|str, n:int = 30, m:int = 10, ru
 				(sizeMpk, sizeMsk, sizeSkIDs, sizeEkIDs, sizeCTTPs, sizeTokens)	\
 			))
 			print()
-	
+
 	# End #
 	return [																			\
 		curveName, securityParameter, nString, mString, runString, 						\
@@ -1218,7 +1218,7 @@ def main() -> int:
 			parser.disableConsoleEchoes()
 			print("The execution has started. ")
 			print()
-			
+
 			# Parameters #
 			curveParameters = ("MNT201", "MNT224", "BN254", ("SS512", 128), ("SS512", 256), ("SS512", 512), ("SS1024", 512), ("SS1024", 1024))
 			queries = ("curveParameter", "secparam", "n", "m", "runCount")
@@ -1232,7 +1232,7 @@ def main() -> int:
 			)
 			getValidatorJudges = lambda x:(x[queryLength + validatorIndex] for validatorIndex in (0, 2, 3))
 			getMetricJudges = lambda x:(x[queryValidatorLength + metricIndex] for metricIndex in (5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 20, 21, 22, 23, 24, 25))
-			
+
 			# Scheme #
 			columns, queryLength, results = queries + validators + metrics, len(queries), []
 			length, queryValidatorLength, runCountIndex = len(columns), queryLength + len(validators), queryLength - 1
