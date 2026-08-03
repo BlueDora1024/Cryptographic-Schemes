@@ -147,7 +147,7 @@ jobs:
           fi
           matrix=()
           [[ "true" == "${executeSchemeAAIBME}" ]] && matrix+=("SchemeAAIBME/SchemeAAIBME.py" "SchemeAAIBME/SchemeFuzzyME.py" "SchemeIBMETR/SchemeIBMECH.py")
-          [[ "true" == "${executeSchemeCANIFPPCT}" ]] && matrix+=("SchemeCANIFPPCT/SchemeCANIFPPCT.py")
+          [[ "true" == "${executeSchemeCANIFPPCT}" ]] && matrix+=("SchemeCANIFPPCT/SchemeCANIFPPCT.py" "SchemeCANIFPPCT/SchemeCANIPSI.py")
           [[ "true" == "${executeSchemeHIBME}" ]] && matrix+=("SchemeHIBME/SchemeAnonymousME.py" "SchemeHIBME/SchemeHIBME.py")
           [[ "true" == "${executeSchemeIBMEMR}" ]] && matrix+=("SchemeIBMEMR/SchemeIBBME.py" "SchemeIBMETR/SchemeIBME.py" "SchemeIBMEMR/SchemeIBMEMR.py")
           [[ "true" == "${executeSchemeIBMETR}" ]] && matrix+=("SchemeIBMETR/SchemeAIBE.py" "SchemeIBMETR/SchemeARES.py" "SchemeIBMETR/SchemeIBME.py" "SchemeIBMETR/SchemeIBMECH.py" "SchemeIBMETR/SchemeIBMETR.py")

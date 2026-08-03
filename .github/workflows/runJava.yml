@@ -156,7 +156,7 @@ jobs:
           fi
           matrix=()
           [[ "true" == "${executeSchemeAAIBME}" ]] && matrix+=("SchemeAAIBME/SchemeAAIBME.java" "SchemeAAIBME/SchemeFuzzyME.java")
-          [[ "true" == "${executeSchemeCANIFPPCT}" ]] && matrix+=("SchemeCANIFPPCT/SchemeCANIFPPCT.java")
+          [[ "true" == "${executeSchemeCANIFPPCT}" ]] && matrix+=("SchemeCANIFPPCT/SchemeCANIFPPCT.java" "SchemeCANIFPPCT/SchemeCANIPSI.java")
           [[ "true" == "${executeSchemeHIBME}" ]] && matrix+=("SchemeHIBME/SchemeAnonymousME.java" "SchemeHIBME/SchemeHIBME.java")
           [[ "true" == "${executeSchemeIBMEMR}" ]] && matrix+=("SchemeIBMEMR/SchemeIBBME.java" "SchemeIBMEMR/SchemeIBMEMR.java")
           [[ "true" == "${executeSchemeIBMETR}" ]] && matrix+=("SchemeIBMETR/SchemeAIBE.java" "SchemeIBMETR/SchemeARES.java" "SchemeIBMETR/SchemeIBME.java" "SchemeIBMETR/SchemeIBMECH.java" "SchemeIBMETR/SchemeIBMETR.java")
