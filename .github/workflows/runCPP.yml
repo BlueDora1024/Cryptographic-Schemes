@@ -1,0 +1,197 @@
+name: Run C++
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'PSI-CA/**/*.cpp'
+      - 'PSI-CA/**/*.hpp'
+      - '.github/workflows/runCPP.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'PSI-CA/**/*.cpp'
+      - 'PSI-CA/**/*.hpp'
+      - '.github/workflows/runCPP.yml'
+  workflow_dispatch:
+    inputs:
+      outputFormat:
+        description: 'Output format'
+        required: true
+        default: '.csv'
+        type: choice
+        options:
+          - '.csv'
+          - '.tsv'
+          - '.txt'
+      decimalPlace:
+        description: 'Decimal place'
+        required: true
+        default: 9
+        type: choice
+        options:
+          - 0
+          - 's'
+          - 'second'
+          - 3
+          - 'ms'
+          - 'millisecond'
+          - 6
+          - 'microsecond'
+          - 9
+          - 'ns'
+          - 'nanosecond'
+          - 12
+          - 'ps'
+          - 'picosecond'
+          - 15
+          - 'fs'
+          - 'femtosecond'
+          - 18
+      runCount:
+        description: 'Run count (1-100)'
+        required: true
+        default: '10'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      decimalPlace: ${{ steps.decimalPlace.outputs.decimalPlace }}
+      runCount: ${{ steps.runCount.outputs.runCount }}
+      timeString: ${{ steps.timeString.outputs.timeString }}
+    steps:
+      - name: Prepare the matrix
+        id: matrix
+        run: |
+          set -euo pipefail
+          matrix='["PSI-CA/OPSI-CA.cpp","PSI-CA/PSI-CA.cpp","PSI-CA/SPSI-CA(1).cpp","PSI-CA/VPSI-CA-Alg2.cpp","PSI-CA/VPSI-CA-Alg3.cpp","PSI-CA/VPSI-CA-Alg4.cpp","PSI-CA/VPSI-CA-Alg5.cpp"]'
+          echo "matrix=${matrix}" >> "${GITHUB_OUTPUT}"
+
+      - name: Prepare the decimal place
+        id: decimalPlace
+        run: |
+          set -euo pipefail
+          case "${decimalPlaceString}" in
+            0|s|second)
+              decimalPlace=0
+              ;;
+            3|ms|millisecond)
+              decimalPlace=3
+              ;;
+            6|microsecond)
+              decimalPlace=6
+              ;;
+            9|ns|nanosecond)
+              decimalPlace=9
+              ;;
+            12|ps|picosecond)
+              decimalPlace=12
+              ;;
+            15|fs|femtosecond)
+              decimalPlace=15
+              ;;
+            18)
+              decimalPlace=18
+              ;;
+            *)
+              decimalPlace=9
+              ;;
+          esac
+          echo "decimalPlace=${decimalPlace}" >> "${GITHUB_OUTPUT}"
+        env:
+          decimalPlaceString: ${{ github.event.inputs.decimalPlace || '9' }}
+
+      - name: Prepare the run count
+        id: runCount
+        run: |
+          set -euo pipefail
+          normalizedRunCount="$(printf '%s' "${runCountString}" | sed 's/^0*//')"
+          if [[ "${runCountString}" =~ ^[0-9]+$ && -n "${normalizedRunCount}" && ${#normalizedRunCount} -le 3 ]] && (( 10#${normalizedRunCount} <= 100 )); then
+            runCount="${normalizedRunCount}"
+          else
+            runCount=10
+          fi
+          echo "runCount=${runCount}" >> "${GITHUB_OUTPUT}"
+        env:
+          runCountString: ${{ github.event.inputs.runCount || '10' }}
+
+      - name: Prepare the time string
+        id: timeString
+        run: |
+          set -euo pipefail
+          timeString="HKT$(date '+%Y%m%d%H%M%S')"
+          echo "timeString=${timeString}" >> "${GITHUB_OUTPUT}"
+        env:
+          TZ: 'Asia/Hong_Kong'
+
+  runCPP:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        cryptographicScheme: ${{ fromJson(needs.prepare.outputs.matrix) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          sparse-checkout: |
+            PSI-CA/
+          persist-credentials: false
+
+      - name: Get ready
+        id: ready
+        run: |
+          set -euo pipefail
+          directoryPath="$(dirname -- "${cryptographicScheme}")"
+          sourceFileName="$(basename -- "${cryptographicScheme}")"
+          mainFileName="${sourceFileName%.cpp}"
+          sourcePath="${{ github.workspace }}/${{ matrix.cryptographicScheme }}"
+          binaryPath="${{ github.workspace }}/${directoryPath}/${mainFileName}.bin"
+          outputFilePath="${directoryPath}/${mainFileName}-C++17-p${decimalPlace}-r${runCount}-${timeString}${outputFormat}"
+          outputFileName="$(basename -- "${outputFilePath}")"
+          echo "sourcePath=${sourcePath}" >> "${GITHUB_OUTPUT}"
+          echo "binaryPath=${binaryPath}" >> "${GITHUB_OUTPUT}"
+          echo "outputFilePath=${outputFilePath}" >> "${GITHUB_OUTPUT}"
+          echo "outputFileName=${outputFileName}" >> "${GITHUB_OUTPUT}"
+        env:
+          cryptographicScheme: ${{ matrix.cryptographicScheme }}
+          decimalPlace: ${{ needs.prepare.outputs.decimalPlace }}
+          runCount: ${{ needs.prepare.outputs.runCount }}
+          timeString: ${{ needs.prepare.outputs.timeString }}
+          outputFormat: ${{ github.event.inputs.outputFormat || '.csv' }}
+
+      - name: Compile the cryptographic scheme
+        run: |
+          set -euo pipefail
+          g++ -std=c++17 -Wall -Wextra -Wpedantic "${sourcePath}" -o "${binaryPath}"
+        env:
+          sourcePath: ${{ steps.ready.outputs.sourcePath }}
+          binaryPath: ${{ steps.ready.outputs.binaryPath }}
+
+      - name: Run the cryptographic scheme
+        run: |
+          set -euo pipefail
+          "${binaryPath}" -t 0 -h
+          "${binaryPath}" -o "${outputFileName}" -p "${decimalPlace}" -r "${runCount}" -t 0 -y
+        env:
+          binaryPath: ${{ steps.ready.outputs.binaryPath }}
+          outputFileName: ${{ steps.ready.outputs.outputFileName }}
+          decimalPlace: ${{ needs.prepare.outputs.decimalPlace }}
+          runCount: ${{ needs.prepare.outputs.runCount }}
+
+      - name: Upload the result
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          path: ${{ github.workspace }}/${{ steps.ready.outputs.outputFilePath }}
+          archive: false
+          if-no-files-found: error

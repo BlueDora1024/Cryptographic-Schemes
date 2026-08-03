@@ -51,12 +51,21 @@ We are currently merging cryptographic schemes from our other repositories. Cryp
   - [FS-MUAEKS.py](./FS-MUAEKS/FS-MUAEKS.py)
 - [LB-PEAKS](./LB-PEAKS/)
   - [LB-PEAKS.py](./LB-PEAKS/LB-PEAKS.py)
+- [PSI-CA](./PSI-CA/)
+  - [OPSI-CA.cpp](./PSI-CA/OPSI-CA.cpp)
+  - [PSI-CA.cpp](./PSI-CA/PSI-CA.cpp)
+  - [SPSI-CA(1).cpp](./PSI-CA/SPSI-CA(1).cpp)
+  - [VPSI-CA-Alg2.cpp](./PSI-CA/VPSI-CA-Alg2.cpp)
+  - [VPSI-CA-Alg3.cpp](./PSI-CA/VPSI-CA-Alg3.cpp)
+  - [VPSI-CA-Alg4.cpp](./PSI-CA/VPSI-CA-Alg4.cpp)
+  - [VPSI-CA-Alg5.cpp](./PSI-CA/VPSI-CA-Alg5.cpp)
 
 Most of the cryptographic schemes here are pairing-based, which are implemented based on the PBC library and its variants. 
 
 | Programming language | Dependency |
 | - | - |
-| C/C++ | [PBC](https://crypto.stanford.edu/pbc/download.html) |
+| C++ (PSI-CA) | C++17 standard library for algorithms and formatting; Ubuntu/POSIX APIs for file publication (Windows compilation is rejected); no third-party libraries |
+| C (and pairing-based C/C++) | [PBC](https://crypto.stanford.edu/pbc/download.html) |
 | Python (3.12 or above) | [Python Charm-Crypto framework](https://github.com/JHUISI/charm) |
 | Java | JPBC |
 
@@ -1007,7 +1016,62 @@ Therefore, this repository only contains the up-to-date Java implementation, wit
 Please use an external memory monitor (such as the Task Manager) to record memory information (e.g., peak RSS) for each Java implementation if necessary. 
 Meanwhile, space measurements other than the computation of the object length will not be officially offered in this repository. 
 
-## 3. Acknowledgment
+## 3. C++
+
+The seven implementations under [``PSI-CA``](./PSI-CA/) are standalone C++17 programs. Their algorithms and result formatting use the C++17 standard library, and they use no third-party libraries. The saver's file-publication path uses Ubuntu/POSIX APIs, so these implementations target Ubuntu/POSIX and compilation on Windows is rejected. These files do not require PBC or the pairing-based dependencies used by other C/C++ implementations in this repository.
+
+### 3.1 C++ environment, inputs, and outputs
+
+The programs are developed for Ubuntu and require a compiler such as ``g++`` with C++17 support. From the repository root, the following example uses all required warning flags; the quotes protect the parentheses in the source name, and the output binary is placed under ``PSI-CA``.
+
+```shell
+g++ -std=c++17 -Wall -Wextra -Wpedantic "PSI-CA/SPSI-CA(1).cpp" -o "PSI-CA/SPSI-CA(1)"
+```
+
+A noninteractive execution that selects the output, precision, run count, immediate exit, and overwrite authorization is as follows.
+
+```shell
+"PSI-CA/SPSI-CA(1)" -o "results.csv" -p 9 -r 10 -t 0 -y
+```
+
+All aliases in the following table are case-insensitive. Pass ``-h`` to print the exact short option list.
+
+| Purpose | Accepted aliases |
+| - | - |
+| Encoding | ``e``, ``/e``, ``-e``, ``encoding``, ``/encoding``, ``--encoding`` |
+| Help | ``h``, ``/h``, ``-h``, ``help``, ``/help``, ``--help`` |
+| Output path | ``o``, ``/o``, ``-o``, ``output``, ``/output``, ``--output`` |
+| Decimal place | ``p``, ``/p``, ``-p``, ``place``, ``/place``, ``--place`` |
+| Quiet mode | ``q``, ``/q``, ``-q``, ``quiet``, ``/quiet``, ``--quiet`` |
+| Run count | ``r``, ``/r``, ``-r``, ``run``, ``/run``, ``--run`` |
+| Waiting time | ``t``, ``/t``, ``-t``, ``time``, ``/time``, ``--time`` |
+| Overwrite confirmation | ``y``, ``/y``, ``-y``, ``yes``, ``/yes``, ``--yes`` |
+
+Only UTF-8 (``UTF-8`` or ``UTF8``) is accepted for the encoding. The default output is ``<program>.csv``, the default decimal place is 9, the default run count is 10, and the default waiting time is infinity. These seven entry points use noninteractive parser and exit handling, so the infinite default does not pause for terminal input; specify ``-t 0`` to make immediate exit explicit in scripts.
+
+A relative output path is resolved against the executable's directory, not the current working directory. If ``-o`` names a directory path (an existing directory or a path ending in a directory separator), the program appends its default ``<program>.csv`` file name. If parsing produces a protected source or script extension, that extension is reset to ``.csv``; the saver independently rejects a protected extension if one reaches it directly.
+
+An existing output requires ``-y`` in these noninteractive programs or interactive confirmation when the shared parser is embedded with interactive input enabled. On Ubuntu/POSIX, after opening and validating the output parent directory, the saver creates an owner-only private workspace and performs its workspace and publication steps with directory-FD-anchored ``mkdirat``, ``openat``, ``linkat``, ``renameat``, and ``unlinkat`` operations. It uses ``linkat`` for atomic no-clobber directory-entry publication and ``renameat`` for authorized replacement. The saver rejects symlink and non-regular targets. Saving is not crash-durable because the saver does not call ``fsync``. These statements describe the implemented publication mechanics, not a general security guarantee.
+
+CSV, TSV, and TXT are the supported output formats, with CSV as the default. An unsupported extension retains the requested file name but receives escaped TXT content as a fallback. Decimal values use the requested precision, while integers are written without decimal places.
+
+The exit codes describe parsing and saving rather than cryptographic validation. ``EXIT_SUCCESS`` ($0$) is returned when the result is saved, and ``EXIT_FAILURE`` ($1$) is returned when saving fails. For invalid arguments, ``main`` returns the literal ``-1`` (normally observed as $255$ on POSIX shells). Help exits with ``EXIT_SUCCESS`` ($0$). The algorithms currently do not expose a separate correctness boolean to ``main``, so cryptographic correctness does not independently determine these exit codes.
+
+The [``runCPP`` workflow](./.github/workflows/runCPP.yml) runs an exact seven-program matrix on ``ubuntu-latest``. Its checkout and artifact actions are pinned to full commit SHAs. Every program is compiled with ``-std=c++17 -Wall -Wextra -Wpedantic``, then exercised with both a help command and a real execution, and the generated results are uploaded as artifacts. Manual dispatch accepts the output format, decimal place, and run count. The CI run count is limited to 1 through 100; an absent or invalid value falls back to 10. Each matrix job has a 30-minute timeout.
+
+### 3.2 Time complexity
+
+The implementations retain their original measurement model. They take CPU-clock samples with ``clock()``, subtract the starting tick count from the ending tick count, and divide by ``CLOCKS_PER_SEC`` while multiplying by 1000 to report milliseconds. Results are divided by the selected run count to obtain a per-run average.
+
+The original ``baseNum`` scaling remains part of both total and actor-specific measurements. The VPSI variants also retain their per-operation ``adjust`` terms. OPSI and SPSI retain the actor-specific modeled costs added to the measured sender and cloud totals. These values therefore reproduce the programs' academic cost model and should not be interpreted as unadjusted wall-clock benchmarks.
+
+### 3.3 Space complexity
+
+The space outputs preserve the academic formulas implemented by each class's ``printSize`` method. OPSI-CA, PSI-CA, and SPSI-CA report bytes. The VPSI-CA programs sum the ``printSize`` results as aggregate byte totals, divide them by ``1024.0``, and save the fractional results as kilobytes. The formulas scale selected elements and collections according to the scheme parameters and retain the original program-specific aggregation.
+
+These values are serialized or object-model estimates for the selected scheme objects, not measurements of process RSS or peak resident memory. Use an external memory monitor when peak memory consumption is required.
+
+## 4. Acknowledgment
 
 We extend our sincere gratitude to the developers for their diligent efforts. Without their assistance, this repository would not exist. 
 
