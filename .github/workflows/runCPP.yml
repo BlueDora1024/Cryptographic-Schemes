@@ -5,18 +5,30 @@ on:
     branches:
       - main
     paths:
-      - 'PSI-CA/**/*.cpp'
-      - 'PSI-CA/**/*.hpp'
+      - '**/*.cpp'
       - '.github/workflows/runCPP.yml'
   push:
     branches:
       - main
     paths:
-      - 'PSI-CA/**/*.cpp'
-      - 'PSI-CA/**/*.hpp'
+      - '**/*.cpp'
       - '.github/workflows/runCPP.yml'
   workflow_dispatch:
     inputs:
+      executePSICA:
+        description: 'PSICA'
+        required: true
+        default: true
+        type: boolean
+      cppVersion:
+        description: 'C++ version'
+        required: true
+        default: 23
+        type: choice
+        options:
+          - 17
+          - 20
+          - 23
       outputFormat:
         description: 'Output format'
         required: true
@@ -49,9 +61,8 @@ on:
           - 15
           - 'fs'
           - 'femtosecond'
-          - 18
       runCount:
-        description: 'Run count (1-100)'
+        description: 'Run count'
         required: true
         default: '10'
         type: string
@@ -71,14 +82,25 @@ jobs:
       - name: Prepare the matrix
         id: matrix
         run: |
-          set -euo pipefail
-          matrix='["PSI-CA/OPSI-CA.cpp","PSI-CA/PSI-CA.cpp","PSI-CA/SPSI-CA(1).cpp","PSI-CA/VPSI-CA-Alg2.cpp","PSI-CA/VPSI-CA-Alg3.cpp","PSI-CA/VPSI-CA-Alg4.cpp","PSI-CA/VPSI-CA-Alg5.cpp"]'
-          echo "matrix=${matrix}" >> "${GITHUB_OUTPUT}"
-
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]];
+          then
+            executePSICA="${{ github.event.inputs.executePSICA }}"
+          else
+            executePSICA="true"
+          fi
+          matrix=()
+          [[ "true" == "${executePSICA}" ]] && matrix+=("PSI-CA/OPSI-CA.cpp" "PSI-CA/PSI-CA.cpp" "PSI-CA/SPSI-CA.cpp" "PSI-CA/VPSI-CA-Alg2.cpp" "PSI-CA/VPSI-CA-Alg3.cpp" "PSI-CA/VPSI-CA-Alg4.cpp" "PSI-CA/VPSI-CA-Alg5.cpp")
+          if [[ ${#matrix[@]} -ge 1 ]];
+          then
+            echo "matrix=$(printf '%s\n' "${matrix[@]}" | jq -R . | jq -s -c 'unique')" >> "${GITHUB_OUTPUT}"
+          else
+            echo "matrix=[]" >> "${GITHUB_OUTPUT}"
+          fi
+      
       - name: Prepare the decimal place
         id: decimalPlace
         run: |
-          set -euo pipefail
+          cd "${{ github.workspace }}"
           case "${decimalPlaceString}" in
             0|s|second)
               decimalPlace=0
@@ -98,9 +120,6 @@ jobs:
             15|fs|femtosecond)
               decimalPlace=15
               ;;
-            18)
-              decimalPlace=18
-              ;;
             *)
               decimalPlace=9
               ;;
@@ -108,79 +127,150 @@ jobs:
           echo "decimalPlace=${decimalPlace}" >> "${GITHUB_OUTPUT}"
         env:
           decimalPlaceString: ${{ github.event.inputs.decimalPlace || '9' }}
-
+      
       - name: Prepare the run count
         id: runCount
         run: |
-          set -euo pipefail
-          normalizedRunCount="$(printf '%s' "${runCountString}" | sed 's/^0*//')"
-          if [[ "${runCountString}" =~ ^[0-9]+$ && -n "${normalizedRunCount}" && ${#normalizedRunCount} -le 3 ]] && (( 10#${normalizedRunCount} <= 100 )); then
-            runCount="${normalizedRunCount}"
-          else
+          cd "${{ github.workspace }}"
+          integerNumberString="$(echo -n "${runCountString}" | tr -cd '0-9A-Za-z+.-' | tr 'A-Z' 'a-z')"
+          leadingSigns="${integerNumberString%%[!+-]*}"
+          minusCount=$(echo -n "${leadingSigns}" | tr -cd '-' | wc -c)
+          integerNumberString="${integerNumberString#$leadingSigns}"
+          integerNumberString="$(echo "${integerNumberString}" | sed 's/^0*//')"
+          radix=0
+          case "${integerNumberString:0:1}" in
+            'b')
+              radix=2
+              integerNumberString="${integerNumberString:1}"
+              ;;
+            'q')
+              radix=4
+              integerNumberString="${integerNumberString:1}"
+              ;;
+            'o')
+              radix=8
+              integerNumberString="${integerNumberString:1}"
+              ;;
+            'd')
+              radix=10
+              integerNumberString="${integerNumberString:1}"
+              ;;
+            'x')
+              radix=16
+              integerNumberString="${integerNumberString:1}"
+              ;;
+          esac
+          if [[ 0 -eq ${radix} ]];
+          then
+            case "${integerNumberString: -1}" in
+              'b')
+                radix=2
+                integerNumberString="${integerNumberString:0:-1}"
+                ;;
+              'q')
+                radix=4
+                integerNumberString="${integerNumberString:0:-1}"
+                ;;
+              'o')
+                radix=8
+                integerNumberString="${integerNumberString:0:-1}"
+                ;;
+              'd')
+                radix=10
+                integerNumberString="${integerNumberString:0:-1}"
+                ;;
+              'x')
+                radix=16
+                integerNumberString="${integerNumberString:0:-1}"
+                ;;
+              *)
+                radix=10
+                ;;
+            esac
+          fi
+          integerNumberString="$(echo "${integerNumberString}" | sed 's/^0*//')"
+          integerNumberString="${integerNumberString%%.*}"
+          runCount=0
+          { runCount=$((${radix}#$integerNumberString)); } 2>/dev/null
+          if (( minusCount % 2 == 1 ));
+          then
+            runCount=$(( -runCount ))
+          fi
+          if [[ ${runCount} -lt 1 ]];
+          then
             runCount=10
           fi
           echo "runCount=${runCount}" >> "${GITHUB_OUTPUT}"
         env:
           runCountString: ${{ github.event.inputs.runCount || '10' }}
-
+      
       - name: Prepare the time string
         id: timeString
         run: |
-          set -euo pipefail
+          cd "${{ github.workspace }}"
           timeString="HKT$(date '+%Y%m%d%H%M%S')"
           echo "timeString=${timeString}" >> "${GITHUB_OUTPUT}"
         env:
           TZ: 'Asia/Hong_Kong'
-
+  
   runCPP:
+    if: ${{ needs.prepare.outputs.matrix != '[]' }}
     needs: prepare
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         cryptographicScheme: ${{ fromJson(needs.prepare.outputs.matrix) }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        uses: actions/checkout@v6
         with:
           sparse-checkout: |
             PSI-CA/
           persist-credentials: false
-
+      
       - name: Get ready
         id: ready
         run: |
-          set -euo pipefail
-          directoryPath="$(dirname -- "${cryptographicScheme}")"
-          sourceFileName="$(basename -- "${cryptographicScheme}")"
+          cd "${{ github.workspace }}"
+          directoryPath="$(dirname -- "${{ matrix.cryptographicScheme }}")"
+          sourceFileName="$(basename -- "${{ matrix.cryptographicScheme }}")"
           mainFileName="${sourceFileName%.cpp}"
-          sourcePath="${{ github.workspace }}/${{ matrix.cryptographicScheme }}"
-          binaryPath="${{ github.workspace }}/${directoryPath}/${mainFileName}.bin"
-          outputFilePath="${directoryPath}/${mainFileName}-C++17-p${decimalPlace}-r${runCount}-${timeString}${outputFormat}"
+          sourceFilePath="${{ matrix.cryptographicScheme }}"
+          binaryFilePath="${directoryPath}/${mainFileName}.bin"
+          outputFilePath="${directoryPath}/${mainFileName}-C++${cppVersion}-p${decimalPlace}-r${runCount}-${timeString}${outputFormat}"
           outputFileName="$(basename -- "${outputFilePath}")"
-          echo "sourcePath=${sourcePath}" >> "${GITHUB_OUTPUT}"
-          echo "binaryPath=${binaryPath}" >> "${GITHUB_OUTPUT}"
+          echo "Cryptographic scheme: ${{ matrix.cryptographicScheme }}"
+          echo "C++ version: ${cppVersion}"
+          echo "Decimal place: ${decimalPlaceString} (${decimalPlace})"
+          echo "Run count: ${runCount}"
+          echo "Time string: ${timeString}"
+          echo "Output format: ${outputFormat}"
+          echo "Output file path: ${outputFilePath}"
+          echo "Output file name: ${outputFileName}"
+          echo "sourceFilePath=${sourceFilePath}" >> "${GITHUB_OUTPUT}"
+          echo "binaryFilePath=${binaryFilePath}" >> "${GITHUB_OUTPUT}"
           echo "outputFilePath=${outputFilePath}" >> "${GITHUB_OUTPUT}"
           echo "outputFileName=${outputFileName}" >> "${GITHUB_OUTPUT}"
         env:
-          cryptographicScheme: ${{ matrix.cryptographicScheme }}
+          cppVersion: ${{ github.event.inputs.cppVersion || 23 }}
+          decimalPlaceString: ${{ github.event.inputs.decimalPlace || '9' }}
           decimalPlace: ${{ needs.prepare.outputs.decimalPlace }}
           runCount: ${{ needs.prepare.outputs.runCount }}
           timeString: ${{ needs.prepare.outputs.timeString }}
           outputFormat: ${{ github.event.inputs.outputFormat || '.csv' }}
-
+      
       - name: Compile the cryptographic scheme
         run: |
-          set -euo pipefail
-          g++ -std=c++17 -Wall -Wextra -Wpedantic "${sourcePath}" -o "${binaryPath}"
+          cd "${{ github.workspace }}"
+          g++ -std=c++${cppVersion} -Wall -Wextra -Wpedantic "${sourcePath}" -o "${binaryPath}"
         env:
+          cppVersion: ${{ github.event.inputs.cppVersion || 23 }}
           sourcePath: ${{ steps.ready.outputs.sourcePath }}
           binaryPath: ${{ steps.ready.outputs.binaryPath }}
-
+      
       - name: Run the cryptographic scheme
         run: |
-          set -euo pipefail
           "${binaryPath}" -t 0 -h
           "${binaryPath}" -o "${outputFileName}" -p "${decimalPlace}" -r "${runCount}" -t 0 -y
         env:
@@ -188,9 +278,9 @@ jobs:
           outputFileName: ${{ steps.ready.outputs.outputFileName }}
           decimalPlace: ${{ needs.prepare.outputs.decimalPlace }}
           runCount: ${{ needs.prepare.outputs.runCount }}
-
+      
       - name: Upload the result
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@v7
         with:
           path: ${{ github.workspace }}/${{ steps.ready.outputs.outputFilePath }}
           archive: false

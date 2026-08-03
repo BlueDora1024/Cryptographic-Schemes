@@ -164,27 +164,29 @@ jobs:
         id: decimalPlace
         run: |
           cd "${{ github.workspace }}"
-          if [[ "s" == "${decimalPlaceString}" || "second" == "${decimalPlaceString}" ]];
-          then
-            decimalPlace=0
-          elif [[ "ms" == "${decimalPlaceString}" || "millisecond" == "${decimalPlaceString}" ]];
-          then
-            decimalPlace=3
-          elif [[ "microsecond" == "${decimalPlaceString}" ]];
-          then
-            decimalPlace=6
-          elif [[ "ns" == "${decimalPlaceString}" || "nanosecond" == "${decimalPlaceString}" ]];
-          then
-            decimalPlace=9
-          elif [[ "ps" == "${decimalPlaceString}" || "picosecond" == "${decimalPlaceString}" ]];
-          then
-            decimalPlace=12
-          elif [[ "fs" == "${decimalPlaceString}" || "femtosecond" == "${decimalPlaceString}" ]];
-          then
-            decimalPlace=15
-          else
-            decimalPlace=${decimalPlaceString}
-          fi
+          case "${decimalPlaceString}" in
+            0|s|second)
+              decimalPlace=0
+              ;;
+            3|ms|millisecond)
+              decimalPlace=3
+              ;;
+            6|microsecond)
+              decimalPlace=6
+              ;;
+            9|ns|nanosecond)
+              decimalPlace=9
+              ;;
+            12|ps|picosecond)
+              decimalPlace=12
+              ;;
+            15|fs|femtosecond)
+              decimalPlace=15
+              ;;
+            *)
+              decimalPlace=9
+              ;;
+          esac
           echo "decimalPlace=${decimalPlace}" >> "${GITHUB_OUTPUT}"
         env:
           decimalPlaceString: ${{ github.event.inputs.decimalPlace || '9' }}
@@ -290,13 +292,14 @@ jobs:
             ${{ matrix.cryptographicScheme }}
             buildSchemeLaTeXPDFs.py
             requirements.txt
+          persist-credentials: false
       
       - name: Get ready
         id: ready
         run: |
           cd "${{ github.workspace }}"
-          directoryPath="$(dirname "${{ matrix.cryptographicScheme }}")"
-          mainFileName="$(basename "${{ matrix.cryptographicScheme }}" | sed "s/\.[^.]*\$//g")"
+          directoryPath="$(dirname -- "${{ matrix.cryptographicScheme }}")"
+          mainFileName="$(basename -- "${{ matrix.cryptographicScheme }}" | sed "s/\.[^.]*\$//g")"
           outputFilePath="${directoryPath}/${mainFileName}-Python${pythonVersion}-p${decimalPlace}-r${runCount}-${timeString}${outputFormat}"
           outputFileName="$(basename "${outputFilePath}")"
           schemeLaTeXFilePath="${directoryPath}/${mainFileName}LaTeX/${mainFileName}-${timeString}.tex"
