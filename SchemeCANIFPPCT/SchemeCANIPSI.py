@@ -1099,7 +1099,7 @@ def conductScheme(curveParameter:tuple|list|dict|str, n:int = 30, m:int = 10, ru
 
 			# BTokenGen #
 			startTime = perf_counter()
-			QTP = tuple(randbelow(1 << group.secparam).to_bytes((group.secparam + 7) >> 3, byteorder = "big") for _ in range(m))
+			QTP = TPs[:m]
 			BTokens = []
 			for i in range(m):
 				BTokens.append(scheme.BTokenGen(QTP[i], bsk_IDs[i]))
@@ -1148,7 +1148,7 @@ def conductScheme(curveParameter:tuple|list|dict|str, n:int = 30, m:int = 10, ru
 
 		# TokenGen #
 		startTime = perf_counter()
-		QTP = tuple(randbelow(1 << group.secparam).to_bytes((group.secparam + 7) >> 3, byteorder = "big") for _ in range(m))
+		QTP = TPs[:m]
 		Tokens = []
 		for i in range(m):
 			Tokens.append(scheme.TokenGen(QTP[i], sk_IDs[i]))
