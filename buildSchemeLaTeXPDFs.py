@@ -162,6 +162,7 @@ class Builder:
 			"The execution has started. ", "The experiments were interrupted by users. Saved results are retained. ", "The experiments were interrupted by {0}. Saved results are retained. ", 
 			"This is a possible implementation of the AIBE cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. ", 
 			"This is a possible implementation of the ARES cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. ", 
+			"This is a possible implementation of the CA-NI-PSI cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. ", 
 			"This is a possible implementation of the Fuzzy-ME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. ", 
 			"This is a possible implementation of the IBBME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. ", 
 			"This is a possible implementation of the IBME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. ", 
