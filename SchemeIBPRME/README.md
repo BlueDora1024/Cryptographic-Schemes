@@ -2,13 +2,15 @@
 
 This is the category of the proposed IBPRME cryptographic scheme, whose baselines are the IBPME, the IBMECH, and the PBAC cryptographic schemes. 
 
-### ``SchemeIBPRME.py``
+### SchemeIBPRME
 
-This is the official implementation of the IBPRME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. 
+- ``SchemeIBPRME.py``: This is the official implementation of the IBPRME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework.
+- ``SchemeIBPRME.java``: This is the official implementation of the IBPRME cryptographic scheme in Java programming language based on the JPBC library.
 
-### ``SchemeIBME.py`` (soft link)
+### SchemeIBME
 
-This is a possible implementation of the IBME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework, referring to the official implementation from [https://github.com/xuehuan-yang/PSME/blob/main/src/04_ibme/04_ibme.py](https://github.com/xuehuan-yang/PSME/blob/main/src/04_ibme/04_ibme.py). 
+- ``SchemeIBME.py`` (soft link): This is a possible implementation of the IBME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. This implementation refers to the official implementation at [https://github.com/xuehuan-yang/PSME/blob/main/src/04_ibme/04_ibme.py](https://github.com/xuehuan-yang/PSME/blob/main/src/04_ibme/04_ibme.py).
+- ``SchemeIBME.java`` (soft link): This is a possible implementation of the IBME cryptographic scheme in Java programming language based on the JPBC library. This implementation refers to the official implementation at [https://github.com/xuehuan-yang/PSME/blob/main/src/04_ibme/04_ibme.py](https://github.com/xuehuan-yang/PSME/blob/main/src/04_ibme/04_ibme.py).
 
 ```bibtex
 @inproceedings{ateniese2019match,
@@ -21,9 +23,10 @@ This is a possible implementation of the IBME cryptographic scheme in Python pro
 }
 ```
 
-### ``SchemeIBMECH.py`` (soft link)
+### SchemeIBMECH
 
-This is a possible implementation of the IBMECH cryptographic scheme in Python programming language based on the Python Charm-Crypto framework, referring to the official implementation from [https://github.com/xuehuan-yang/PSME/blob/main/src/02_ibmech/02_ibmech_v2.py](https://github.com/xuehuan-yang/PSME/blob/main/src/02_ibmech/02_ibmech_v2.py). 
+- ``SchemeIBMECH.py`` (soft link): This is a possible implementation of the IBMECH cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. This implementation refers to the official implementation at [https://github.com/xuehuan-yang/PSME/blob/main/src/02_ibmech/02_ibmech_v2.py](https://github.com/xuehuan-yang/PSME/blob/main/src/02_ibmech/02_ibmech_v2.py).
+- ``SchemeIBMECH.java`` (soft link): This is a possible implementation of the IBMECH cryptographic scheme in Java programming language based on the JPBC library. This implementation refers to the official implementation at [https://github.com/xuehuan-yang/PSME/blob/main/src/02_ibmech/02_ibmech_v2.py](https://github.com/xuehuan-yang/PSME/blob/main/src/02_ibmech/02_ibmech_v2.py).
 
 ```bibtex
 @inproceedings{chen2022identity,
@@ -36,9 +39,10 @@ This is a possible implementation of the IBMECH cryptographic scheme in Python p
 }
 ```
 
-### ``SchemeIBPME.py``
+### SchemeIBPME
 
-This is a possible implementation of the IBPME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. 
+- ``SchemeIBPME.py``: This is a possible implementation of the IBPME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework.
+- ``SchemeIBPME.java``: This is a possible implementation of the IBPME cryptographic scheme in Java programming language based on the JPBC library.
 
 ```bibtex
 @article{yan2023identity,
@@ -52,9 +56,10 @@ This is a possible implementation of the IBPME cryptographic scheme in Python pr
 }
 ```
 
-### ``SchemePBAC.py``
+### SchemePBAC
 
-This is the official implementation of the PBAC cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. 
+- ``SchemePBAC.py``: This is the official implementation of the PBAC cryptographic scheme in Python programming language based on the Python Charm-Crypto framework.
+- ``SchemePBAC.java``: This is the official implementation of the PBAC cryptographic scheme in Java programming language based on the JPBC library.
 
 ### Others
 

@@ -2,9 +2,10 @@
 
 This is the category of the proposed CA-NI-FPPCT cryptographic scheme, whose baseline is the CA-NI-PSI cryptographic scheme. 
 
-### ``SchemeCANIFPPCT.py``
+### SchemeCANIFPPCT
 
-This is the official implementation of the CA-NI-FPPCT cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. 
+- ``SchemeCANIFPPCT.py``: This is the official implementation of the CA-NI-FPPCT cryptographic scheme in Python programming language based on the Python Charm-Crypto framework.
+- ``SchemeCANIFPPCT.java``: This is the official implementation of the CA-NI-FPPCT cryptographic scheme in Java programming language based on the JPBC library.
 
 ```bibtex
 @article{wu2025non,
@@ -20,6 +21,7 @@ This is the official implementation of the CA-NI-FPPCT cryptographic scheme in P
 
 We would like to express our sincere gratitude to everyone who has cited this work. Readers who wish to cite this work may use the BibTeX entry above. 
 
-### ``SchemeCANIPSI.py``
+### SchemeCANIPSI
 
-This is a possible implementation of the CA-NI-PSI cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. 
+- ``SchemeCANIPSI.py``: This is a possible implementation of the CA-NI-PSI cryptographic scheme in Python programming language based on the Python Charm-Crypto framework.
+- ``SchemeCANIPSI.java``: This is a possible implementation of the CA-NI-PSI cryptographic scheme in Java programming language based on the JPBC library.
