@@ -2,27 +2,26 @@
 
 This is the category of the proposed AA-IB-ME cryptographic scheme, whose baselines are the Fuzzy-IB-ME, Fuzzy-ME, and IBMECH cryptographic schemes. 
 
-### ``SchemeAAIBME.py``
+### SchemeAAIBME
 
-This is the official implementation of the AA-IB-ME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. 
-
-#### ``SchemeAAIBME.java``
-
-This is the official implementation of the AA-IB-ME cryptographic scheme in Java programming language based on the JPBC library. 
+- ``SchemeAAIBME.py``: This is the official implementation of the AA-IB-ME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework.
+- ``SchemeAAIBME.java``: This is the official implementation of the AA-IB-ME cryptographic scheme in Java programming language based on the JPBC library.
 
 As this is an early implementation, please consider using ``SchemeAAIBME.py`` instead. 
 
-### ``SchemeFuzzyIBME.py``
+### SchemeFuzzyIBME
 
-This is a possible implementation of the Fuzzy-IB-ME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. 
+- ``SchemeFuzzyIBME.py``: This is a possible implementation of the Fuzzy-IB-ME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework.
 
-### ``SchemeFuzzyME.py``
+### SchemeFuzzyME
 
-This is a possible implementation of the Fuzzy-ME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. 
+- ``SchemeFuzzyME.py``: This is a possible implementation of the Fuzzy-ME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework.
+- ``SchemeFuzzyME.java``: This is a possible implementation of the Fuzzy-ME cryptographic scheme in Java programming language based on the JPBC library.
 
-### ``SchemeIBMECH.py`` (soft link)
+### SchemeIBMECH
 
-This is a possible implementation of the IBMECH cryptographic scheme in Python programming language based on the Python Charm-Crypto framework, referring to the official implementation from [https://github.com/xuehuan-yang/PSME/blob/main/src/02_ibmech/02_ibmech_v2.py](https://github.com/xuehuan-yang/PSME/blob/main/src/02_ibmech/02_ibmech_v2.py). 
+- ``SchemeIBMECH.py`` (soft link): This is a possible implementation of the IBMECH cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. This implementation refers to the official implementation at [https://github.com/xuehuan-yang/PSME/blob/main/src/02_ibmech/02_ibmech_v2.py](https://github.com/xuehuan-yang/PSME/blob/main/src/02_ibmech/02_ibmech_v2.py).
+- ``SchemeIBMECH.java`` (soft link): This is a possible implementation of the IBMECH cryptographic scheme in Java programming language based on the JPBC library. This implementation refers to the official implementation at [https://github.com/xuehuan-yang/PSME/blob/main/src/02_ibmech/02_ibmech_v2.py](https://github.com/xuehuan-yang/PSME/blob/main/src/02_ibmech/02_ibmech_v2.py).
 
 ```bibtex
 @inproceedings{chen2022identity,

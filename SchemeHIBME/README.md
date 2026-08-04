@@ -2,9 +2,10 @@
 
 This is the category of the proposed HIB-ME cryptographic scheme, whose baseline is the AnonymousME cryptographic scheme. 
 
-### ``SchemeHIBME.py``
+### SchemeHIBME
 
-This is the official implementation of the HIB-ME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. 
+- ``SchemeHIBME.py``: This is the official implementation of the HIB-ME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework.
+- ``SchemeHIBME.java``: This is the official implementation of the HIB-ME cryptographic scheme in Java programming language based on the JPBC library.
 
 #### Discussion
 
@@ -16,9 +17,10 @@ Therefore, if the length of the element in $G_1$ is greater than twice the lengt
 
 Consequently, when $n$ grows with the variables $l$ and $m$ fixed, the curve in the SS512 system is in an upward trend while that in the remaining systems is in a downward one. 
 
-### ``SchemeAnonymousME.py``
+### SchemeAnonymousME
 
-This is the official implementation of the AnonymousME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. 
+- ``SchemeAnonymousME.py``: This is the official implementation of the AnonymousME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework.
+- ``SchemeAnonymousME.java``: This is the official implementation of the AnonymousME cryptographic scheme in Java programming language based on the JPBC library.
 
 ```bibtex
 @misc{wu2024anonymous,

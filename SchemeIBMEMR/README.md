@@ -2,13 +2,15 @@
 
 This is the category of the proposed IBMEMR cryptographic scheme, whose baselines are the IBME and the IBBME cryptographic schemes. 
 
-### ``SchemeIBMEMR.py``
+### SchemeIBMEMR
 
-This is the official implementation of the IBMEMR cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. 
+- ``SchemeIBMEMR.py``: This is the official implementation of the IBMEMR cryptographic scheme in Python programming language based on the Python Charm-Crypto framework.
+- ``SchemeIBMEMR.java``: This is the official implementation of the IBMEMR cryptographic scheme in Java programming language based on the JPBC library.
 
-### ``SchemeIBME.py`` (soft link)
+### SchemeIBME
 
-This is a possible implementation of the IBME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework, referring to the official implementation from [https://github.com/xuehuan-yang/PSME/blob/main/src/04_ibme/04_ibme.py](https://github.com/xuehuan-yang/PSME/blob/main/src/04_ibme/04_ibme.py). 
+- ``SchemeIBME.py`` (soft link): This is a possible implementation of the IBME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. This implementation refers to the official implementation at [https://github.com/xuehuan-yang/PSME/blob/main/src/04_ibme/04_ibme.py](https://github.com/xuehuan-yang/PSME/blob/main/src/04_ibme/04_ibme.py).
+- ``SchemeIBME.java`` (soft link): This is a possible implementation of the IBME cryptographic scheme in Java programming language based on the JPBC library. This implementation refers to the official implementation at [https://github.com/xuehuan-yang/PSME/blob/main/src/04_ibme/04_ibme.py](https://github.com/xuehuan-yang/PSME/blob/main/src/04_ibme/04_ibme.py).
 
 ```bibtex
 @inproceedings{ateniese2019match,
@@ -21,9 +23,10 @@ This is a possible implementation of the IBME cryptographic scheme in Python pro
 }
 ```
 
-### ``SchemeIBBME.py``
+### SchemeIBBME
 
-This is a possible implementation of the IBBME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework, referring to the official implementation from [https://github.com/xuehuan-yang/PSME/blob/main/src/00_aibbme/00_aibbme.py](https://github.com/xuehuan-yang/PSME/blob/main/src/00_aibbme/00_aibbme.py). 
+- ``SchemeIBBME.py``: This is a possible implementation of the IBBME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. This implementation refers to the official implementation at [https://github.com/xuehuan-yang/PSME/blob/main/src/00_aibbme/00_aibbme.py](https://github.com/xuehuan-yang/PSME/blob/main/src/00_aibbme/00_aibbme.py).
+- ``SchemeIBBME.java``: This is a possible implementation of the IBBME cryptographic scheme in Java programming language based on the JPBC library. This implementation refers to the official implementation at [https://github.com/xuehuan-yang/PSME/blob/main/src/00_aibbme/00_aibbme.py](https://github.com/xuehuan-yang/PSME/blob/main/src/00_aibbme/00_aibbme.py).
 
 ```
 @article{sun2023privacy,
