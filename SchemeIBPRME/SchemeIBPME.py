@@ -12,9 +12,9 @@ from math import ceil, log
 from secrets import randbelow
 from time import perf_counter, sleep
 from warnings import filterwarnings
-filterwarnings(																																												\
-	"ignore", category = DeprecationWarning, 																																				\
-	message = "^Curve \'SS[0-9]+\' provides only ~80-bit security, which is below the 128-bit minimum recommended by NIST. Use \'BN254\' \\(128-bit\\) or stronger for production use\\.$"	\
+filterwarnings(
+	"ignore", category = DeprecationWarning, 
+	message = "^Curve \'SS[0-9]+\' provides only ~80-bit security, which is below the 128-bit minimum recommended by NIST. Use \'BN254\' \\(128-bit\\) or stronger for production use\\.$"
 )
 try:
 	chdir(abspath(dirname(__file__)))
@@ -62,17 +62,17 @@ class Parser:
 		print("Options (case-insensitive): ")
 		print("\t{0} [utf-8|utf-16|...]\t\tSpecify the encoding mode for CSV and TXT outputs. The default value is {1}. ".format(self.__formatOption(Parser.__OptionEncoding), Parser.__DefaultEncoding))
 		print("\t{0}\t\tPrint this help document. ".format(self.__formatOption(Parser.__OptionHelp)))
-		print("\t{0} [|.|./{1}.xlsx|./{1}.csv|...]\t\tSpecify the output file path, leaving it empty for console output. The default value is {2}. ".format(	\
-			self.__formatOption(Parser.__OptionOutput), Parser.__SchemeName, repr(Parser.__DefaultOutputFileName)												\
+		print("\t{0} [|.|./{1}.xlsx|./{1}.csv|...]\t\tSpecify the output file path, leaving it empty for console output. The default value is {2}. ".format(
+			self.__formatOption(Parser.__OptionOutput), Parser.__SchemeName, repr(Parser.__DefaultOutputFileName)
 		))
-		print("\t{0} [s|ms|microsecond|ns|ps|0|3|6|9|12|...]\t\tSpecify the decimal place, which should be a non-negative integer. The default value is {1}. ".format(	\
-			self.__formatOption(Parser.__OptionPlace), Parser.__DefaultPlace)																							\
+		print("\t{0} [s|ms|microsecond|ns|ps|0|3|6|9|12|...]\t\tSpecify the decimal place, which should be a non-negative integer. The default value is {1}. ".format(
+			self.__formatOption(Parser.__OptionPlace), Parser.__DefaultPlace)
 		)
 		print("\t{0}\t\tDisable the verbose console outputs. ".format(self.__formatOption(Parser.__OptionQuiet)))
 		print("\t{0} [1|2|5|10|20|50|100|...]\t\tSpecify the run count, which must be a positive integer. The default value is {1}. ".format(self.__formatOption(Parser.__OptionRun), Parser.__DefaultRun))
-		print(																																							\
-			"\t{0} [0|0.1|1|10|...|inf]\t\tSpecify the waiting time before exiting, which should be non-negative. ".format(self.__formatOption(Parser.__OptionTime))	\
-			+ "Passing inf requires users to manually press the Enter key before exiting. The default value is {0}. ".format(Parser.__DefaultTime)						\
+		print(
+			"\t{0} [0|0.1|1|10|...|inf]\t\tSpecify the waiting time before exiting, which should be non-negative. ".format(self.__formatOption(Parser.__OptionTime))
+			+ "Passing inf requires users to manually press the Enter key before exiting. The default value is {0}. ".format(Parser.__DefaultTime)
 		)
 		print("\t{0}\t\tIndicate to confirm the overwriting of the existing output file. ".format(self.__formatOption(Parser.__OptionYes)))
 		print()
@@ -146,8 +146,8 @@ class Parser:
 		except:
 			return None
 	def parse(self:object) -> tuple:
-		flag, encoding, outputFilePath, decimalPlace, isVerbose, runCount, waitingTime, overwritingConfirmed = (																	\
-			max(EXIT_SUCCESS, EOF) + 1, Parser.__DefaultEncoding, Parser.__DefaultOutputFileName, Parser.__DefaultPlace, True, Parser.__DefaultRun, Parser.__DefaultTime, False		\
+		flag, encoding, outputFilePath, decimalPlace, isVerbose, runCount, waitingTime, overwritingConfirmed = (
+			max(EXIT_SUCCESS, EOF) + 1, Parser.__DefaultEncoding, Parser.__DefaultOutputFileName, Parser.__DefaultPlace, True, Parser.__DefaultRun, Parser.__DefaultTime, False
 		)
 		index, argumentCount, buffers = 1, len(self.__arguments), []
 		while index < argumentCount:
@@ -354,8 +354,8 @@ class Saver:
 											writer.writerow("{{0:.{0}f}}".format(self.__decimalPlace).format(r) if isinstance(r, float) else r for r in result)
 								elif self.__extensionName in ("HTM", "HTML"):
 									if self.__escapeHTML is None:
-										self.__escapeHTML = lambda x:str(x).replace("&", "&amp;").replace('"', "&quot;").replace("'", "&#39;")	\
-											.replace("<", "&lt;").replace(">", "&gt;").replace("\r\n", "<br />").replace("\n", "<br />").replace("\r", "<br />")
+										self.__escapeHTML = (lambda x:str(x).replace("&", "&amp;").replace('"', "&quot;").replace("'", "&#39;")
+											.replace("<", "&lt;").replace(">", "&gt;").replace("\r\n", "<br />").replace("\n", "<br />").replace("\r", "<br />"))
 									with open(self.__outputFilePath, "w", encoding = self.__encoding) as f:
 										f.write("<!DOCTYPE html>\n<html>\n\t<head>\n\t\t<meta charset=\"{0}\" />\n".format(self.__encoding.upper()))
 										f.write("\t\t<title>{0}</title>\n\t\t<style>\n".format(Parser.getSchemeName()))
@@ -375,8 +375,8 @@ class Saver:
 										for result in results:
 											f.write("\t\t\t\t<tr>\n")
 											for r in result:
-												f.write("\t\t\t\t\t<td>{0}</td>\n".format(																	\
-													"{{0:.{0}f}}".format(self.__decimalPlace).format(r) if isinstance(r, float) else self.__escapeHTML(r)	\
+												f.write("\t\t\t\t\t<td>{0}</td>\n".format(
+													"{{0:.{0}f}}".format(self.__decimalPlace).format(r) if isinstance(r, float) else self.__escapeHTML(r)
 												))
 											f.write("\t\t\t\t</tr>\n")
 										f.write("\t\t\t</tbody>\n\t\t</table>\n\t</body>\n</html>")
@@ -387,12 +387,12 @@ class Saver:
 										f.write(self.__dumpsJSON({"columns":self.__columns, "results":results}, indent = "\t", sort_keys = True, ensure_ascii = True))
 								elif "TEX" == self.__extensionName:
 									if self.__escapeTEX is None:
-										self.__escapeTEX = lambda x:"\\textbackslash{}".join(													\
-											string.replace("#", "\\#").replace("$", "\\$").replace("%", "\\%").replace("&", "\\&")				\
-											.replace("_", "\\_").replace("{", "\\{").replace("}", "\\}")										\
-											.replace("<", "\\textless{}").replace(">", "\\textgreater{}")										\
-											.replace("^", "\\textasciicircum{}").replace("~", "\\textasciitilde{}")								\
-											for string in "".join(character for character in str(x) if ' ' <= character <= '~').split("\\")		\
+										self.__escapeTEX = lambda x:"\\textbackslash{}".join(
+											string.replace("#", "\\#").replace("$", "\\$").replace("%", "\\%").replace("&", "\\&")
+											.replace("_", "\\_").replace("{", "\\{").replace("}", "\\}")
+											.replace("<", "\\textless{}").replace(">", "\\textgreater{}")
+											.replace("^", "\\textasciicircum{}").replace("~", "\\textasciitilde{}")
+											for string in "".join(character for character in str(x) if ' ' <= character <= '~').split("\\")
 										)
 									with open(self.__outputFilePath, "w", encoding = self.__encoding) as f:
 										maxLength = max(len(self.__columnsTEX) if isinstance(self.__columnsTEX, (tuple, list)) else 0, max(len(result) for result in results))
@@ -411,8 +411,8 @@ class Saver:
 										for result in results:
 											if result:
 												f.write("\t\t\t\t")
-												f.write(" & ".join((																	\
-													"${0}$" if isinstance(r, int) else "${{0:.{0}f}}$".format(self.__decimalPlace)		\
+												f.write(" & ".join((
+													"${0}$" if isinstance(r, int) else "${{0:.{0}f}}$".format(self.__decimalPlace)
 												).format(r) if isinstance(r, (float, int)) and not isinstance(r, bool) else self.__escapeTEX(r) for r in result))
 												if len(result) < maxLength:
 													f.write(" & ~" * (maxLength - len(result)))
@@ -486,8 +486,8 @@ class Saver:
 									workbook.save(self.__outputFilePath)
 								elif "XML" == self.__extensionName:
 									if self.__escapeXML is None:
-										self.__escapeXML = lambda x:"".join(character for character in str(x) if ' ' <= character <= '~')		\
-											.replace("&", "&amp;").replace("\"", "&quot;").replace("\'", "&apos;").replace("<", "&lt;").replace(">", "&gt;")
+										self.__escapeXML = (lambda x:"".join(character for character in str(x) if ' ' <= character <= '~')
+											.replace("&", "&amp;").replace("\"", "&quot;").replace("\'", "&apos;").replace("<", "&lt;").replace(">", "&gt;"))
 									with open(self.__outputFilePath, "w", encoding = self.__encoding) as f:
 										f.write("<?xml version=\"1.0\" encoding=\"{0}\"?>\n<data>\n\t<columns>\n".format(self.__encoding.upper()))
 										for column in self.__columns:
@@ -517,12 +517,12 @@ class Saver:
 											f.write("results:\n")
 											for result in results:
 												if result:
-													f.write("  - - {0}\n".format(															\
-														self.__dumpsJSON(result[0], indent = "\t", sort_keys = True, ensure_ascii = True)	\
+													f.write("  - - {0}\n".format(
+														self.__dumpsJSON(result[0], indent = "\t", sort_keys = True, ensure_ascii = True)
 													))
 													for r in result[1:]:
-														f.write("    - {0}\n".format(													\
-															self.__dumpsJSON(r, indent = "\t", sort_keys = True, ensure_ascii = True)	\
+														f.write("    - {0}\n".format(
+															self.__dumpsJSON(r, indent = "\t", sort_keys = True, ensure_ascii = True)
 														))
 												else:
 													f.write("  - []")
@@ -540,8 +540,8 @@ class Saver:
 								continue
 							except BaseException as e:
 								flag = False
-								print("Saver: Failed to save the results to {0} in the {1} format due to the following exception(s). \n\t{2}".format(	\
-									repr(self.__outputFilePath), self.__extensionName, repr(e)															\
+								print("Saver: Failed to save the results to {0} in the {1} format due to the following exception(s). \n\t{2}".format(
+									repr(self.__outputFilePath), self.__extensionName, repr(e)
 								))
 						else:
 							try:
@@ -755,17 +755,17 @@ class SchemeIBPME:
 		if isinstance(_pdk, tuple) and len(_pdk) == 2 and all(isinstance(ele, Element) for ele in _pdk): # hybrid check
 			pdk = _pdk
 		else:
-			pdk = self.PKGen(																										\
-				self.RKGen(randbelow(1 << self.__group.secparam).to_bytes(ceil(self.__group.secparam / 8), byteorder = "big")), 	\
-				randbelow(1 << self.__group.secparam).to_bytes(ceil(self.__group.secparam / 8), byteorder = "big")					\
+			pdk = self.PKGen(
+				self.RKGen(randbelow(1 << self.__group.secparam).to_bytes(ceil(self.__group.secparam / 8), byteorder = "big")), 
+				randbelow(1 << self.__group.secparam).to_bytes(ceil(self.__group.secparam / 8), byteorder = "big")
 			)
 			print("ProxyDec: The variable $\\textit{pdk}$ should be a tuple containing 2 elements, but it is not, which has been generated randomly. ")
 		if isinstance(cipher, tuple) and len(cipher) == 3 and all(isinstance(ele, Element) for ele in cipher[:2]) and isinstance(cipher[2], int): # hybrid check
 			C = cipher
 		else:
-			C = self.Enc(																											\
-				self.SKGen(randbelow(1 << self.__group.secparam).to_bytes(ceil(self.__group.secparam / 8), byteorder = "big")), 	\
-				randbelow(1 << self.__group.secparam).to_bytes(ceil(self.__group.secparam / 8), byteorder = "big"), b"SchemeIBPME"	\
+			C = self.Enc(
+				self.SKGen(randbelow(1 << self.__group.secparam).to_bytes(ceil(self.__group.secparam / 8), byteorder = "big")), 
+				randbelow(1 << self.__group.secparam).to_bytes(ceil(self.__group.secparam / 8), byteorder = "big"), b"SchemeIBPME"
 			)
 			print("ProxyDec: The variable $C$ should be a tuple containing 2 elements and an integer, but it is not, which has been generated randomly with $m$ set to b\"SchemeIBPME\". ")
 		
@@ -808,9 +808,9 @@ class SchemeIBPME:
 		if isinstance(cipher, tuple) and len(cipher) == 3 and all(isinstance(ele, Element) for ele in cipher[:2]) and isinstance(cipher[2], int): # hybrid check
 			C = cipher
 		else:
-			C = self.Enc(																											\
-				self.SKGen(randbelow(1 << self.__group.secparam).to_bytes(ceil(self.__group.secparam / 8), byteorder = "big")), 	\
-				randbelow(1 << self.__group.secparam).to_bytes(ceil(self.__group.secparam / 8), byteorder = "big"), b"SchemeIBPME"	\
+			C = self.Enc(
+				self.SKGen(randbelow(1 << self.__group.secparam).to_bytes(ceil(self.__group.secparam / 8), byteorder = "big")), 
+				randbelow(1 << self.__group.secparam).to_bytes(ceil(self.__group.secparam / 8), byteorder = "big"), b"SchemeIBPME"
 			)
 			print("Dec1: The variable $C$ should be a tuple containing 2 elements and an integer, but it is not, which has been generated randomly with $m$ set to b\"SchemeIBPME\". ")
 		
@@ -854,14 +854,14 @@ class SchemeIBPME:
 		elif isinstance(cipherText, bool):
 			return False
 		else:
-			CT = self.ProxyDec(																											\
-				self.PKGen(																												\
-					self.RKGen(randbelow(1 << self.__group.secparam).to_bytes(ceil(self.__group.secparam / 8), byteorder = "big")), 	\
-					randbelow(1 << self.__group.secparam).to_bytes(ceil(self.__group.secparam / 8), byteorder = "big")					\
-				), self.Enc(																											\
-					self.SKGen(randbelow(1 << self.__group.secparam).to_bytes(ceil(self.__group.secparam / 8), byteorder = "big")), 	\
-					randbelow(1 << self.__group.secparam).to_bytes(ceil(self.__group.secparam / 8), byteorder = "big"), b"SchemeIBPME"	\
-				)																														\
+			CT = self.ProxyDec(
+				self.PKGen(
+					self.RKGen(randbelow(1 << self.__group.secparam).to_bytes(ceil(self.__group.secparam / 8), byteorder = "big")), 
+					randbelow(1 << self.__group.secparam).to_bytes(ceil(self.__group.secparam / 8), byteorder = "big")
+				), self.Enc(
+					self.SKGen(randbelow(1 << self.__group.secparam).to_bytes(ceil(self.__group.secparam / 8), byteorder = "big")), 
+					randbelow(1 << self.__group.secparam).to_bytes(ceil(self.__group.secparam / 8), byteorder = "big"), b"SchemeIBPME"
+				)
 			)
 			print("Dec2: The variable $\\textit{CT}$ should be a tuple containing an element and an integer, but it is not, which has been generated randomly with $m$ set to b\"SchemeIBPME\". ")
 		
@@ -951,9 +951,9 @@ def conductScheme(curveParameter:tuple|list|dict|str, run:int|None = None, isVer
 	if isSystemValid:
 		# Initialization #
 		schemeIBPME = SchemeIBPME(group)
-		sizeZR, sizeG1, sizeG2, sizeGT = (															\
-			schemeIBPME.getLengthOf(group.random(ZR)), schemeIBPME.getLengthOf(group.random(G1)), 	\
-			schemeIBPME.getLengthOf(group.random(G2)), schemeIBPME.getLengthOf(group.random(GT))	\
+		sizeZR, sizeG1, sizeG2, sizeGT = (
+			schemeIBPME.getLengthOf(group.random(ZR)), schemeIBPME.getLengthOf(group.random(G1)), 
+			schemeIBPME.getLengthOf(group.random(G2)), schemeIBPME.getLengthOf(group.random(GT))
 		)
 		
 		# Setup #
@@ -1030,12 +1030,12 @@ def conductScheme(curveParameter:tuple|list|dict|str, run:int|None = None, isVer
 			print()
 	
 	# End #
-	return [																						\
-		curveName, securityParameter, runString, 													\
-		isSystemValid, isProxyDecPassed, isDec1Passed, isDec2Passed, 								\
-		timeSetup, timeSKGen, timeRKGen, timePKGen, timeEnc, timeProxyDec, timeDec1, timeDec2, 		\
-		sizeZR, sizeG1, sizeG2, sizeGT, 															\
-		sizeMpk, sizeMsk, sizeSKGen, sizeDkRho, sizePdk, sizeC, sizeCT								\
+	return [
+		curveName, securityParameter, runString, 
+		isSystemValid, isProxyDecPassed, isDec1Passed, isDec2Passed, 
+		timeSetup, timeSKGen, timeRKGen, timePKGen, timeEnc, timeProxyDec, timeDec1, timeDec2, 
+		sizeZR, sizeG1, sizeG2, sizeGT, 
+		sizeMpk, sizeMsk, sizeSKGen, sizeDkRho, sizePdk, sizeC, sizeCT
 	]
 
 def main() -> int:
@@ -1057,10 +1057,10 @@ def main() -> int:
 			curveParameters = ("MNT201", "MNT224", "BN254", ("SS512", 128), ("SS512", 256), ("SS512", 512), ("SS1024", 512), ("SS1024", 1024))
 			queries = ("curveParameter", "secparam", "runCount")
 			validators = ("isSystemValid", "isProxyDecPassed", "isDec1Passed", "isDec2Passed")
-			metrics = (																									\
-				"Setup (s)", "SKGen (s)", "RKGen (s)", "PKGen (s)", "Enc (s)", "ProxyDec (s)", "Dec1 (s)", "Dec2 (s)", 	\
-				"elementOfZR (B)", "elementOfG1 (B)", "elementOfG2 (B)", "elementOfGT (B)", 							\
-				"mpk (B)", "msk (B)", "ek_sigma (B)", "dk_rho (B)", "pdk (B)", "C (B)", "CT (B)"						\
+			metrics = (
+				"Setup (s)", "SKGen (s)", "RKGen (s)", "PKGen (s)", "Enc (s)", "ProxyDec (s)", "Dec1 (s)", "Dec2 (s)", 
+				"elementOfZR (B)", "elementOfG1 (B)", "elementOfG2 (B)", "elementOfGT (B)", 
+				"mpk (B)", "msk (B)", "ek_sigma (B)", "dk_rho (B)", "pdk (B)", "C (B)", "CT (B)"
 			)
 			getValidatorJudges = lambda x:x[queryLength:queryValidatorLength]
 			getMetricJudges = lambda x:x[queryValidatorLength:]
@@ -1100,10 +1100,10 @@ def main() -> int:
 			except BaseException as e:
 				print()
 				print("The experiments were interrupted by {0}. Saved results are retained. ".format(repr(e)))
-			errorLevel = EXIT_SUCCESS if results and all(											\
-				all(r == runCount for r in getValidatorJudges(result))								\
-				and all(isinstance(r, (float, int)) and r > 0 for r in getMetricJudges(result))		\
-				for result in results																\
+			errorLevel = EXIT_SUCCESS if results and all(
+				all(r == runCount for r in getValidatorJudges(result))
+				and all(isinstance(r, (float, int)) and r > 0 for r in getMetricJudges(result))
+				for result in results
 			) else EXIT_FAILURE
 	elif EXIT_SUCCESS == flag:
 		errorLevel = flag

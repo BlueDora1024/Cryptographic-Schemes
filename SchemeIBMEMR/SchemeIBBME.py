@@ -10,9 +10,9 @@ from getpass import getpass
 from secrets import randbelow
 from time import perf_counter, sleep
 from warnings import filterwarnings
-filterwarnings(																																												\
-	"ignore", category = DeprecationWarning, 																																				\
-	message = "^Curve \'SS[0-9]+\' provides only ~80-bit security, which is below the 128-bit minimum recommended by NIST. Use \'BN254\' \\(128-bit\\) or stronger for production use\\.$"	\
+filterwarnings(
+	"ignore", category = DeprecationWarning, 
+	message = "^Curve \'SS[0-9]+\' provides only ~80-bit security, which is below the 128-bit minimum recommended by NIST. Use \'BN254\' \\(128-bit\\) or stronger for production use\\.$"
 )
 try:
 	chdir(abspath(dirname(__file__)))
@@ -60,17 +60,17 @@ class Parser:
 		print("Options (case-insensitive): ")
 		print("\t{0} [utf-8|utf-16|...]\t\tSpecify the encoding mode for CSV and TXT outputs. The default value is {1}. ".format(self.__formatOption(Parser.__OptionEncoding), Parser.__DefaultEncoding))
 		print("\t{0}\t\tPrint this help document. ".format(self.__formatOption(Parser.__OptionHelp)))
-		print("\t{0} [|.|./{1}.xlsx|./{1}.csv|...]\t\tSpecify the output file path, leaving it empty for console output. The default value is {2}. ".format(	\
-			self.__formatOption(Parser.__OptionOutput), Parser.__SchemeName, repr(Parser.__DefaultOutputFileName)												\
+		print("\t{0} [|.|./{1}.xlsx|./{1}.csv|...]\t\tSpecify the output file path, leaving it empty for console output. The default value is {2}. ".format(
+			self.__formatOption(Parser.__OptionOutput), Parser.__SchemeName, repr(Parser.__DefaultOutputFileName)
 		))
-		print("\t{0} [s|ms|microsecond|ns|ps|0|3|6|9|12|...]\t\tSpecify the decimal place, which should be a non-negative integer. The default value is {1}. ".format(	\
-			self.__formatOption(Parser.__OptionPlace), Parser.__DefaultPlace)																							\
+		print("\t{0} [s|ms|microsecond|ns|ps|0|3|6|9|12|...]\t\tSpecify the decimal place, which should be a non-negative integer. The default value is {1}. ".format(
+			self.__formatOption(Parser.__OptionPlace), Parser.__DefaultPlace)
 		)
 		print("\t{0}\t\tDisable the verbose console outputs. ".format(self.__formatOption(Parser.__OptionQuiet)))
 		print("\t{0} [1|2|5|10|20|50|100|...]\t\tSpecify the run count, which must be a positive integer. The default value is {1}. ".format(self.__formatOption(Parser.__OptionRun), Parser.__DefaultRun))
-		print(																																							\
-			"\t{0} [0|0.1|1|10|...|inf]\t\tSpecify the waiting time before exiting, which should be non-negative. ".format(self.__formatOption(Parser.__OptionTime))	\
-			+ "Passing inf requires users to manually press the Enter key before exiting. The default value is {0}. ".format(Parser.__DefaultTime)						\
+		print(
+			"\t{0} [0|0.1|1|10|...|inf]\t\tSpecify the waiting time before exiting, which should be non-negative. ".format(self.__formatOption(Parser.__OptionTime))
+			+ "Passing inf requires users to manually press the Enter key before exiting. The default value is {0}. ".format(Parser.__DefaultTime)
 		)
 		print("\t{0}\t\tIndicate to confirm the overwriting of the existing output file. ".format(self.__formatOption(Parser.__OptionYes)))
 		print()
@@ -144,8 +144,8 @@ class Parser:
 		except:
 			return None
 	def parse(self:object) -> tuple:
-		flag, encoding, outputFilePath, decimalPlace, isVerbose, runCount, waitingTime, overwritingConfirmed = (																	\
-			max(EXIT_SUCCESS, EOF) + 1, Parser.__DefaultEncoding, Parser.__DefaultOutputFileName, Parser.__DefaultPlace, True, Parser.__DefaultRun, Parser.__DefaultTime, False		\
+		flag, encoding, outputFilePath, decimalPlace, isVerbose, runCount, waitingTime, overwritingConfirmed = (
+			max(EXIT_SUCCESS, EOF) + 1, Parser.__DefaultEncoding, Parser.__DefaultOutputFileName, Parser.__DefaultPlace, True, Parser.__DefaultRun, Parser.__DefaultTime, False
 		)
 		index, argumentCount, buffers = 1, len(self.__arguments), []
 		while index < argumentCount:
@@ -352,8 +352,8 @@ class Saver:
 											writer.writerow("{{0:.{0}f}}".format(self.__decimalPlace).format(r) if isinstance(r, float) else r for r in result)
 								elif self.__extensionName in ("HTM", "HTML"):
 									if self.__escapeHTML is None:
-										self.__escapeHTML = lambda x:str(x).replace("&", "&amp;").replace('"', "&quot;").replace("'", "&#39;")	\
-											.replace("<", "&lt;").replace(">", "&gt;").replace("\r\n", "<br />").replace("\n", "<br />").replace("\r", "<br />")
+										self.__escapeHTML = (lambda x:str(x).replace("&", "&amp;").replace('"', "&quot;").replace("'", "&#39;")
+											.replace("<", "&lt;").replace(">", "&gt;").replace("\r\n", "<br />").replace("\n", "<br />").replace("\r", "<br />"))
 									with open(self.__outputFilePath, "w", encoding = self.__encoding) as f:
 										f.write("<!DOCTYPE html>\n<html>\n\t<head>\n\t\t<meta charset=\"{0}\" />\n".format(self.__encoding.upper()))
 										f.write("\t\t<title>{0}</title>\n\t\t<style>\n".format(Parser.getSchemeName()))
@@ -373,8 +373,8 @@ class Saver:
 										for result in results:
 											f.write("\t\t\t\t<tr>\n")
 											for r in result:
-												f.write("\t\t\t\t\t<td>{0}</td>\n".format(																	\
-													"{{0:.{0}f}}".format(self.__decimalPlace).format(r) if isinstance(r, float) else self.__escapeHTML(r)	\
+												f.write("\t\t\t\t\t<td>{0}</td>\n".format(
+													"{{0:.{0}f}}".format(self.__decimalPlace).format(r) if isinstance(r, float) else self.__escapeHTML(r)
 												))
 											f.write("\t\t\t\t</tr>\n")
 										f.write("\t\t\t</tbody>\n\t\t</table>\n\t</body>\n</html>")
@@ -385,12 +385,12 @@ class Saver:
 										f.write(self.__dumpsJSON({"columns":self.__columns, "results":results}, indent = "\t", sort_keys = True, ensure_ascii = True))
 								elif "TEX" == self.__extensionName:
 									if self.__escapeTEX is None:
-										self.__escapeTEX = lambda x:"\\textbackslash{}".join(													\
-											string.replace("#", "\\#").replace("$", "\\$").replace("%", "\\%").replace("&", "\\&")				\
-											.replace("_", "\\_").replace("{", "\\{").replace("}", "\\}")										\
-											.replace("<", "\\textless{}").replace(">", "\\textgreater{}")										\
-											.replace("^", "\\textasciicircum{}").replace("~", "\\textasciitilde{}")								\
-											for string in "".join(character for character in str(x) if ' ' <= character <= '~').split("\\")		\
+										self.__escapeTEX = lambda x:"\\textbackslash{}".join(
+											string.replace("#", "\\#").replace("$", "\\$").replace("%", "\\%").replace("&", "\\&")
+											.replace("_", "\\_").replace("{", "\\{").replace("}", "\\}")
+											.replace("<", "\\textless{}").replace(">", "\\textgreater{}")
+											.replace("^", "\\textasciicircum{}").replace("~", "\\textasciitilde{}")
+											for string in "".join(character for character in str(x) if ' ' <= character <= '~').split("\\")
 										)
 									with open(self.__outputFilePath, "w", encoding = self.__encoding) as f:
 										maxLength = max(len(self.__columnsTEX) if isinstance(self.__columnsTEX, (tuple, list)) else 0, max(len(result) for result in results))
@@ -409,8 +409,8 @@ class Saver:
 										for result in results:
 											if result:
 												f.write("\t\t\t\t")
-												f.write(" & ".join((																	\
-													"${0}$" if isinstance(r, int) else "${{0:.{0}f}}$".format(self.__decimalPlace)		\
+												f.write(" & ".join((
+													"${0}$" if isinstance(r, int) else "${{0:.{0}f}}$".format(self.__decimalPlace)
 												).format(r) if isinstance(r, (float, int)) and not isinstance(r, bool) else self.__escapeTEX(r) for r in result))
 												if len(result) < maxLength:
 													f.write(" & ~" * (maxLength - len(result)))
@@ -484,8 +484,8 @@ class Saver:
 									workbook.save(self.__outputFilePath)
 								elif "XML" == self.__extensionName:
 									if self.__escapeXML is None:
-										self.__escapeXML = lambda x:"".join(character for character in str(x) if ' ' <= character <= '~')		\
-											.replace("&", "&amp;").replace("\"", "&quot;").replace("\'", "&apos;").replace("<", "&lt;").replace(">", "&gt;")
+										self.__escapeXML = (lambda x:"".join(character for character in str(x) if ' ' <= character <= '~')
+											.replace("&", "&amp;").replace("\"", "&quot;").replace("\'", "&apos;").replace("<", "&lt;").replace(">", "&gt;"))
 									with open(self.__outputFilePath, "w", encoding = self.__encoding) as f:
 										f.write("<?xml version=\"1.0\" encoding=\"{0}\"?>\n<data>\n\t<columns>\n".format(self.__encoding.upper()))
 										for column in self.__columns:
@@ -515,12 +515,12 @@ class Saver:
 											f.write("results:\n")
 											for result in results:
 												if result:
-													f.write("  - - {0}\n".format(															\
-														self.__dumpsJSON(result[0], indent = "\t", sort_keys = True, ensure_ascii = True)	\
+													f.write("  - - {0}\n".format(
+														self.__dumpsJSON(result[0], indent = "\t", sort_keys = True, ensure_ascii = True)
 													))
 													for r in result[1:]:
-														f.write("    - {0}\n".format(													\
-															self.__dumpsJSON(r, indent = "\t", sort_keys = True, ensure_ascii = True)	\
+														f.write("    - {0}\n".format(
+															self.__dumpsJSON(r, indent = "\t", sort_keys = True, ensure_ascii = True)
 														))
 												else:
 													f.write("  - []")
@@ -538,8 +538,8 @@ class Saver:
 								continue
 							except BaseException as e:
 								flag = False
-								print("Saver: Failed to save the results to {0} in the {1} format due to the following exception(s). \n\t{2}".format(	\
-									repr(self.__outputFilePath), self.__extensionName, repr(e)															\
+								print("Saver: Failed to save the results to {0} in the {1} format due to the following exception(s). \n\t{2}".format(
+									repr(self.__outputFilePath), self.__extensionName, repr(e)
 								))
 						else:
 							try:
@@ -619,9 +619,9 @@ class SchemeIBBME:
 		except Exception:
 			return self.__group.init(ZR, 1)
 	def __computePolynomial(self:object, x:Element|int|float, coefficients:tuple|list) -> Element|int|float|None:
-		if isinstance(coefficients, (tuple, list)) and coefficients and (																		\
-			isinstance(x, Element) and all(isinstance(coefficient, Element) and coefficient.type == x.type for coefficient in coefficients)		\
-			or isinstance(x, (int, float)) and all(isinstance(coefficient, (int, float)) for coefficient in coefficients)						\
+		if isinstance(coefficients, (tuple, list)) and coefficients and (
+			isinstance(x, Element) and all(isinstance(coefficient, Element) and coefficient.type == x.type for coefficient in coefficients)
+			or isinstance(x, (int, float)) and all(isinstance(coefficient, (int, float)) for coefficient in coefficients)
 		):
 			n, eleResult = len(coefficients) - 1, coefficients[0]
 			for i in range(1, n):
@@ -660,8 +660,8 @@ class SchemeIBBME:
 		H1 = lambda x:self.__group.hash(x, G1) # $H_1: \{0, 1\}^* \to \mathbb{G}_1$
 		H2 = lambda x:self.__group.hash(x, ZR) # $H_2: \{0, 1\}^* \to \mathbb{Z}_r$
 		H3 = lambda x:self.__group.hash(self.__group.serialize(x), ZR) # $H_3: \mathbb{G}_T \to \mathbb{Z}_r$
-		self.__mpk = (																																																														\
-			v, v ** rho, g, g ** b, RVec, T, pair(g, h) ** beta, h, tuple(h ** rVec1[i] for i in range(l + 1)), tuple(h ** rVec2[i] for i in range(l + 1)), h ** t1, h ** t2, g ** (tau * beta), h ** (tau * beta1), h ** (tau * beta2), h ** (1 / tau), H0, H1, H2, H3		\
+		self.__mpk = (
+			v, v ** rho, g, g ** b, RVec, T, pair(g, h) ** beta, h, tuple(h ** rVec1[i] for i in range(l + 1)), tuple(h ** rVec2[i] for i in range(l + 1)), h ** t1, h ** t2, g ** (tau * beta), h ** (tau * beta1), h ** (tau * beta2), h ** (1 / tau), H0, H1, H2, H3
 		) # $\textit{mpk} \gets (v, v^\rho, g, g^b, \vec{R}, T, e(g, h)^\beta, h, h^{\vec{r}_1}, h^{\vec{r}_2}, h^{t_1}, h^{t_2}, g^{\tau\beta}, h^{\tau\beta_1}, h^{\tau\beta_2}, h^{1/\tau}, H_0, H_1, H_2, H_3)$
 		self.__msk = (h ** beta1, h ** beta2, alpha, rho) # $\textit{msk} \gets (h^{\beta_1}, h^{\beta_2}, \alpha, \rho)$
 		
@@ -712,11 +712,11 @@ class SchemeIBBME:
 		dk4 = hToThePowerOfBeta1 * hToThePowerOfT1 ** z # $\textit{dk}_4 \gets h^{\beta_1}(h^{t_1})^z$
 		dk5 = hToThePowerOfBeta2 * hToThePowerOfT2 ** z # $\textit{dk}_5 \gets h^{\beta_2}(h^{t_2})^z$
 		dk6 = h ** z # $\textit{dk}_6 \gets h^z$
-		dk7 = tuple(																												\
-			(hToThePowerOfT1 ** rtags[j - 1] * hToThePowerOfR1[j] / hToThePowerOfR1[0] ** (H2(identity) ** j)) ** z for j in range(1, self.__l + 1)		\
+		dk7 = tuple(
+			(hToThePowerOfT1 ** rtags[j - 1] * hToThePowerOfR1[j] / hToThePowerOfR1[0] ** (H2(identity) ** j)) ** z for j in range(1, self.__l + 1)
 		) # $\textit{dk}_{7, j} \gets ((h^{t_1})^{\textit{rtag}_j}h^{r_{1, j}} / (h^{r_{1, 0}})^{H_2(\textit{id})^j})^z, \forall j \in \{1, 2, \cdots, l\}$
-		dk8 = tuple(																												\
-			(hToThePowerOfT2 ** rtags[j - 1] * hToThePowerOfR2[j] / hToThePowerOfR2[0] ** (H2(identity) ** j)) ** z for j in range(1, self.__l + 1)		\
+		dk8 = tuple(
+			(hToThePowerOfT2 ** rtags[j - 1] * hToThePowerOfR2[j] / hToThePowerOfR2[0] ** (H2(identity) ** j)) ** z for j in range(1, self.__l + 1)
 		) # $\textit{dk}_{8, j} \gets ((h^{t_2})^{\textit{rtag}_j}h^{r_{2, j}} / (h^{r_{2, 0}})^{H_2(\textit{id})^j})^z, \forall j \in \{1, 2, \cdots, l\}$
 		dk_id = (dk1, dk2, dk3, dk4, dk5, dk6, dk7, dk8, rtags) # $\textit{dk}_\textit{id} \gets (\textit{dk}_1, \textit{dk}_2, \cdots, \textit{dk}_8, \textit{rtags})$
 		
@@ -758,8 +758,8 @@ class SchemeIBBME:
 		C3 = (T ** ctag * self.__product(tuple(R[i] ** yVec[i] for i in range(n + 1)))) ** (d2 * s) # $C_3 \gets \left(T^{\textit{ctag}}\prod\limits_{i = 0}^n (g^{r_i})^{y_i}\right)^{d_2 s}$
 		C4 = v ** s # $C_4 \gets v^s$
 		V_id = tuple(H3(pair(H0(S[i]), ek_idStar * gToThePowerOfB ** s * vToThePowerOfRho ** s)) for i in range(n)) # $V_{\textit{id}_i} \gets H_3(e(H_0(\textit{id}_i), \textit{ek}_{\textit{id}^*} \cdot g^{bs} \cdot v^{\rho s})), \forall \textit{id}_i \in S$
-		bVec = self.__computeCoefficients(	\
-			V_id, k = d2					\
+		bVec = self.__computeCoefficients(
+			V_id, k = d2
 		) # Compute $\vec{b} \gets (b_0, b_1, b_2, \cdots b_n)$ that satisfy $\forall y \in \mathbb{Z}_r$, we have $g(y) = \prod\limits_{V_{\textit{id}_k} \in V_{\textit{id}}} (y - V_{\textit{id}_k}) + d_2 = b_0 + \sum\limits_{k = 1}^n b_k y^k$
 		ct = (C0, C1, C2, C3, C4, ctag, yVec, bVec) # $\textit{ct} \gets (C_0, C_1, C_2, C_3, C_4, \textit{ctag}, \vec{y}, \vec{b})$
 		
@@ -804,8 +804,8 @@ class SchemeIBBME:
 		if rtag == ctag: # \textbf{if} $\textit{rtag} = \textit{ctag}$ \textbf{then}
 			m = False # \quad$m \gets \perp$
 		else: # \textbf{else}
-			A = (																																																	\
-				pair(C1, self.__product(tuple(dki7[j] ** yVec[j + 1] for j in range(self.__l)))) * pair(C2, self.__product(tuple(dki8[j] ** yVec[j + 1] for j in range(self.__l)))) / pair(C3 ** (1 / d2), dki6)	\
+			A = (
+				pair(C1, self.__product(tuple(dki7[j] ** yVec[j + 1] for j in range(self.__l)))) * pair(C2, self.__product(tuple(dki8[j] ** yVec[j + 1] for j in range(self.__l)))) / pair(C3 ** (1 / d2), dki6)
 			) # \quad$A \gets e\left(C_1, \prod\limits_{j = 1}^l \textit{dk}_{7, j}^{y_j}\right)e\left(C_2, \prod\limits_{j = 1}^l \textit{dk}_{8, j}^{y_j}\right) / e(C_3^{1 / d_2}, \textit{dk}_6)$
 			B = pair(C1, dki4) * pair(C2, dki5) # \quad$B \gets e(C_1, \textit{dk}_4) \cdot e(C_2, \textit{dk}_5)$
 			m = C0 * A ** (1 / (rtag - ctag)) * B ** (-1) # \quad$m \gets C_0 \cdot A^{1 / (\textit{rtag} - \textit{ctag})} \cdot B^{-1}$
@@ -888,9 +888,9 @@ def conductScheme(curveParameter:tuple|list|dict|str, l:int = 30, n:int = 10, _s
 	if isSystemValid:
 		# Initialization #
 		schemeIBBME = SchemeIBBME(group)
-		sizeZR, sizeG1, sizeG2, sizeGT = (															\
-			schemeIBBME.getLengthOf(group.random(ZR)), schemeIBBME.getLengthOf(group.random(G1)), 	\
-			schemeIBBME.getLengthOf(group.random(G2)), schemeIBBME.getLengthOf(group.random(GT))	\
+		sizeZR, sizeG1, sizeG2, sizeGT = (
+			schemeIBBME.getLengthOf(group.random(ZR)), schemeIBBME.getLengthOf(group.random(G1)), 
+			schemeIBBME.getLengthOf(group.random(G2)), schemeIBBME.getLengthOf(group.random(GT))
 		)
 		
 		# Setup #
@@ -918,9 +918,9 @@ def conductScheme(curveParameter:tuple|list|dict|str, l:int = 30, n:int = 10, _s
 		
 		# Enc #
 		startTime = perf_counter()
-		S = (																																	\
-			tuple(randbelow(1 << group.secparam).to_bytes((group.secparam + 7) >> 3, byteorder = "big") for _ in range(seed)) + (identity, )	\
-			+ tuple(randbelow(1 << group.secparam).to_bytes((group.secparam + 7) >> 3, byteorder = "big") for _ in range(n - seed - 1))			\
+		S = (
+			tuple(randbelow(1 << group.secparam).to_bytes((group.secparam + 7) >> 3, byteorder = "big") for _ in range(seed)) + (identity, )
+			+ tuple(randbelow(1 << group.secparam).to_bytes((group.secparam + 7) >> 3, byteorder = "big") for _ in range(n - seed - 1))
 		)
 		message = group.random(GT)
 		ct = schemeIBBME.Enc(S, ek_idStar, message)
@@ -946,12 +946,12 @@ def conductScheme(curveParameter:tuple|list|dict|str, l:int = 30, n:int = 10, _s
 			print()
 	
 	# End #
-	return [														\
-		curveName, securityParameter, lString, nString, runString, 	\
-		isSystemValid, isSchemeCorrect, 							\
-		timeSetup, timeEKGen, timeDKGen, timeEnc, timeDec, 			\
-		sizeZR, sizeG1, sizeG2, sizeGT, 							\
-		sizeMpk, sizeMsk, sizeEkIdStar, sizeDkId, sizeCt			\
+	return [
+		curveName, securityParameter, lString, nString, runString, 
+		isSystemValid, isSchemeCorrect, 
+		timeSetup, timeEKGen, timeDKGen, timeEnc, timeDec, 
+		sizeZR, sizeG1, sizeG2, sizeGT, 
+		sizeMpk, sizeMsk, sizeEkIdStar, sizeDkId, sizeCt
 	]
 
 def main() -> int:
@@ -973,10 +973,10 @@ def main() -> int:
 			curveParameters = ("MNT201", "MNT224", "BN254", ("SS512", 128), ("SS512", 256), ("SS512", 512), ("SS1024", 512), ("SS1024", 1024))
 			queries = ("curveParameter", "secparam", "l", "n", "runCount")
 			validators = ("isSystemValid", "isSchemeCorrect")
-			metrics = (																			\
-				"Setup (s)", "EKGen (s)", "DKGen (s)", "Enc (s)", "Dec (s)", 					\
-				"elementOfZR (B)", "elementOfG1 (B)", "elementOfG2 (B)", "elementOfGT (B)", 	\
-				"mpk (B)", "msk (B)", "ek_idStar (B)", "dk_id (B)", "ct (B)"					\
+			metrics = (
+				"Setup (s)", "EKGen (s)", "DKGen (s)", "Enc (s)", "Dec (s)", 
+				"elementOfZR (B)", "elementOfG1 (B)", "elementOfG2 (B)", "elementOfGT (B)", 
+				"mpk (B)", "msk (B)", "ek_idStar (B)", "dk_id (B)", "ct (B)"
 			)
 			getValidatorJudges = lambda x:x[queryLength:queryValidatorLength]
 			getMetricJudges = lambda x:x[queryValidatorLength:]
@@ -1018,10 +1018,10 @@ def main() -> int:
 			except BaseException as e:
 				print()
 				print("The experiments were interrupted by {0}. Saved results are retained. ".format(repr(e)))
-			errorLevel = EXIT_SUCCESS if results and all(											\
-				all(r == runCount for r in getValidatorJudges(result))								\
-				and all(isinstance(r, (float, int)) and r > 0 for r in getMetricJudges(result))		\
-				for result in results																\
+			errorLevel = EXIT_SUCCESS if results and all(
+				all(r == runCount for r in getValidatorJudges(result))
+				and all(isinstance(r, (float, int)) and r > 0 for r in getMetricJudges(result))
+				for result in results
 			) else EXIT_FAILURE
 	elif EXIT_SUCCESS == flag:
 		errorLevel = flag
