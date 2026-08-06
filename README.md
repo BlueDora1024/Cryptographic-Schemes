@@ -57,20 +57,24 @@ We are currently merging cryptographic schemes from our other repositories. Cryp
 - [SchemeLBPEAKS](./SchemeLBPEAKS/)
   - [SchemeLBPEAKS.java](./SchemeLBPEAKS/SchemeLBPEAKS.java)
   - [SchemeLBPEAKS.py](./SchemeLBPEAKS/SchemeLBPEAKS.py)
-- [PSI-CA](./PSI-CA/)
-  - [OPSI-CA.cpp](./PSI-CA/OPSI-CA.cpp)
-  - [PSI-CA.cpp](./PSI-CA/PSI-CA.cpp)
-  - [SPSI-CA(1).cpp](./PSI-CA/SPSI-CA(1).cpp)
-  - [VPSI-CA-Alg2.cpp](./PSI-CA/VPSI-CA-Alg2.cpp)
-  - [VPSI-CA-Alg3.cpp](./PSI-CA/VPSI-CA-Alg3.cpp)
-  - [VPSI-CA-Alg4.cpp](./PSI-CA/VPSI-CA-Alg4.cpp)
-  - [VPSI-CA-Alg5.cpp](./PSI-CA/VPSI-CA-Alg5.cpp)
+- [SchemeVPSICA](./SchemeVPSICA/)
+  - [SchemePSICA.cpp](./SchemeVPSICA/SchemePSICA.cpp)
+  - [SchemeVPSICAAlg2.cpp](./SchemeVPSICA/SchemeVPSICAAlg2.cpp)
+  - [SchemeVPSICAAlg3.cpp](./SchemeVPSICA/SchemeVPSICAAlg3.cpp)
+  - [SchemeVPSICAAlg4.cpp](./SchemeVPSICA/SchemeVPSICAAlg4.cpp)
+  - [SchemeVPSICAAlg5.cpp](./SchemeVPSICA/SchemeVPSICAAlg5.cpp)
+- [SchemeOPSICA](./SchemeOPSICA/)
+  - [SchemeOPSICA.cpp](./SchemeOPSICA/SchemeOPSICA.cpp)
+  - [SchemePSICA.cpp](./SchemeOPSICA/SchemePSICA.cpp)
+- [SchemeSPSICA](./SchemeSPSICA/)
+  - [SchemeSPSICA.cpp](./SchemeSPSICA/SchemeSPSICA.cpp)
+  - [SchemePSICA.cpp](./SchemeSPSICA/SchemePSICA.cpp)
 
 Most of the cryptographic schemes here are pairing-based, which are implemented based on the PBC library and its variants. 
 
 | Programming language | Dependency |
 | - | - |
-| C++ (PSI-CA) | C++17 standard library for algorithms and formatting; Ubuntu/POSIX APIs for file publication (Windows compilation is rejected); no third-party libraries |
+| C++ (SchemeVPSICA, SchemeOPSICA, and SchemeSPSICA) | C++17 standard library for algorithms and formatting; Ubuntu/POSIX APIs for file publication (Windows compilation is rejected); no third-party libraries |
 | C (and pairing-based C/C++) | [PBC](https://crypto.stanford.edu/pbc/download.html) |
 | Python (3.12 or above) | [Python Charm-Crypto framework](https://github.com/JHUISI/charm) |
 | Java | JPBC |
@@ -1024,20 +1028,20 @@ Meanwhile, space measurements other than the computation of the object length wi
 
 ## 3. C++
 
-The seven implementations under [``PSI-CA``](./PSI-CA/) are standalone C++17 programs. Their algorithms and result formatting use the C++17 standard library, and they use no third-party libraries. The saver's file-publication path uses Ubuntu/POSIX APIs, so these implementations target Ubuntu/POSIX and compilation on Windows is rejected. These files do not require PBC or the pairing-based dependencies used by other C/C++ implementations in this repository.
+The seven physical implementations under [``SchemeVPSICA``](./SchemeVPSICA/), [``SchemeOPSICA``](./SchemeOPSICA/), and [``SchemeSPSICA``](./SchemeSPSICA/) are standalone C++17 programs. Each source contains its own command-line parser and result saver and does not depend on a shared header. The OPSI-CA and SPSI-CA directories also provide a symbolic link to the PSI-CA baseline under ``SchemeVPSICA``. Their algorithms and result formatting use the C++17 standard library, and they use no third-party libraries. The saver's file-publication path uses Ubuntu/POSIX APIs, so these implementations target Ubuntu/POSIX and compilation on Windows is rejected. These files do not require PBC or the pairing-based dependencies used by other C/C++ implementations in this repository.
 
 ### 3.1 C++ environment, inputs, and outputs
 
-The programs are developed for Ubuntu and require a compiler such as ``g++`` with C++17 support. From the repository root, the following example uses all required warning flags; the quotes protect the parentheses in the source name, and the output binary is placed under ``PSI-CA``.
+The programs are developed for Ubuntu and require a compiler such as ``g++`` with C++17 support. From the repository root, the following example uses all required warning flags and places the output binary beside its source.
 
 ```shell
-g++ -std=c++17 -Wall -Wextra -Wpedantic "PSI-CA/SPSI-CA(1).cpp" -o "PSI-CA/SPSI-CA(1)"
+g++ -std=c++17 -Wall -Wextra -Wpedantic "SchemeSPSICA/SchemeSPSICA.cpp" -o "SchemeSPSICA/SchemeSPSICA"
 ```
 
 A noninteractive execution that selects the output, precision, run count, immediate exit, and overwrite authorization is as follows.
 
 ```shell
-"PSI-CA/SPSI-CA(1)" -o "results.csv" -p 9 -r 10 -t 0 -y
+"SchemeSPSICA/SchemeSPSICA" -o "results.csv" -p 9 -r 10 -t 0 -y
 ```
 
 All aliases in the following table are case-insensitive. Pass ``-h`` to print the exact short option list.
@@ -1063,17 +1067,17 @@ CSV, TSV, and TXT are the supported output formats, with CSV as the default. An 
 
 The exit codes describe parsing and saving rather than cryptographic validation. ``EXIT_SUCCESS`` ($0$) is returned when the result is saved, and ``EXIT_FAILURE`` ($1$) is returned when saving fails. For invalid arguments, ``main`` returns the literal ``-1`` (normally observed as $255$ on POSIX shells). Help exits with ``EXIT_SUCCESS`` ($0$). The algorithms currently do not expose a separate correctness boolean to ``main``, so cryptographic correctness does not independently determine these exit codes.
 
-The [``runCPP`` workflow](./.github/workflows/runCPP.yml) runs an exact seven-program matrix on ``ubuntu-latest``. Its checkout and artifact actions are pinned to full commit SHAs. Every program is compiled with ``-std=c++17 -Wall -Wextra -Wpedantic``, then exercised with both a help command and a real execution, and the generated results are uploaded as artifacts. Manual dispatch accepts the output format, decimal place, and run count. The CI run count is limited to 1 through 100; an absent or invalid value falls back to 10. Each matrix job has a 30-minute timeout.
+The [``runCPP`` workflow](./.github/workflows/runCPP.yml) builds nine matrix entries grouped under SchemeVPSICA, SchemeOPSICA, and SchemeSPSICA on ``ubuntu-latest``. These entries cover the seven physical implementations and execute the PSI-CA baseline once in each scheme group through the two symbolic links. Each program is compiled with the selected C++ standard and ``-Wall -Wextra -Wpedantic``, then exercised with both a help command and a real execution, and the generated results are uploaded as artifacts. Manual dispatch can select the scheme groups, C++ standard, output format, decimal place, and run count. The CI run count is limited to 1 through 100; an absent or invalid value falls back to 10. Each matrix job has a 30-minute timeout.
 
 ### 3.2 Time complexity
 
 The implementations retain their original measurement model. They take CPU-clock samples with ``clock()``, subtract the starting tick count from the ending tick count, and divide by ``CLOCKS_PER_SEC`` while multiplying by 1000 to report milliseconds. Results are divided by the selected run count to obtain a per-run average.
 
-The original ``baseNum`` scaling remains part of both total and actor-specific measurements. The VPSI variants also retain their per-operation ``adjust`` terms. OPSI and SPSI retain the actor-specific modeled costs added to the measured sender and cloud totals. These values therefore reproduce the programs' academic cost model and should not be interpreted as unadjusted wall-clock benchmarks.
+The original ``baseNum`` scaling remains part of both total and actor-specific measurements. The SchemeVPSICA variants also retain their per-operation ``adjust`` terms. SchemeOPSICA and SchemeSPSICA retain the actor-specific modeled costs added to the measured sender and cloud totals. These values therefore reproduce the programs' academic cost model and should not be interpreted as unadjusted wall-clock benchmarks.
 
 ### 3.3 Space complexity
 
-The space outputs preserve the academic formulas implemented by each class's ``printSize`` method. OPSI-CA, PSI-CA, and SPSI-CA report bytes. The VPSI-CA programs sum the ``printSize`` results as aggregate byte totals, divide them by ``1024.0``, and save the fractional results as kilobytes. The formulas scale selected elements and collections according to the scheme parameters and retain the original program-specific aggregation.
+The space outputs preserve the academic formulas implemented by each class's ``printSize`` method. SchemeOPSICA, SchemePSICA, and SchemeSPSICA report bytes. The SchemeVPSICA programs sum the ``printSize`` results as aggregate byte totals, divide them by ``1024.0``, and save the fractional results as kilobytes. The formulas scale selected elements and collections according to the scheme parameters and retain the original program-specific aggregation.
 
 These values are serialized or object-model estimates for the selected scheme objects, not measurements of process RSS or peak resident memory. Use an external memory monitor when peak memory consumption is required.
 

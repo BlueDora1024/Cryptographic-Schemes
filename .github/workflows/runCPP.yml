@@ -15,8 +15,18 @@ on:
       - '.github/workflows/runCPP.yml'
   workflow_dispatch:
     inputs:
-      executePSICA:
-        description: 'PSICA'
+      executeSchemeVPSICA:
+        description: 'SchemeVPSICA'
+        required: true
+        default: true
+        type: boolean
+      executeSchemeOPSICA:
+        description: 'SchemeOPSICA'
+        required: true
+        default: true
+        type: boolean
+      executeSchemeSPSICA:
+        description: 'SchemeSPSICA'
         required: true
         default: true
         type: boolean
@@ -84,12 +94,18 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]];
           then
-            executePSICA="${{ github.event.inputs.executePSICA }}"
+            executeSchemeVPSICA="${{ github.event.inputs.executeSchemeVPSICA }}"
+            executeSchemeOPSICA="${{ github.event.inputs.executeSchemeOPSICA }}"
+            executeSchemeSPSICA="${{ github.event.inputs.executeSchemeSPSICA }}"
           else
-            executePSICA="true"
+            executeSchemeVPSICA="true"
+            executeSchemeOPSICA="true"
+            executeSchemeSPSICA="true"
           fi
           matrix=()
-          [[ "true" == "${executePSICA}" ]] && matrix+=("PSI-CA/OPSI-CA.cpp" "PSI-CA/PSI-CA.cpp" "PSI-CA/SPSI-CA.cpp" "PSI-CA/VPSI-CA-Alg2.cpp" "PSI-CA/VPSI-CA-Alg3.cpp" "PSI-CA/VPSI-CA-Alg4.cpp" "PSI-CA/VPSI-CA-Alg5.cpp")
+          [[ "true" == "${executeSchemeVPSICA}" ]] && matrix+=("SchemeVPSICA/SchemePSICA.cpp" "SchemeVPSICA/SchemeVPSICAAlg2.cpp" "SchemeVPSICA/SchemeVPSICAAlg3.cpp" "SchemeVPSICA/SchemeVPSICAAlg4.cpp" "SchemeVPSICA/SchemeVPSICAAlg5.cpp")
+          [[ "true" == "${executeSchemeOPSICA}" ]] && matrix+=("SchemeOPSICA/SchemeOPSICA.cpp" "SchemeOPSICA/SchemePSICA.cpp")
+          [[ "true" == "${executeSchemeSPSICA}" ]] && matrix+=("SchemeSPSICA/SchemeSPSICA.cpp" "SchemeSPSICA/SchemePSICA.cpp")
           if [[ ${#matrix[@]} -ge 1 ]];
           then
             echo "matrix=$(printf '%s\n' "${matrix[@]}" | jq -R . | jq -s -c 'unique')" >> "${GITHUB_OUTPUT}"
@@ -226,7 +242,9 @@ jobs:
         uses: actions/checkout@v6
         with:
           sparse-checkout: |
-            PSI-CA/
+            SchemeVPSICA/
+            SchemeOPSICA/
+            SchemeSPSICA/
           persist-credentials: false
       
       - name: Get ready
