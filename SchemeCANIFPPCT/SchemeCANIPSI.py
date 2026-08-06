@@ -643,6 +643,11 @@ class SchemeCANIPSI:
 			return eleResult
 		else:
 			return None
+	def __generateRandomNonZeroZRElement(self:object) -> Element:
+		element = self.__group.random(ZR)
+		while element == self.__group.init(ZR, 0):
+			element = self.__group.random(ZR)
+		return element
 	def BSetup(self:object, n:int = __DefaultN, m:int = __DefaultM) -> tuple: # $\textbf{BSetup}(n, m) \to (\textit{bpk}, \textit{bsk})$
 		# Checks #
 		self.__bFlag = False
@@ -661,7 +666,7 @@ class SchemeCANIPSI:
 		H1 = lambda x: self.__group.hash(x, G1) # $H_1: \{0, 1\}^* \to \mathbb{G}_1$
 		H2 = lambda x: self.__group.hash(self.__group.serialize(x), ZR) # $H_2: \mathbb{G}_1 \to \mathbb{Z}_r$
 		omega = self.__group.random(ZR) # generate $\omega \in \mathbb{Z}_r$ randomly
-		t1, t2, t3, t4 = self.__group.random(ZR, 4) # generate $t_1, t_2, t_3, t_4 \in \mathbb{Z}_r^*$ randomly
+		t1, t2, t3, t4 = tuple(self.__generateRandomNonZeroZRElement() for _ in range(4)) # generate $t_1, t_2, t_3, t_4 \in \mathbb{Z}_r^*$ randomly
 		Omega = pair(g, g) ** (t1 * t2 * omega) # $\Omega \gets e(g, g)^{t_1 t_2 \omega}$
 		v1 = g ** t1 # $v_1 \gets g^{t_1}$
 		v2 = g ** t2 # $v_2 \gets g^{t_2}$
@@ -802,7 +807,7 @@ class SchemeCANIPSI:
 		H3 = lambda x: self.__group.hash(x, ZR) # $H_3: \{0, 1\}^* \to \mathbb{Z}_r$
 		H4 = lambda x: self.__group.hash(self.__group.serialize(x), ZR) # $H_4: \mathbb{G}_1 \to \mathbb{Z}_r$
 		r, t, omega = self.__group.random(ZR, 3) # generate $r, t, \omega \in \mathbb{Z}_r$ randomly
-		s, t1, t2, t3, t4 = self.__group.random(ZR, 5) # generate $s, t_1, t_2, t_3, t_4 \in \mathbb{Z}_r^*$ randomly
+		s, t1, t2, t3, t4 = tuple(self.__generateRandomNonZeroZRElement() for _ in range(5)) # generate $s, t_1, t_2, t_3, t_4 \in \mathbb{Z}_r^*$ randomly
 		R = g1 ** r # $R \gets g_1^r$
 		S = g2 ** s # $S \gets g_2^s$
 		T = g1 ** t # $T \gets g_1^t$
@@ -833,7 +838,7 @@ class SchemeCANIPSI:
 		r, s = self.__msk[0], self.__msk[1]
 		
 		# Scheme #
-		k_i, x_i = self.__group.random(ZR), self.__group.random(ZR) # generate $k_i \in \mathbb{Z}_r$ and $x_i \in \mathbb{Z}_r^*$
+		k_i, x_i = self.__group.random(ZR), self.__generateRandomNonZeroZRElement() # generate $k_i \in \mathbb{Z}_r$ and $x_i \in \mathbb{Z}_r^*$
 		z_i = (r - x_i) * (s * x_i) ** (-1) # $z_i \gets \frac{r - x_i}{s x_i}$
 		Z_i = g1 ** z_i # $Z_i \gets g_1^{z_i}$
 		sk_ID_i = k_i # $\textit{sk}_{\textit{ID}_i} \gets k_i$

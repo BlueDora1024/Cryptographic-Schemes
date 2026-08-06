@@ -595,6 +595,11 @@ class SchemeIBMECH:
 			return result if isinstance(result, Element) else self.__group.init(ZR, result)
 		except Exception:
 			return self.__group.init(ZR, 1)
+	def __generateRandomNonZeroZRElement(self:object) -> Element:
+		element = self.__group.random(ZR)
+		while element == self.__group.init(ZR, 0):
+			element = self.__group.random(ZR)
+		return element
 	def Setup(self:object): # $\textbf{Setup}() \to (\textit{mpk}, \textit{msk})$
 		# Checks #
 		self.__flag = False
@@ -604,10 +609,16 @@ class SchemeIBMECH:
 		g2 = self.__group.init(G2, 1) # $g_2 \gets 1_{\mathbb{G}_2}$
 		q = self.__group.order() # $q \gets \|\mathbb{G}\|$
 		alpha, eta = self.__group.random(ZR), self.__group.random(ZR) # generate $\alpha, \eta \in \mathbb{Z}_r$ randomly
-		zero, one = self.__group.init(ZR, 0), self.__group.random(ZR) # generate $\textbf{0}_{\mathbb{Z}_r}, \textbf{1}_{\mathbb{Z}_r} \in \mathbb{Z}_r$ randomly
-		B = [[self.__group.random(ZR) for j in range(8)] for i in range(8)] # generate $\bm{B} \gets (\mathbb{Z}_r)^{8 \times 8}$ randomly
+		zero = self.__group.init(ZR, 0) # generate $\textbf{0}_{\mathbb{Z}_r} \in \mathbb{Z}_r$
+		one = self.__generateRandomNonZeroZRElement() # generate $\textbf{1}_{\mathbb{Z}_r} \in \mathbb{Z}_r^*$ randomly
+		B, DStar = None, None
+		while DStar is None:
+			B = [[self.__group.random(ZR) for j in range(8)] for i in range(8)] # generate $\bm{B} \gets (\mathbb{Z}_r)^{8 \times 8}$ randomly
+			try:
+				DStar = tuple(tuple(GaussEliminationinGroups([B[j] + [one if i == j else zero] for j in range(8)])) for i in range(4)) # $\mathbb{D}_i^* \gets \textit{GaussEliminationinGroups}(\bm{B} || [1 = i, 2 = i, \cdots, 8 = i]^\mathrm{T}), \forall i \in \{1, 2, 3, 4\}$
+			except Exception:
+				DStar = None
 		D = tuple(tuple(g1 ** B[i][j] for j in range(8)) for i in range(4)) # $\mathbb{D}_{i, j} \gets g_1^{\bm{B}_{i, j}}, \forall i \in \{1, 2, 3, 4\}, \forall j \in \{1, 2, \cdots, 8\}$
-		DStar = tuple(tuple(GaussEliminationinGroups([B[j] + [one if i == j else zero] for j in range(8)])) for i in range(4)) # $\mathbb{D}_i^* \gets \textit{GaussEliminationinGroups}(\bm{B} || [1 = i, 2 = i, \cdots, 8 = i]^\mathrm{T}), \forall i \in \{1, 2, 3, 4\}$
 		del B
 		gT = pair(g1, g2) # $g_T \gets e(g_1, g_2)$
 		self.__mpk = (gT ** (alpha * one), gT ** (eta * one), D[0], D[1]) # $\textit{mpk} \gets (g_T^{\alpha \times \textbf{1}_{\mathbb{Z}_r}}, g_T^{\eta \times \textbf{1}_{\mathbb{Z}_r}}, D_1, D_2)$

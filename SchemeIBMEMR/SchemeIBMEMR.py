@@ -648,6 +648,11 @@ class SchemeIBMEMR:
 			return eleResult
 		else:
 			return None
+	def __generateRandomNonZeroZRElement(self:object) -> Element:
+		element = self.__group.random(ZR)
+		while element == self.__group.init(ZR, 0):
+			element = self.__group.random(ZR)
+		return element
 	def Setup(self:object, d:int = __DefaultD, seed:int|None = None) -> tuple: # $\textbf{Setup}(d) \to (\textit{mpk}, \textit{msk})$
 		# Checks #
 		self.__flag = False
@@ -682,7 +687,8 @@ class SchemeIBMEMR:
 		H4 = lambda x:self.__group.hash(self.__group.serialize(x), ZR) # $H_4: \mathbb{G}_T \to \mathbb{Z}_r$
 		H5 = lambda x:self.__group.hash(x, G1) # $H_5: \{0, 1\}^* \to \mathbb{G}_1$
 		g0, g1 = self.__group.random(G1), self.__group.random(G1) # generate $g_0, g_1 \in \mathbb{G}_1$ randomly
-		w, alpha, gamma, k, t1, t2 = self.__group.random(ZR, 6) # generate $w, \alpha, \gamma, k, t_1, t_2 \in \mathbb{Z}_r$ randomly
+		w, alpha, gamma, k = self.__group.random(ZR, 4) # generate $w, \alpha, \gamma, k \in \mathbb{Z}_r$ randomly
+		t1, t2 = tuple(self.__generateRandomNonZeroZRElement() for _ in range(2)) # generate $t_1, t_2 \in \mathbb{Z}_r^*$ randomly
 		Omega = pair(g, g) ** w # $\Omega \gets e(g, g)^w$
 		v1 = g ** t1 # $v_1 \gets g^{t_1}$
 		v2 = g ** t2 # $v_2 \gets g^{t_2}$

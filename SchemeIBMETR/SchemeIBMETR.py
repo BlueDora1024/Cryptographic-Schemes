@@ -600,6 +600,11 @@ class SchemeIBMETR:
 			return result if isinstance(result, Element) else self.__group.init(ZR, result)
 		except Exception:
 			return self.__group.init(ZR, 1)
+	def __generateRandomNonZeroZRElement(self:object) -> Element:
+		element = self.__group.random(ZR)
+		while element == self.__group.init(ZR, 0):
+			element = self.__group.random(ZR)
+		return element
 	def Setup(self:object) -> tuple: # $\textbf{Setup}() \to (\textit{mpk}, \textit{msk})$
 		# Checks #
 		self.__flag = False
@@ -625,7 +630,8 @@ class SchemeIBMETR:
 			HHat = lambda x:int.from_bytes(sha3_512(self.__group.serialize(x)).digest() * (((self.__group.secparam - 1) >> 9) + 1), byteorder = "big") & self.__operand # $\hat{H}: \{0, 1\}^* \to \{0, 1\}^\lambda$
 			print("Setup: An irregular security parameter ($\\lambda = {0}$) is specified. It is recommended to use 224, 256, 384, 512, or 1024 as the security parameter. ".format(self.__group.secparam))
 		g0, g1 = self.__group.random(G1), self.__group.random(G1) # generate $g_0, g_1 \in \mathbb{G}_1$ randomly
-		w, alpha, t1, t2 = self.__group.random(ZR), self.__group.random(ZR), self.__group.random(ZR), self.__group.random(ZR) # generate $w, alpha, t_1, t_2 \in \mathbb{Z}_r$
+		w, alpha = self.__group.random(ZR, 2) # generate $w, \alpha \in \mathbb{Z}_r$ randomly
+		t1, t2 = tuple(self.__generateRandomNonZeroZRElement() for _ in range(2)) # generate $t_1, t_2 \in \mathbb{Z}_r^*$ randomly
 		Omega = pair(g, g) ** w # $\Omega \gets e(g, g)^w$
 		v1 = g ** t1 # $v \gets g^{t_1}$
 		v2 = g ** t2 # $v \gets g^{t_2}$
