@@ -11,9 +11,9 @@ from hashlib import md5, sha1, sha3_224, sha3_256, sha3_384, sha3_512
 from random import shuffle
 from time import perf_counter, sleep
 from warnings import filterwarnings
-filterwarnings(																																												\
-	"ignore", category = DeprecationWarning, 																																				\
-	message = "^Curve \'SS[0-9]+\' provides only ~80-bit security, which is below the 128-bit minimum recommended by NIST. Use \'BN254\' \\(128-bit\\) or stronger for production use\\.$"	\
+filterwarnings(
+	"ignore", category = DeprecationWarning, 
+	message = "^Curve \'SS[0-9]+\' provides only ~80-bit security, which is below the 128-bit minimum recommended by NIST. Use \'BN254\' \\(128-bit\\) or stronger for production use\\.$"
 )
 try:
 	chdir(abspath(dirname(__file__)))
@@ -61,17 +61,17 @@ class Parser:
 		print("Options (case-insensitive): ")
 		print("\t{0} [utf-8|utf-16|...]\t\tSpecify the encoding mode for CSV and TXT outputs. The default value is {1}. ".format(self.__formatOption(Parser.__OptionEncoding), Parser.__DefaultEncoding))
 		print("\t{0}\t\tPrint this help document. ".format(self.__formatOption(Parser.__OptionHelp)))
-		print("\t{0} [|.|./{1}.xlsx|./{1}.csv|...]\t\tSpecify the output file path, leaving it empty for console output. The default value is {2}. ".format(	\
-			self.__formatOption(Parser.__OptionOutput), Parser.__SchemeName, repr(Parser.__DefaultOutputFileName)												\
+		print("\t{0} [|.|./{1}.xlsx|./{1}.csv|...]\t\tSpecify the output file path, leaving it empty for console output. The default value is {2}. ".format(
+			self.__formatOption(Parser.__OptionOutput), Parser.__SchemeName, repr(Parser.__DefaultOutputFileName)
 		))
-		print("\t{0} [s|ms|microsecond|ns|ps|0|3|6|9|12|...]\t\tSpecify the decimal place, which should be a non-negative integer. The default value is {1}. ".format(	\
-			self.__formatOption(Parser.__OptionPlace), Parser.__DefaultPlace)																							\
+		print("\t{0} [s|ms|microsecond|ns|ps|0|3|6|9|12|...]\t\tSpecify the decimal place, which should be a non-negative integer. The default value is {1}. ".format(
+			self.__formatOption(Parser.__OptionPlace), Parser.__DefaultPlace)
 		)
 		print("\t{0}\t\tDisable the verbose console outputs. ".format(self.__formatOption(Parser.__OptionQuiet)))
 		print("\t{0} [1|2|5|10|20|50|100|...]\t\tSpecify the run count, which must be a positive integer. The default value is {1}. ".format(self.__formatOption(Parser.__OptionRun), Parser.__DefaultRun))
-		print(																																							\
-			"\t{0} [0|0.1|1|10|...|inf]\t\tSpecify the waiting time before exiting, which should be non-negative. ".format(self.__formatOption(Parser.__OptionTime))	\
-			+ "Passing inf requires users to manually press the Enter key before exiting. The default value is {0}. ".format(Parser.__DefaultTime)						\
+		print(
+			"\t{0} [0|0.1|1|10|...|inf]\t\tSpecify the waiting time before exiting, which should be non-negative. ".format(self.__formatOption(Parser.__OptionTime))
+			+ "Passing inf requires users to manually press the Enter key before exiting. The default value is {0}. ".format(Parser.__DefaultTime)
 		)
 		print("\t{0}\t\tIndicate to confirm the overwriting of the existing output file. ".format(self.__formatOption(Parser.__OptionYes)))
 		print()
@@ -145,8 +145,8 @@ class Parser:
 		except:
 			return None
 	def parse(self:object) -> tuple:
-		flag, encoding, outputFilePath, decimalPlace, isVerbose, runCount, waitingTime, overwritingConfirmed = (																	\
-			max(EXIT_SUCCESS, EOF) + 1, Parser.__DefaultEncoding, Parser.__DefaultOutputFileName, Parser.__DefaultPlace, True, Parser.__DefaultRun, Parser.__DefaultTime, False		\
+		flag, encoding, outputFilePath, decimalPlace, isVerbose, runCount, waitingTime, overwritingConfirmed = (
+			max(EXIT_SUCCESS, EOF) + 1, Parser.__DefaultEncoding, Parser.__DefaultOutputFileName, Parser.__DefaultPlace, True, Parser.__DefaultRun, Parser.__DefaultTime, False
 		)
 		index, argumentCount, buffers = 1, len(self.__arguments), []
 		while index < argumentCount:
@@ -353,8 +353,10 @@ class Saver:
 											writer.writerow("{{0:.{0}f}}".format(self.__decimalPlace).format(r) if isinstance(r, float) else r for r in result)
 								elif self.__extensionName in ("HTM", "HTML"):
 									if self.__escapeHTML is None:
-										self.__escapeHTML = lambda x:str(x).replace("&", "&amp;").replace('"', "&quot;").replace("'", "&#39;")	\
+										self.__escapeHTML = (
+											lambda x:str(x).replace("&", "&amp;").replace('"', "&quot;").replace("'", "&#39;")
 											.replace("<", "&lt;").replace(">", "&gt;").replace("\r\n", "<br />").replace("\n", "<br />").replace("\r", "<br />")
+										)
 									with open(self.__outputFilePath, "w", encoding = self.__encoding) as f:
 										f.write("<!DOCTYPE html>\n<html>\n\t<head>\n\t\t<meta charset=\"{0}\" />\n".format(self.__encoding.upper()))
 										f.write("\t\t<title>{0}</title>\n\t\t<style>\n".format(Parser.getSchemeName()))
@@ -374,8 +376,8 @@ class Saver:
 										for result in results:
 											f.write("\t\t\t\t<tr>\n")
 											for r in result:
-												f.write("\t\t\t\t\t<td>{0}</td>\n".format(																	\
-													"{{0:.{0}f}}".format(self.__decimalPlace).format(r) if isinstance(r, float) else self.__escapeHTML(r)	\
+												f.write("\t\t\t\t\t<td>{0}</td>\n".format(
+													"{{0:.{0}f}}".format(self.__decimalPlace).format(r) if isinstance(r, float) else self.__escapeHTML(r)
 												))
 											f.write("\t\t\t\t</tr>\n")
 										f.write("\t\t\t</tbody>\n\t\t</table>\n\t</body>\n</html>")
@@ -386,12 +388,12 @@ class Saver:
 										f.write(self.__dumpsJSON({"columns":self.__columns, "results":results}, indent = "\t", sort_keys = True, ensure_ascii = True))
 								elif "TEX" == self.__extensionName:
 									if self.__escapeTEX is None:
-										self.__escapeTEX = lambda x:"\\textbackslash{}".join(													\
-											string.replace("#", "\\#").replace("$", "\\$").replace("%", "\\%").replace("&", "\\&")				\
-											.replace("_", "\\_").replace("{", "\\{").replace("}", "\\}")										\
-											.replace("<", "\\textless{}").replace(">", "\\textgreater{}")										\
-											.replace("^", "\\textasciicircum{}").replace("~", "\\textasciitilde{}")								\
-											for string in "".join(character for character in str(x) if ' ' <= character <= '~').split("\\")		\
+										self.__escapeTEX = lambda x:"\\textbackslash{}".join(
+											string.replace("#", "\\#").replace("$", "\\$").replace("%", "\\%").replace("&", "\\&")
+											.replace("_", "\\_").replace("{", "\\{").replace("}", "\\}")
+											.replace("<", "\\textless{}").replace(">", "\\textgreater{}")
+											.replace("^", "\\textasciicircum{}").replace("~", "\\textasciitilde{}")
+											for string in "".join(character for character in str(x) if ' ' <= character <= '~').split("\\")
 										)
 									with open(self.__outputFilePath, "w", encoding = self.__encoding) as f:
 										maxLength = max(len(self.__columnsTEX) if isinstance(self.__columnsTEX, (tuple, list)) else 0, max(len(result) for result in results))
@@ -410,8 +412,8 @@ class Saver:
 										for result in results:
 											if result:
 												f.write("\t\t\t\t")
-												f.write(" & ".join((																	\
-													"${0}$" if isinstance(r, int) else "${{0:.{0}f}}$".format(self.__decimalPlace)		\
+												f.write(" & ".join((
+													"${0}$" if isinstance(r, int) else "${{0:.{0}f}}$".format(self.__decimalPlace)
 												).format(r) if isinstance(r, (float, int)) and not isinstance(r, bool) else self.__escapeTEX(r) for r in result))
 												if len(result) < maxLength:
 													f.write(" & ~" * (maxLength - len(result)))
@@ -485,8 +487,10 @@ class Saver:
 									workbook.save(self.__outputFilePath)
 								elif "XML" == self.__extensionName:
 									if self.__escapeXML is None:
-										self.__escapeXML = lambda x:"".join(character for character in str(x) if ' ' <= character <= '~')		\
+										self.__escapeXML = (
+											lambda x:"".join(character for character in str(x) if ' ' <= character <= '~')
 											.replace("&", "&amp;").replace("\"", "&quot;").replace("\'", "&apos;").replace("<", "&lt;").replace(">", "&gt;")
+										)
 									with open(self.__outputFilePath, "w", encoding = self.__encoding) as f:
 										f.write("<?xml version=\"1.0\" encoding=\"{0}\"?>\n<data>\n\t<columns>\n".format(self.__encoding.upper()))
 										for column in self.__columns:
@@ -516,12 +520,12 @@ class Saver:
 											f.write("results:\n")
 											for result in results:
 												if result:
-													f.write("  - - {0}\n".format(															\
-														self.__dumpsJSON(result[0], indent = "\t", sort_keys = True, ensure_ascii = True)	\
+													f.write("  - - {0}\n".format(
+														self.__dumpsJSON(result[0], indent = "\t", sort_keys = True, ensure_ascii = True)
 													))
 													for r in result[1:]:
-														f.write("    - {0}\n".format(													\
-															self.__dumpsJSON(r, indent = "\t", sort_keys = True, ensure_ascii = True)	\
+														f.write("    - {0}\n".format(
+															self.__dumpsJSON(r, indent = "\t", sort_keys = True, ensure_ascii = True)
 														))
 												else:
 													f.write("  - []")
@@ -539,8 +543,8 @@ class Saver:
 								continue
 							except BaseException as e:
 								flag = False
-								print("Saver: Failed to save the results to {0} in the {1} format due to the following exception(s). \n\t{2}".format(	\
-									repr(self.__outputFilePath), self.__extensionName, repr(e)															\
+								print("Saver: Failed to save the results to {0} in the {1} format due to the following exception(s). \n\t{2}".format(
+									repr(self.__outputFilePath), self.__extensionName, repr(e)
 								))
 						else:
 							try:
@@ -600,9 +604,9 @@ class SchemeFuzzyME:
 		except Exception:
 			return self.__group.init(ZR, 1)
 	def __computePolynomial(self:object, x:Element|int|float, coefficients:tuple|list) -> Element|int|float|None:
-		if isinstance(coefficients, (tuple, list)) and coefficients and (															\
-			isinstance(x, Element) and all(isinstance(coefficient, Element) and coefficient.type == x.type for coefficient in coefficients)	\
-			or isinstance(x, (int, float)) and all(isinstance(coefficient, (int, float)) for coefficient in coefficients)						\
+		if isinstance(coefficients, (tuple, list)) and coefficients and (
+			isinstance(x, Element) and all(isinstance(coefficient, Element) and coefficient.type == x.type for coefficient in coefficients)
+			or isinstance(x, (int, float)) and all(isinstance(coefficient, (int, float)) for coefficient in coefficients)
 		):
 			n, eleResult = len(coefficients) - 1, coefficients[0]
 			for i in range(1, n):
@@ -624,9 +628,9 @@ class SchemeFuzzyME:
 			self.__n, self.__d = n, d
 		else:
 			self.__n, self.__d = SchemeFuzzyME.__DefaultN, SchemeFuzzyME.__DefaultD
-			print(																																\
-				"Setup: The variables $n$ and $d$ should be two positive integers satisfying $2 \\leqslant d \\leqslant n$, but they are not, "	\
-				+ "which have been defaulted to ${0}$ and ${1}$, respectively. ".format(SchemeFuzzyME.__DefaultN, SchemeFuzzyME.__DefaultD)		\
+			print(
+				"Setup: The variables $n$ and $d$ should be two positive integers satisfying $2 \\leqslant d \\leqslant n$, but they are not, "
+				+ "which have been defaulted to ${0}$ and ${1}$, respectively. ".format(SchemeFuzzyME.__DefaultN, SchemeFuzzyME.__DefaultD)
 			)
 		
 		# Scheme #
@@ -717,21 +721,21 @@ class SchemeFuzzyME:
 		rPrime1Vec = tuple(self.__group.random(ZR) for _ in range(self.__n)) # generate $\vec{r}'_1 = (r'_{1, 1}, r'_{1, 2}, \cdots, r'_{1, n}) \in \mathbb{Z}_r^n$ randomly
 		rPrime2Vec = tuple(self.__group.random(ZR) for _ in range(self.__n)) # generate $\vec{r}'_2 = (r'_{2, 1}, r'_{2, 2}, \cdots, r'_{2, n}) \in \mathbb{Z}_r^n$ randomly
 		dk_S_B_0 = tuple(g ** (k1Vec[i] * theta1 * theta2 + k2Vec[i] * theta3 * theta4) for i in range(self.__n)) # $\textit{dk}_{S_{B_{0, i}}} \gets g^{k_{1, i} \theta_1 \theta_2 + k_{2, i} \theta_3 \theta_4}, \forall i \in \{1, 2, \cdots, n\}$
-		dk_S_B_1 = tuple(																												\
-			g2 ** (-f(S_B[i]) * theta2) * G_ID ** (-h(S_B[i]) * theta2) * T(S_B[i]) ** (-k1Vec[i] * theta2) for i in range(self.__n)	\
+		dk_S_B_1 = tuple(
+			g2 ** (-f(S_B[i]) * theta2) * G_ID ** (-h(S_B[i]) * theta2) * T(S_B[i]) ** (-k1Vec[i] * theta2) for i in range(self.__n)
 		) # $\textit{dk}_{S_{B_{1, i}}} \gets g_2^{-f(b_i) \theta_2} (G_{\textit{ID}})^{-h(b_i) \theta_2} [T(b_i)]^{-k_{1, i} \theta_2}, \forall i \in \{1, 2, \cdots, n\}$
-		dk_S_B_2 = tuple(																												\
-			g2 ** (-f(S_B[i]) * theta1) * G_ID ** (-h(S_B[i]) * theta1) * T(S_B[i]) ** (-k1Vec[i] * theta1) for i in range(self.__n)	\
+		dk_S_B_2 = tuple(
+			g2 ** (-f(S_B[i]) * theta1) * G_ID ** (-h(S_B[i]) * theta1) * T(S_B[i]) ** (-k1Vec[i] * theta1) for i in range(self.__n)
 		) # $\textit{dk}_{S_{B_{2, i}}} \gets g_2^{-f(b_i) \theta_1} (G_{\textit{ID}})^{-h(b_i) \theta_1} [T(b_i)]^{-k_{1, i} \theta_1}, \forall i \in \{1, 2, \cdots, n\}$
 		dk_S_B_3 = tuple(T(S_B[i]) ** (-k2Vec[i] * theta4) for i in range(self.__n)) # $\textit{dk}_{S_{B_{3, i}}} \gets [T(b_i)]^{-k_{2, i} \theta_4}, \forall i \in \{1, 2, \cdots, n\}$
 		dk_S_B_4 = tuple(T(S_B[i]) ** (-k2Vec[i] * theta3) for i in range(self.__n)) # $\textit{dk}_{S_{B_{4, i}}} \gets [T(b_i)]^{-k_{2, i} \theta_3}, \forall i \in \{1, 2, \cdots, n\}$
 		dk_S_B = (dk_S_B_0, dk_S_B_1, dk_S_B_2, dk_S_B_3, dk_S_B_4) # $\textit{dk}_{S_B} \gets (\textit{dk}_{S_{B_0}}, \textit{dk}_{S_{B_1}}, \textit{dk}_{S_{B_2}}, \textit{dk}_{S_{B_3}}, \textit{dk}_{S_{B_4}})$
 		dk_P_A_0 = tuple(g ** (rPrime1Vec[i] * theta1 * theta2 + rPrime2Vec[i] * theta3 * theta4) for i in range(self.__n)) # $\textit{dk}_{P_{A_{0, i}}} \gets g^{r'_{1, i} \theta_1 \theta_2 + r'_{i, 2} \theta_3 \theta_4}, \forall i \in \{1, 2, \cdots, n\}$
-		dk_P_A_1 = tuple(																															\
-			g2 ** (-2 * qPrime(P_A[i]) * theta2) * G_ID ** (h(P_A[i]) * theta2) * H(P_A[i]) ** (-rPrime1Vec[i] * theta2) for i in range(self.__n)	\
+		dk_P_A_1 = tuple(
+			g2 ** (-2 * qPrime(P_A[i]) * theta2) * G_ID ** (h(P_A[i]) * theta2) * H(P_A[i]) ** (-rPrime1Vec[i] * theta2) for i in range(self.__n)
 		) # $\textit{dk}_{P_{A_{1, i}}} \gets g_2^{-2q'(a_i) \theta_2} (G_{\textit{ID}})^{h(a_i \theta_2)} H(a_i)^{-r'_{1, i} \theta_2}, \forall i \in \{1, 2, \cdots, n\}$
-		dk_P_A_2 = tuple(																															\
-			g2 ** (-2 * qPrime(P_A[i]) * theta1) * G_ID ** (h(P_A[i]) * theta1) * H(P_A[i]) ** (-rPrime1Vec[i] * theta1) for i in range(self.__n)	\
+		dk_P_A_2 = tuple(
+			g2 ** (-2 * qPrime(P_A[i]) * theta1) * G_ID ** (h(P_A[i]) * theta1) * H(P_A[i]) ** (-rPrime1Vec[i] * theta1) for i in range(self.__n)
 		) # $\textit{dk}_{P_{A_{2, i}}} \gets g_2^{-2q'(a_i) \theta_1} (G_{\textit{ID}})^{h(a_i \theta_1)} H(a_i)^{-r'_{1, i} \theta_1}, \forall i \in \{1, 2, \cdots, n\}$
 		dk_P_A_3 = tuple(H(P_A[i]) ** (-rPrime2Vec[i] * theta4) for i in range(self.__n)) # $\textit{dk}_{P_{A_{3, i}}} \gets [H(a_i)]^{-r'_{2, i} \theta_4}, \forall i \in \{1, 2, \cdots, n\}$
 		dk_P_A_4 = tuple(H(P_A[i]) ** (-rPrime2Vec[i] * theta3) for i in range(self.__n)) # $\textit{dk}_{P_{A_{3, i}}} \gets [H(a_i)]^{-r'_{2, i} \theta_3}, \forall i \in \{1, 2, \cdots, n\}$
@@ -794,9 +798,9 @@ class SchemeFuzzyME:
 		chiVec = tuple(self.__group.random(ZR) for _ in range(self.__n)) # generate $\vec{\chi} = (\chi_1, \chi_2, \cdots, \chi_n) \in \mathbb{Z}_r^n$ randomly
 		C3Vec = tuple(eVec[i] * g ** xiVec[i] for i in range(self.__n)) # $C_{3, i} \gets e_i \cdot g^{\xi_i}, \forall i \in \{1, 2, \cdots, n\}$
 		C4Vec = tuple(g ** chiVec[i] for i in range(self.__n)) # $C_{4, i} \gets g^{\chi_i}, \forall i \in \{1, 2, \cdots, n\}$
-		C5Vec = tuple(EVec[i] ** s * g3 ** l(S_A[i]) * H(S_A[i]) ** (s * xiVec[i]) * H1(																	\
-			self.__group.serialize(C0) + self.__group.serialize(C1) + self.__group.serialize(C2) + self.__group.serialize(C3) + self.__group.serialize(C4)	\
-			+ self.__group.serialize(C1Vec[i]) + self.__group.serialize(C2Vec[i]) + self.__group.serialize(C3Vec[i]) + self.__group.serialize(C4Vec[i])		\
+		C5Vec = tuple(EVec[i] ** s * g3 ** l(S_A[i]) * H(S_A[i]) ** (s * xiVec[i]) * H1(
+			self.__group.serialize(C0) + self.__group.serialize(C1) + self.__group.serialize(C2) + self.__group.serialize(C3) + self.__group.serialize(C4)
+			+ self.__group.serialize(C1Vec[i]) + self.__group.serialize(C2Vec[i]) + self.__group.serialize(C3Vec[i]) + self.__group.serialize(C4Vec[i])
 		) for i in range(self.__n)) # $C_{5, i} \gets E_i^s \cdot g_3^{l(a_i)} H(a_i)^{s \cdot \xi_i} \cdot H_1(C_0 || C_1 || C_2 || C_3 || C_4 || C_{1, i} || C_{2, i} || C_{3, i} || C_{4, i})^{\chi_i}$
 		CT = (C0, C1, C2, C3, C4, C1Vec, C2Vec, C3Vec, C4Vec, C5Vec) # $\textit{CT} \gets (C_0, C_1, C_2, C_3, C_4, \vec{C}_1, \vec{C}_2, \vec{C}_3, \vec{C}_4, \vec{C}_5)$
 		
@@ -807,15 +811,15 @@ class SchemeFuzzyME:
 		if not self.__flag:
 			print("Decryption: The ``Setup`` procedure has not been called yet. The program will call the ``Setup`` first and finish the ``Decryption`` subsequently. ")
 			self.Setup()
-		if (																																								\
-			isinstance(SA, tuple) and isinstance(PA, tuple) and isinstance(SB, tuple) and isinstance(PB, tuple) and len(SA) == len(PA) == len(SA) == len(SB) == self.__n	\
-			and all(isinstance(ele, Element) and ele.type == ZR for ele in SA) and all(isinstance(ele, Element) and ele.type == ZR for ele in PA)							\
-			and all(isinstance(ele, Element) and ele.type == ZR for ele in SB) and all(isinstance(ele, Element) and ele.type == ZR for ele in PB)							\
+		if (
+			isinstance(SA, tuple) and isinstance(PA, tuple) and isinstance(SB, tuple) and isinstance(PB, tuple) and len(SA) == len(PA) == len(SA) == len(SB) == self.__n
+			and all(isinstance(ele, Element) and ele.type == ZR for ele in SA) and all(isinstance(ele, Element) and ele.type == ZR for ele in PA)
+			and all(isinstance(ele, Element) and ele.type == ZR for ele in SB) and all(isinstance(ele, Element) and ele.type == ZR for ele in PB)
 		): # hybrid check
 			S_A, P_A, S_B, P_B = SA, PA, SB, PB
-			if (																																								\
-				isinstance(dkSBPA, tuple) and len(dkSBPA) == 2 and isinstance(dkSBPA[0], tuple) and isinstance(dkSBPA[1], tuple) and len(dkSBPA[0]) == len(dkSBPA[1]) == 5		\
-				and all(isinstance(ele, tuple) and len(ele) == self.__n for ele in dkSBPA[0]) and all(isinstance(ele, tuple) and len(ele) == self.__n for ele in dkSBPA[1])		\
+			if (
+				isinstance(dkSBPA, tuple) and len(dkSBPA) == 2 and isinstance(dkSBPA[0], tuple) and isinstance(dkSBPA[1], tuple) and len(dkSBPA[0]) == len(dkSBPA[1]) == 5
+				and all(isinstance(ele, tuple) and len(ele) == self.__n for ele in dkSBPA[0]) and all(isinstance(ele, tuple) and len(ele) == self.__n for ele in dkSBPA[1])
 			): # hybrid check
 				dk_SBPA = dkSBPA
 			else:
@@ -852,11 +856,11 @@ class SchemeFuzzyME:
 				pair(C1Vec[i], dk_S_B_0[i]) * pair(C1, dk_S_B_1[i]) * pair(C2, dk_S_B_2[i]) # \hat{e}(C_{1, i}, \textit{dk}_{S_{B_{0, i}}}) \hat{e}(C_1, \textit{dk}_{S_{B_{1, i}}}) \hat{e}(C_2, \textit{dk}_{S_{B_{2, i}}})
 				* pair(C3, dk_S_B_3[i]) * pair(C4, dk_S_B_4[i]) # \hat{e}(C_3, \textit{dk}_{S_{B_{3, i}}}) \hat{e}(C_4, \textit{dk}_{S_{B_{4, i}}})
 			) ** Delta(S_B[i], WB, 0) for i in range(self.__n))) # )^{\Delta_{b_i, W_B}(0)}$
-			CTVec = tuple(																																			\
-				(																																					\
-					self.__group.serialize(C0) + self.__group.serialize(C1) + self.__group.serialize(C2) + self.__group.serialize(C3) + self.__group.serialize(C4)	\
-					+ self.__group.serialize(C1Vec[i]) + self.__group.serialize(C2Vec[i]) + self.__group.serialize(C3Vec[i]) + self.__group.serialize(C4Vec[i])		\
-				) for i in range(self.__n)																															\
+			CTVec = tuple(
+				(
+					self.__group.serialize(C0) + self.__group.serialize(C1) + self.__group.serialize(C2) + self.__group.serialize(C3) + self.__group.serialize(C4)
+					+ self.__group.serialize(C1Vec[i]) + self.__group.serialize(C2Vec[i]) + self.__group.serialize(C3Vec[i]) + self.__group.serialize(C4Vec[i])
+				) for i in range(self.__n)
 			) # \quad$\textit{CT}_i \gets C_0 || C_1 || C_2 || C_3 || C_4 || C_{1, i} || C_{2, i} || C_{3, i} || C_{4, i}, \forall i \in \{1, 2, \cdots, n\}$
 			KlPrime = self.__product(tuple( # \quad$K'_l \gets \prod\limits_{a_i \in W_A} 
 				( # \left(
@@ -1006,12 +1010,12 @@ def conductScheme(curveParameter:tuple|list|dict|str, n:int = 30, d:int = 10, ru
 			print()
 	
 	# End #
-	return [																\
-		curveName, securityParameter, nString, dString, runString, 			\
-		isSystemValid, isSchemeCorrect, 									\
-		timeSetup, timeEKGen, timeDKGen, timeEncryption, timeDecryption, 	\
-		sizeZR, sizeG1G2, sizeGT, 											\
-		sizeMpk, sizeMsk, sizeEkSA, sizeDkSBPA, sizeCT						\
+	return [
+		curveName, securityParameter, nString, dString, runString, 
+		isSystemValid, isSchemeCorrect, 
+		timeSetup, timeEKGen, timeDKGen, timeEncryption, timeDecryption, 
+		sizeZR, sizeG1G2, sizeGT, 
+		sizeMpk, sizeMsk, sizeEkSA, sizeDkSBPA, sizeCT
 	]
 
 def main() -> int:
@@ -1033,10 +1037,10 @@ def main() -> int:
 			curveParameters = (("SS512", 128), ("SS512", 160), ("SS512", 224), ("SS512", 256), ("SS512", 384), ("SS512", 512))
 			queries = ("curveParameter", "secparam", "n", "d", "runCount")
 			validators = ("isSystemValid", "isSchemeCorrect")
-			metrics = (																		\
-				"Setup (s)", "EKGen (s)", "DKGen (s)", "Encryption (s)", "Decryption (s)", 	\
-				"elementOfZR (B)", "elementOfG1G2 (B)", "elementOfGT (B)", 					\
-				"mpk (B)", "msk (B)", "ek_S_A (B)", "dk_SBPA (B)", "CT (B)"					\
+			metrics = (
+				"Setup (s)", "EKGen (s)", "DKGen (s)", "Encryption (s)", "Decryption (s)", 
+				"elementOfZR (B)", "elementOfG1G2 (B)", "elementOfGT (B)", 
+				"mpk (B)", "msk (B)", "ek_S_A (B)", "dk_SBPA (B)", "CT (B)"
 			)
 			getValidatorJudges = lambda x:x[queryLength:queryValidatorLength]
 			getMetricJudges = lambda x:x[queryValidatorLength:]
@@ -1078,10 +1082,10 @@ def main() -> int:
 			except BaseException as e:
 				print()
 				print("The experiments were interrupted by {0}. Saved results are retained. ".format(repr(e)))
-			errorLevel = EXIT_SUCCESS if results and all(											\
-				all(r == runCount for r in getValidatorJudges(result))								\
-				and all(isinstance(r, (float, int)) and r > 0 for r in getMetricJudges(result))		\
-				for result in results																\
+			errorLevel = EXIT_SUCCESS if results and all(
+				all(r == runCount for r in getValidatorJudges(result))
+				and all(isinstance(r, (float, int)) and r > 0 for r in getMetricJudges(result))
+				for result in results
 			) else EXIT_FAILURE
 	elif EXIT_SUCCESS == flag:
 		errorLevel = flag

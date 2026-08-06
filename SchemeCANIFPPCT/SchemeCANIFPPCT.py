@@ -10,9 +10,9 @@ from getpass import getpass
 from secrets import randbelow
 from time import perf_counter, sleep
 from warnings import filterwarnings
-filterwarnings(																																												\
-	"ignore", category = DeprecationWarning, 																																				\
-	message = "^Curve \'SS[0-9]+\' provides only ~80-bit security, which is below the 128-bit minimum recommended by NIST. Use \'BN254\' \\(128-bit\\) or stronger for production use\\.$"	\
+filterwarnings(
+	"ignore", category = DeprecationWarning, 
+	message = "^Curve \'SS[0-9]+\' provides only ~80-bit security, which is below the 128-bit minimum recommended by NIST. Use \'BN254\' \\(128-bit\\) or stronger for production use\\.$"
 )
 try:
 	chdir(abspath(dirname(__file__)))
@@ -60,17 +60,17 @@ class Parser:
 		print("Options (case-insensitive): ")
 		print("\t{0} [utf-8|utf-16|...]\t\tSpecify the encoding mode for CSV and TXT outputs. The default value is {1}. ".format(self.__formatOption(Parser.__OptionEncoding), Parser.__DefaultEncoding))
 		print("\t{0}\t\tPrint this help document. ".format(self.__formatOption(Parser.__OptionHelp)))
-		print("\t{0} [|.|./{1}.xlsx|./{1}.csv|...]\t\tSpecify the output file path, leaving it empty for console output. The default value is {2}. ".format(	\
-			self.__formatOption(Parser.__OptionOutput), Parser.__SchemeName, repr(Parser.__DefaultOutputFileName)												\
+		print("\t{0} [|.|./{1}.xlsx|./{1}.csv|...]\t\tSpecify the output file path, leaving it empty for console output. The default value is {2}. ".format(
+			self.__formatOption(Parser.__OptionOutput), Parser.__SchemeName, repr(Parser.__DefaultOutputFileName)
 		))
-		print("\t{0} [s|ms|microsecond|ns|ps|0|3|6|9|12|...]\t\tSpecify the decimal place, which should be a non-negative integer. The default value is {1}. ".format(	\
-			self.__formatOption(Parser.__OptionPlace), Parser.__DefaultPlace)																							\
+		print("\t{0} [s|ms|microsecond|ns|ps|0|3|6|9|12|...]\t\tSpecify the decimal place, which should be a non-negative integer. The default value is {1}. ".format(
+			self.__formatOption(Parser.__OptionPlace), Parser.__DefaultPlace)
 		)
 		print("\t{0}\t\tDisable the verbose console outputs. ".format(self.__formatOption(Parser.__OptionQuiet)))
 		print("\t{0} [1|2|5|10|20|50|100|...]\t\tSpecify the run count, which must be a positive integer. The default value is {1}. ".format(self.__formatOption(Parser.__OptionRun), Parser.__DefaultRun))
-		print(																																							\
-			"\t{0} [0|0.1|1|10|...|inf]\t\tSpecify the waiting time before exiting, which should be non-negative. ".format(self.__formatOption(Parser.__OptionTime))	\
-			+ "Passing inf requires users to manually press the Enter key before exiting. The default value is {0}. ".format(Parser.__DefaultTime)						\
+		print(
+			"\t{0} [0|0.1|1|10|...|inf]\t\tSpecify the waiting time before exiting, which should be non-negative. ".format(self.__formatOption(Parser.__OptionTime))
+			+ "Passing inf requires users to manually press the Enter key before exiting. The default value is {0}. ".format(Parser.__DefaultTime)
 		)
 		print("\t{0}\t\tIndicate to confirm the overwriting of the existing output file. ".format(self.__formatOption(Parser.__OptionYes)))
 		print()
@@ -144,8 +144,8 @@ class Parser:
 		except:
 			return None
 	def parse(self:object) -> tuple:
-		flag, encoding, outputFilePath, decimalPlace, isVerbose, runCount, waitingTime, overwritingConfirmed = (																	\
-			max(EXIT_SUCCESS, EOF) + 1, Parser.__DefaultEncoding, Parser.__DefaultOutputFileName, Parser.__DefaultPlace, True, Parser.__DefaultRun, Parser.__DefaultTime, False		\
+		flag, encoding, outputFilePath, decimalPlace, isVerbose, runCount, waitingTime, overwritingConfirmed = (
+			max(EXIT_SUCCESS, EOF) + 1, Parser.__DefaultEncoding, Parser.__DefaultOutputFileName, Parser.__DefaultPlace, True, Parser.__DefaultRun, Parser.__DefaultTime, False
 		)
 		index, argumentCount, buffers = 1, len(self.__arguments), []
 		while index < argumentCount:
@@ -352,8 +352,10 @@ class Saver:
 											writer.writerow("{{0:.{0}f}}".format(self.__decimalPlace).format(r) if isinstance(r, float) else r for r in result)
 								elif self.__extensionName in ("HTM", "HTML"):
 									if self.__escapeHTML is None:
-										self.__escapeHTML = lambda x:str(x).replace("&", "&amp;").replace('"', "&quot;").replace("'", "&#39;")	\
+										self.__escapeHTML = (
+											lambda x:str(x).replace("&", "&amp;").replace('"', "&quot;").replace("'", "&#39;")
 											.replace("<", "&lt;").replace(">", "&gt;").replace("\r\n", "<br />").replace("\n", "<br />").replace("\r", "<br />")
+										)
 									with open(self.__outputFilePath, "w", encoding = self.__encoding) as f:
 										f.write("<!DOCTYPE html>\n<html>\n\t<head>\n\t\t<meta charset=\"{0}\" />\n".format(self.__encoding.upper()))
 										f.write("\t\t<title>{0}</title>\n\t\t<style>\n".format(Parser.getSchemeName()))
@@ -373,8 +375,8 @@ class Saver:
 										for result in results:
 											f.write("\t\t\t\t<tr>\n")
 											for r in result:
-												f.write("\t\t\t\t\t<td>{0}</td>\n".format(																	\
-													"{{0:.{0}f}}".format(self.__decimalPlace).format(r) if isinstance(r, float) else self.__escapeHTML(r)	\
+												f.write("\t\t\t\t\t<td>{0}</td>\n".format(
+													"{{0:.{0}f}}".format(self.__decimalPlace).format(r) if isinstance(r, float) else self.__escapeHTML(r)
 												))
 											f.write("\t\t\t\t</tr>\n")
 										f.write("\t\t\t</tbody>\n\t\t</table>\n\t</body>\n</html>")
@@ -385,12 +387,12 @@ class Saver:
 										f.write(self.__dumpsJSON({"columns":self.__columns, "results":results}, indent = "\t", sort_keys = True, ensure_ascii = True))
 								elif "TEX" == self.__extensionName:
 									if self.__escapeTEX is None:
-										self.__escapeTEX = lambda x:"\\textbackslash{}".join(													\
-											string.replace("#", "\\#").replace("$", "\\$").replace("%", "\\%").replace("&", "\\&")				\
-											.replace("_", "\\_").replace("{", "\\{").replace("}", "\\}")										\
-											.replace("<", "\\textless{}").replace(">", "\\textgreater{}")										\
-											.replace("^", "\\textasciicircum{}").replace("~", "\\textasciitilde{}")								\
-											for string in "".join(character for character in str(x) if ' ' <= character <= '~').split("\\")		\
+										self.__escapeTEX = lambda x:"\\textbackslash{}".join(
+											string.replace("#", "\\#").replace("$", "\\$").replace("%", "\\%").replace("&", "\\&")
+											.replace("_", "\\_").replace("{", "\\{").replace("}", "\\}")
+											.replace("<", "\\textless{}").replace(">", "\\textgreater{}")
+											.replace("^", "\\textasciicircum{}").replace("~", "\\textasciitilde{}")
+											for string in "".join(character for character in str(x) if ' ' <= character <= '~').split("\\")
 										)
 									with open(self.__outputFilePath, "w", encoding = self.__encoding) as f:
 										maxLength = max(len(self.__columnsTEX) if isinstance(self.__columnsTEX, (tuple, list)) else 0, max(len(result) for result in results))
@@ -409,8 +411,8 @@ class Saver:
 										for result in results:
 											if result:
 												f.write("\t\t\t\t")
-												f.write(" & ".join((																	\
-													"${0}$" if isinstance(r, int) else "${{0:.{0}f}}$".format(self.__decimalPlace)		\
+												f.write(" & ".join((
+													"${0}$" if isinstance(r, int) else "${{0:.{0}f}}$".format(self.__decimalPlace)
 												).format(r) if isinstance(r, (float, int)) and not isinstance(r, bool) else self.__escapeTEX(r) for r in result))
 												if len(result) < maxLength:
 													f.write(" & ~" * (maxLength - len(result)))
@@ -484,8 +486,10 @@ class Saver:
 									workbook.save(self.__outputFilePath)
 								elif "XML" == self.__extensionName:
 									if self.__escapeXML is None:
-										self.__escapeXML = lambda x:"".join(character for character in str(x) if ' ' <= character <= '~')		\
+										self.__escapeXML = (
+											lambda x:"".join(character for character in str(x) if ' ' <= character <= '~')
 											.replace("&", "&amp;").replace("\"", "&quot;").replace("\'", "&apos;").replace("<", "&lt;").replace(">", "&gt;")
+										)
 									with open(self.__outputFilePath, "w", encoding = self.__encoding) as f:
 										f.write("<?xml version=\"1.0\" encoding=\"{0}\"?>\n<data>\n\t<columns>\n".format(self.__encoding.upper()))
 										for column in self.__columns:
@@ -515,12 +519,12 @@ class Saver:
 											f.write("results:\n")
 											for result in results:
 												if result:
-													f.write("  - - {0}\n".format(															\
-														self.__dumpsJSON(result[0], indent = "\t", sort_keys = True, ensure_ascii = True)	\
+													f.write("  - - {0}\n".format(
+														self.__dumpsJSON(result[0], indent = "\t", sort_keys = True, ensure_ascii = True)
 													))
 													for r in result[1:]:
-														f.write("    - {0}\n".format(													\
-															self.__dumpsJSON(r, indent = "\t", sort_keys = True, ensure_ascii = True)	\
+														f.write("    - {0}\n".format(
+															self.__dumpsJSON(r, indent = "\t", sort_keys = True, ensure_ascii = True)
 														))
 												else:
 													f.write("  - []")
@@ -538,8 +542,8 @@ class Saver:
 								continue
 							except BaseException as e:
 								flag = False
-								print("Saver: Failed to save the results to {0} in the {1} format due to the following exception(s). \n\t{2}".format(	\
-									repr(self.__outputFilePath), self.__extensionName, repr(e)															\
+								print("Saver: Failed to save the results to {0} in the {1} format due to the following exception(s). \n\t{2}".format(
+									repr(self.__outputFilePath), self.__extensionName, repr(e)
 								))
 						else:
 							try:
@@ -622,9 +626,9 @@ class SchemeCANIFPPCT:
 		except Exception:
 			return self.__group.init(ZR, 1)
 	def __computePolynomial(self:object, x:Element|int|float, coefficients:tuple|list) -> Element|int|float|None:
-		if isinstance(coefficients, (tuple, list)) and coefficients and (																		\
-			isinstance(x, Element) and all(isinstance(coefficient, Element) and coefficient.type == x.type for coefficient in coefficients)		\
-			or isinstance(x, (int, float)) and all(isinstance(coefficient, (int, float)) for coefficient in coefficients)						\
+		if isinstance(coefficients, (tuple, list)) and coefficients and (
+			isinstance(x, Element) and all(isinstance(coefficient, Element) and coefficient.type == x.type for coefficient in coefficients)
+			or isinstance(x, (int, float)) and all(isinstance(coefficient, (int, float)) for coefficient in coefficients)
 		):
 			n, eleResult = len(coefficients) - 1, coefficients[0]
 			for i in range(1, n):
@@ -646,9 +650,9 @@ class SchemeCANIFPPCT:
 			self.__n, self.__m = n, m
 		else:
 			self.__n, self.__m = SchemeCANIFPPCT.__DefaultN, SchemeCANIFPPCT.__DefaultM
-			print(																																	\
-				"BSetup: The variables $n$ and $m$ should be two positive integers satisfying $1 \\leqslant m \\leqslant n$, but they are not, "		\
-				+ "which have been defaulted to ${0}$ and ${1}$, respectively. ".format(SchemeCANIFPPCT.__DefaultN, SchemeCANIFPPCT.__DefaultM)		\
+			print(
+				"BSetup: The variables $n$ and $m$ should be two positive integers satisfying $1 \\leqslant m \\leqslant n$, but they are not, "
+				+ "which have been defaulted to ${0}$ and ${1}$, respectively. ".format(SchemeCANIFPPCT.__DefaultN, SchemeCANIFPPCT.__DefaultM)
 			)
 		
 		# Scheme #
@@ -763,18 +767,18 @@ class SchemeCANIFPPCT:
 			BCT_TP_i = BCTTPi
 		else:
 			sk_ID_i, ek_ID_i = self.KGen(self.__group.random(ZR))
-			BCT_TP_i = self.BEncryption(																					\
-				randbelow(1 << self.__group.secparam).to_bytes((self.__group.secparam + 7) >> 3, byteorder = "big"), 	\
-				sk_ID_i, ek_ID_i, s, s[randbelow(self.__n)]																\
+			BCT_TP_i = self.BEncryption(
+				randbelow(1 << self.__group.secparam).to_bytes((self.__group.secparam + 7) >> 3, byteorder = "big"), 
+				sk_ID_i, ek_ID_i, s, s[randbelow(self.__n)]
 			)
 			del ek_ID_i
 			print("BQuery: The variable $\\textit{BCT}_{\\textit{TP}_i}$ should be a tuple containing 2 tuples, but it is not, which has been generated randomly. ")
 		if isinstance(btrapdoori, tuple) and len(btrapdoori) == 5 and all(isinstance(ele, Element) for ele in btrapdoori): # hybrid check
 			btrapdoor_i = btrapdoori
 		else:
-			btrapdoor_i = self.BTrapdoorGen(																					\
-				randbelow(1 << self.__group.secparam).to_bytes((self.__group.secparam + 7) >> 3, byteorder = "big"), 	\
-				self.BKGen(self.__group.random(ZR))[0] if sk_ID_i is None else sk_ID_i								\
+			btrapdoor_i = self.BTrapdoorGen(
+				randbelow(1 << self.__group.secparam).to_bytes((self.__group.secparam + 7) >> 3, byteorder = "big"), 
+				self.BKGen(self.__group.random(ZR))[0] if sk_ID_i is None else sk_ID_i
 			)
 			print("BQuery: The variable $\\textit{btrapdoor}_i$ should be a tuple containing 5 elements, but it is not, which has been generated randomly. ")
 		del sk_ID_i
@@ -786,8 +790,8 @@ class SchemeCANIFPPCT:
 		T0_i, T1_i, T2_i, T3_i, T4_i = btrapdoor_i
 		
 		# Scheme #
-		VPrime_i = H2(																						\
-			pair(T0_i, C0_i) * pair(T1_i, C1_i) * pair(T2_i, C2_i) * pair(T3_i, C3_i) * pair(T4_i, C4_i)	\
+		VPrime_i = H2(
+			pair(T0_i, C0_i) * pair(T1_i, C1_i) * pair(T2_i, C2_i) * pair(T3_i, C3_i) * pair(T4_i, C4_i)
 		) # $V'_i \gets H_2(e(T_{0_i}, C_{0_i}) e(T_{1_i}, C_{1_i}) e(T_{2_i}, C_{2_i}) e(T_{3_i}, C_{3_i}) e(T_{4_i}, C_{4_i}))$
 		
 		# Return #
@@ -799,9 +803,9 @@ class SchemeCANIFPPCT:
 			self.__n, self.__m = n, m
 		else:
 			self.__n, self.__m = SchemeCANIFPPCT.__DefaultN, SchemeCANIFPPCT.__DefaultM
-			print(																																	\
-				"Setup: The variables $n$ and $m$ should be two positive integers satisfying $1 \\leqslant m \\leqslant n$, but they are not, "		\
-				+ "which have been defaulted to ${0}$ and ${1}$, respectively. ".format(SchemeCANIFPPCT.__DefaultN, SchemeCANIFPPCT.__DefaultM)		\
+			print(
+				"Setup: The variables $n$ and $m$ should be two positive integers satisfying $1 \\leqslant m \\leqslant n$, but they are not, "
+				+ "which have been defaulted to ${0}$ and ${1}$, respectively. ".format(SchemeCANIFPPCT.__DefaultN, SchemeCANIFPPCT.__DefaultM)
 			)
 		
 		# Scheme #
@@ -886,9 +890,9 @@ class SchemeCANIFPPCT:
 			print("Encryption: The variable $s_i$ has been generated accordingly. ")
 		
 		# Unpack #
-		g1, g3, H1, H2, H3, S, T, Omega, v1, v2, v3, v4 = (													\
-			self.__mpk[0], self.__mpk[2], self.__mpk[3], self.__mpk[4], self.__mpk[5], self.__mpk[8], 		\
-			self.__mpk[9], self.__mpk[10], self.__mpk[11], self.__mpk[12], self.__mpk[13], self.__mpk[14]	\
+		g1, g3, H1, H2, H3, S, T, Omega, v1, v2, v3, v4 = (
+			self.__mpk[0], self.__mpk[2], self.__mpk[3], self.__mpk[4], self.__mpk[5], self.__mpk[8], 
+			self.__mpk[9], self.__mpk[10], self.__mpk[11], self.__mpk[12], self.__mpk[13], self.__mpk[14]
 		)
 		x_i, Z_i = ek_ID_i
 		
@@ -959,18 +963,18 @@ class SchemeCANIFPPCT:
 			CT_TP_i = CTTPi
 		else:
 			sk_ID_i, ek_ID_i = self.KGen(self.__group.random(ZR), [])
-			CT_TP_i = self.Encryption(																					\
-				randbelow(1 << self.__group.secparam).to_bytes((self.__group.secparam + 7) >> 3, byteorder = "big"), 	\
-				sk_ID_i, ek_ID_i, s, s[randbelow(self.__n)]																\
+			CT_TP_i = self.Encryption(
+				randbelow(1 << self.__group.secparam).to_bytes((self.__group.secparam + 7) >> 3, byteorder = "big"), 
+				sk_ID_i, ek_ID_i, s, s[randbelow(self.__n)]
 			)
 			del ek_ID_i
 			print("Query: The variable $\\textit{CT}_{\\textit{TP}_i}$ should be a tuple containing 10 elements, but it is not, which has been generated randomly. ")
 		if isinstance(trapdoori, tuple) and len(trapdoori) == 5 and all(isinstance(ele, Element) for ele in trapdoori):
 			trapdoor_i = trapdoori
 		else:
-			trapdoor_i = self.TrapdoorGen(																					\
-				randbelow(1 << self.__group.secparam).to_bytes((self.__group.secparam + 7) >> 3, byteorder = "big"), 	\
-				self.KGen(self.__group.random(ZR), [])[0] if sk_ID_i is None else sk_ID_i								\
+			trapdoor_i = self.TrapdoorGen(
+				randbelow(1 << self.__group.secparam).to_bytes((self.__group.secparam + 7) >> 3, byteorder = "big"), 
+				self.KGen(self.__group.random(ZR), [])[0] if sk_ID_i is None else sk_ID_i
 			)
 			print("Query: The variable $\\textit{trapdoor}_i$ should be a tuple containing 5 elements, but it is not, which has been generated randomly. ")
 		del sk_ID_i
@@ -983,8 +987,8 @@ class SchemeCANIFPPCT:
 		# Scheme #
 		VVec = tuple(H2(Omega ** s[i]) for i in range(self.__n)) # $V_i \gets H_2(\Omega^{s_i}), \forall i \in \{1, 2, \cdots, n\}$
 		aVec = self.__computeCoefficients(VVec) # Compute $a_0, a_1, a_2, \cdots a_n$ that satisfy $\forall x \in \mathbb{Z}_r$, we have $f(x) = \prod\limits_{i = 1}^n (x - V_i) = a_0 + \sum\limits_{i = 1}^n a_i x^i$
-		VPrime_i = H2(																						\
-			pair(C0_i, T0_i) * pair(C1_i, T1_i) * pair(C2_i, T2_i) * pair(C3_i, T3_i) * pair(C4_i, T4_i)	\
+		VPrime_i = H2(
+			pair(C0_i, T0_i) * pair(C1_i, T1_i) * pair(C2_i, T2_i) * pair(C3_i, T3_i) * pair(C4_i, T4_i)
 		) # $V'_i \gets H_2(e(C_{0_i}, T_{0_i}) e(C_{1_i}, T_{1_i}) e(C_{2_i}, T_{2_i}) e(C_{3_i}, T_{3_i}) e(C_{4_i}, T_{4_i}))$
 		
 		# Return #
@@ -997,9 +1001,9 @@ class SchemeCANIFPPCT:
 		if isinstance(CTTPi, tuple) and len(CTTPi) == 10 and all(isinstance(ele, Element) for ele in CTTPi): # hybrid check
 			CT_TP_i = CTTPi
 		else:
-			CT_TP_i = self.Encryption(																					\
-				randbelow(1 << self.__group.secparam).to_bytes((self.__group.secparam + 7) >> 3, byteorder = "big"), 	\
-				*self.KGen(self.__group.random(ZR), []), s, s[randbelow(self.__n)]										\
+			CT_TP_i = self.Encryption(
+				randbelow(1 << self.__group.secparam).to_bytes((self.__group.secparam + 7) >> 3, byteorder = "big"), 
+				*self.KGen(self.__group.random(ZR), []), s, s[randbelow(self.__n)]
 			)
 			print("Trace: The variable $\\textit{CT}_{\\textit{TP}_i}$ should be a tuple containing 10 elements, but it is not, which has been generated randomly. ")
 		if isinstance(_L, list): # type check
@@ -1101,9 +1105,9 @@ def conductScheme(curveParameter:tuple|list|dict|str, n:int = 30, m:int = 10, ru
 	if isSystemValid:
 		# Initialization #
 		scheme = SchemeCANIFPPCT(group)
-		sizeZR, sizeG1, sizeG2, sizeGT = (													\
-			scheme.getLengthOf(group.random(ZR)), scheme.getLengthOf(group.random(G1)), 	\
-			scheme.getLengthOf(group.random(G2)), scheme.getLengthOf(group.random(GT))		\
+		sizeZR, sizeG1, sizeG2, sizeGT = (
+			scheme.getLengthOf(group.random(ZR)), scheme.getLengthOf(group.random(G1)), 
+			scheme.getLengthOf(group.random(G2)), scheme.getLengthOf(group.random(GT))
 		)
 		
 		try:
@@ -1228,25 +1232,25 @@ def conductScheme(curveParameter:tuple|list|dict|str, n:int = 30, m:int = 10, ru
 			print("Is the basic scheme correct? {0}. ".format("Yes" if isBSchemeCorrect else "No"))
 			print("Is the scheme correct? {0}. ".format("Yes" if isSchemeCorrect else "No"))
 			print("Is the tracing verified? {0}. ".format("Yes" if isTracingVerified else "No"))
-			print("Time:", (																	\
-				(timeBSetup, timeBKGen, timeBEncryption, timeBTrapdoorGen, timeBQuery),			\
-				(timeSetup, timeKGen, timeEncryption, timeTrapdoorGen, timeQuery, timeTrace)	\
+			print("Time:", (
+				(timeBSetup, timeBKGen, timeBEncryption, timeBTrapdoorGen, timeBQuery), 
+				(timeSetup, timeKGen, timeEncryption, timeTrapdoorGen, timeQuery, timeTrace)
 			))
-			print("Space:", (sizeZR, sizeG1, sizeG2, sizeGT,						\
-				(sizeBpk, sizeBsk, sizeBskIDs, sizeBCTTPs, sizeBTrapdoors),			\
-				(sizeMpk, sizeMsk, sizeSkIDs, sizeEkIDs, sizeCTTPs, sizeTrapdoors)	\
+			print("Space:", (sizeZR, sizeG1, sizeG2, sizeGT, 
+				(sizeBpk, sizeBsk, sizeBskIDs, sizeBCTTPs, sizeBTrapdoors), 
+				(sizeMpk, sizeMsk, sizeSkIDs, sizeEkIDs, sizeCTTPs, sizeTrapdoors)
 			))
 			print()
 	
 	# End #
-	return [																			\
-		curveName, securityParameter, nString, mString, runString, 						\
-		isSystemValid, isBSchemeCorrect, isSchemeCorrect, isTracingVerified, 			\
-		timeBSetup, timeBKGen, timeBEncryption, timeBTrapdoorGen, timeBQuery, 			\
-		timeSetup, timeKGen, timeEncryption, timeTrapdoorGen, timeQuery, timeTrace, 	\
-		sizeZR, sizeG1, sizeG2, sizeGT, 												\
-		sizeBpk, sizeBsk, sizeBskIDs, sizeBCTTPs, sizeBTrapdoors, 						\
-		sizeMpk, sizeMsk, sizeSkIDs, sizeEkIDs, sizeCTTPs, sizeTrapdoors				\
+	return [
+		curveName, securityParameter, nString, mString, runString, 
+		isSystemValid, isBSchemeCorrect, isSchemeCorrect, isTracingVerified, 
+		timeBSetup, timeBKGen, timeBEncryption, timeBTrapdoorGen, timeBQuery, 
+		timeSetup, timeKGen, timeEncryption, timeTrapdoorGen, timeQuery, timeTrace, 
+		sizeZR, sizeG1, sizeG2, sizeGT, 
+		sizeBpk, sizeBsk, sizeBskIDs, sizeBCTTPs, sizeBTrapdoors, 
+		sizeMpk, sizeMsk, sizeSkIDs, sizeEkIDs, sizeCTTPs, sizeTrapdoors
 	]
 
 def main() -> int:
@@ -1268,12 +1272,12 @@ def main() -> int:
 			curveParameters = ("MNT201", "MNT224", "BN254", ("SS512", 128), ("SS512", 256), ("SS512", 512), ("SS1024", 512), ("SS1024", 1024))
 			queries = ("curveParameter", "secparam", "n", "m", "runCount")
 			validators = ("isSystemValid", "isBSchemeCorrect", "isSchemeCorrect", "isTracingVerified")
-			metrics = (																						\
-				"BSetup (s)", "BKGen (s)", "BEncryption (s)", "BTrapdoorGen (s)", "BQuery (s)", 			\
-				"Setup (s)", "KGen (s)", "Encryption (s)", "TrapdoorGen (s)", "Query (s)", "Trace (s)", 	\
-				"elementOfZR (B)", "elementOfG1 (B)", "elementOfG2 (B)", "elementOfGT (B)", 				\
-				"bpk (B)", "bsk (B)", "bsk_IDs (B)", "BCT_TPs (B)", "BTrapdoors (B)",						\
-				"mpk (B)", "msk (B)", "sk_IDs (B)", "ek_IDs (B)", "CT_TPs (B)", "Trapdoors (B)"				\
+			metrics = (
+				"BSetup (s)", "BKGen (s)", "BEncryption (s)", "BTrapdoorGen (s)", "BQuery (s)", 
+				"Setup (s)", "KGen (s)", "Encryption (s)", "TrapdoorGen (s)", "Query (s)", "Trace (s)", 
+				"elementOfZR (B)", "elementOfG1 (B)", "elementOfG2 (B)", "elementOfGT (B)", 
+				"bpk (B)", "bsk (B)", "bsk_IDs (B)", "BCT_TPs (B)", "BTrapdoors (B)", 
+				"mpk (B)", "msk (B)", "sk_IDs (B)", "ek_IDs (B)", "CT_TPs (B)", "Trapdoors (B)"
 			)
 			getValidatorJudges = lambda x:(x[queryLength + validatorIndex] for validatorIndex in (0, 2, 3))
 			getMetricJudges = lambda x:(x[queryValidatorLength + metricIndex] for metricIndex in (5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 20, 21, 22, 23, 24, 25))
@@ -1315,10 +1319,10 @@ def main() -> int:
 			except BaseException as e:
 				print()
 				print("The experiments were interrupted by {0}. Saved results are retained. ".format(repr(e)))
-			errorLevel = EXIT_SUCCESS if results and all(											\
-				all(r == runCount for r in getValidatorJudges(result))								\
-				and all(isinstance(r, (float, int)) and r > 0 for r in getMetricJudges(result))		\
-				for result in results																\
+			errorLevel = EXIT_SUCCESS if results and all(
+				all(r == runCount for r in getValidatorJudges(result))
+				and all(isinstance(r, (float, int)) and r > 0 for r in getMetricJudges(result))
+				for result in results
 			) else EXIT_FAILURE
 	elif EXIT_SUCCESS == flag:
 		errorLevel = flag

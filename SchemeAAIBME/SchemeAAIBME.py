@@ -11,9 +11,9 @@ from random import shuffle
 from secrets import randbelow
 from time import perf_counter, sleep
 from warnings import filterwarnings
-filterwarnings(																																												\
-	"ignore", category = DeprecationWarning, 																																				\
-	message = "^Curve \'SS[0-9]+\' provides only ~80-bit security, which is below the 128-bit minimum recommended by NIST. Use \'BN254\' \\(128-bit\\) or stronger for production use\\.$"	\
+filterwarnings(
+	"ignore", category = DeprecationWarning, 
+	message = "^Curve \'SS[0-9]+\' provides only ~80-bit security, which is below the 128-bit minimum recommended by NIST. Use \'BN254\' \\(128-bit\\) or stronger for production use\\.$"
 )
 try:
 	chdir(abspath(dirname(__file__)))
@@ -61,17 +61,17 @@ class Parser:
 		print("Options (case-insensitive): ")
 		print("\t{0} [utf-8|utf-16|...]\t\tSpecify the encoding mode for CSV and TXT outputs. The default value is {1}. ".format(self.__formatOption(Parser.__OptionEncoding), Parser.__DefaultEncoding))
 		print("\t{0}\t\tPrint this help document. ".format(self.__formatOption(Parser.__OptionHelp)))
-		print("\t{0} [|.|./{1}.xlsx|./{1}.csv|...]\t\tSpecify the output file path, leaving it empty for console output. The default value is {2}. ".format(	\
-			self.__formatOption(Parser.__OptionOutput), Parser.__SchemeName, repr(Parser.__DefaultOutputFileName)												\
+		print("\t{0} [|.|./{1}.xlsx|./{1}.csv|...]\t\tSpecify the output file path, leaving it empty for console output. The default value is {2}. ".format(
+			self.__formatOption(Parser.__OptionOutput), Parser.__SchemeName, repr(Parser.__DefaultOutputFileName)
 		))
-		print("\t{0} [s|ms|microsecond|ns|ps|0|3|6|9|12|...]\t\tSpecify the decimal place, which should be a non-negative integer. The default value is {1}. ".format(	\
-			self.__formatOption(Parser.__OptionPlace), Parser.__DefaultPlace)																							\
+		print("\t{0} [s|ms|microsecond|ns|ps|0|3|6|9|12|...]\t\tSpecify the decimal place, which should be a non-negative integer. The default value is {1}. ".format(
+			self.__formatOption(Parser.__OptionPlace), Parser.__DefaultPlace)
 		)
 		print("\t{0}\t\tDisable the verbose console outputs. ".format(self.__formatOption(Parser.__OptionQuiet)))
 		print("\t{0} [1|2|5|10|20|50|100|...]\t\tSpecify the run count, which must be a positive integer. The default value is {1}. ".format(self.__formatOption(Parser.__OptionRun), Parser.__DefaultRun))
-		print(																																							\
-			"\t{0} [0|0.1|1|10|...|inf]\t\tSpecify the waiting time before exiting, which should be non-negative. ".format(self.__formatOption(Parser.__OptionTime))	\
-			+ "Passing inf requires users to manually press the Enter key before exiting. The default value is {0}. ".format(Parser.__DefaultTime)						\
+		print(
+			"\t{0} [0|0.1|1|10|...|inf]\t\tSpecify the waiting time before exiting, which should be non-negative. ".format(self.__formatOption(Parser.__OptionTime))
+			+ "Passing inf requires users to manually press the Enter key before exiting. The default value is {0}. ".format(Parser.__DefaultTime)
 		)
 		print("\t{0}\t\tIndicate to confirm the overwriting of the existing output file. ".format(self.__formatOption(Parser.__OptionYes)))
 		print()
@@ -145,8 +145,8 @@ class Parser:
 		except:
 			return None
 	def parse(self:object) -> tuple:
-		flag, encoding, outputFilePath, decimalPlace, isVerbose, runCount, waitingTime, overwritingConfirmed = (																	\
-			max(EXIT_SUCCESS, EOF) + 1, Parser.__DefaultEncoding, Parser.__DefaultOutputFileName, Parser.__DefaultPlace, True, Parser.__DefaultRun, Parser.__DefaultTime, False		\
+		flag, encoding, outputFilePath, decimalPlace, isVerbose, runCount, waitingTime, overwritingConfirmed = (
+			max(EXIT_SUCCESS, EOF) + 1, Parser.__DefaultEncoding, Parser.__DefaultOutputFileName, Parser.__DefaultPlace, True, Parser.__DefaultRun, Parser.__DefaultTime, False
 		)
 		index, argumentCount, buffers = 1, len(self.__arguments), []
 		while index < argumentCount:
@@ -353,8 +353,10 @@ class Saver:
 											writer.writerow("{{0:.{0}f}}".format(self.__decimalPlace).format(r) if isinstance(r, float) else r for r in result)
 								elif self.__extensionName in ("HTM", "HTML"):
 									if self.__escapeHTML is None:
-										self.__escapeHTML = lambda x:str(x).replace("&", "&amp;").replace('"', "&quot;").replace("'", "&#39;")	\
+										self.__escapeHTML = (
+											lambda x:str(x).replace("&", "&amp;").replace('"', "&quot;").replace("'", "&#39;")
 											.replace("<", "&lt;").replace(">", "&gt;").replace("\r\n", "<br />").replace("\n", "<br />").replace("\r", "<br />")
+										)
 									with open(self.__outputFilePath, "w", encoding = self.__encoding) as f:
 										f.write("<!DOCTYPE html>\n<html>\n\t<head>\n\t\t<meta charset=\"{0}\" />\n".format(self.__encoding.upper()))
 										f.write("\t\t<title>{0}</title>\n\t\t<style>\n".format(Parser.getSchemeName()))
@@ -374,8 +376,8 @@ class Saver:
 										for result in results:
 											f.write("\t\t\t\t<tr>\n")
 											for r in result:
-												f.write("\t\t\t\t\t<td>{0}</td>\n".format(																	\
-													"{{0:.{0}f}}".format(self.__decimalPlace).format(r) if isinstance(r, float) else self.__escapeHTML(r)	\
+												f.write("\t\t\t\t\t<td>{0}</td>\n".format(
+													"{{0:.{0}f}}".format(self.__decimalPlace).format(r) if isinstance(r, float) else self.__escapeHTML(r)
 												))
 											f.write("\t\t\t\t</tr>\n")
 										f.write("\t\t\t</tbody>\n\t\t</table>\n\t</body>\n</html>")
@@ -386,12 +388,12 @@ class Saver:
 										f.write(self.__dumpsJSON({"columns":self.__columns, "results":results}, indent = "\t", sort_keys = True, ensure_ascii = True))
 								elif "TEX" == self.__extensionName:
 									if self.__escapeTEX is None:
-										self.__escapeTEX = lambda x:"\\textbackslash{}".join(													\
-											string.replace("#", "\\#").replace("$", "\\$").replace("%", "\\%").replace("&", "\\&")				\
-											.replace("_", "\\_").replace("{", "\\{").replace("}", "\\}")										\
-											.replace("<", "\\textless{}").replace(">", "\\textgreater{}")										\
-											.replace("^", "\\textasciicircum{}").replace("~", "\\textasciitilde{}")								\
-											for string in "".join(character for character in str(x) if ' ' <= character <= '~').split("\\")		\
+										self.__escapeTEX = lambda x:"\\textbackslash{}".join(
+											string.replace("#", "\\#").replace("$", "\\$").replace("%", "\\%").replace("&", "\\&")
+											.replace("_", "\\_").replace("{", "\\{").replace("}", "\\}")
+											.replace("<", "\\textless{}").replace(">", "\\textgreater{}")
+											.replace("^", "\\textasciicircum{}").replace("~", "\\textasciitilde{}")
+											for string in "".join(character for character in str(x) if ' ' <= character <= '~').split("\\")
 										)
 									with open(self.__outputFilePath, "w", encoding = self.__encoding) as f:
 										maxLength = max(len(self.__columnsTEX) if isinstance(self.__columnsTEX, (tuple, list)) else 0, max(len(result) for result in results))
@@ -410,8 +412,8 @@ class Saver:
 										for result in results:
 											if result:
 												f.write("\t\t\t\t")
-												f.write(" & ".join((																	\
-													"${0}$" if isinstance(r, int) else "${{0:.{0}f}}$".format(self.__decimalPlace)		\
+												f.write(" & ".join((
+													"${0}$" if isinstance(r, int) else "${{0:.{0}f}}$".format(self.__decimalPlace)
 												).format(r) if isinstance(r, (float, int)) and not isinstance(r, bool) else self.__escapeTEX(r) for r in result))
 												if len(result) < maxLength:
 													f.write(" & ~" * (maxLength - len(result)))
@@ -485,8 +487,10 @@ class Saver:
 									workbook.save(self.__outputFilePath)
 								elif "XML" == self.__extensionName:
 									if self.__escapeXML is None:
-										self.__escapeXML = lambda x:"".join(character for character in str(x) if ' ' <= character <= '~')		\
+										self.__escapeXML = (
+											lambda x:"".join(character for character in str(x) if ' ' <= character <= '~')
 											.replace("&", "&amp;").replace("\"", "&quot;").replace("\'", "&apos;").replace("<", "&lt;").replace(">", "&gt;")
+										)
 									with open(self.__outputFilePath, "w", encoding = self.__encoding) as f:
 										f.write("<?xml version=\"1.0\" encoding=\"{0}\"?>\n<data>\n\t<columns>\n".format(self.__encoding.upper()))
 										for column in self.__columns:
@@ -516,12 +520,12 @@ class Saver:
 											f.write("results:\n")
 											for result in results:
 												if result:
-													f.write("  - - {0}\n".format(															\
-														self.__dumpsJSON(result[0], indent = "\t", sort_keys = True, ensure_ascii = True)	\
+													f.write("  - - {0}\n".format(
+														self.__dumpsJSON(result[0], indent = "\t", sort_keys = True, ensure_ascii = True)
 													))
 													for r in result[1:]:
-														f.write("    - {0}\n".format(													\
-															self.__dumpsJSON(r, indent = "\t", sort_keys = True, ensure_ascii = True)	\
+														f.write("    - {0}\n".format(
+															self.__dumpsJSON(r, indent = "\t", sort_keys = True, ensure_ascii = True)
 														))
 												else:
 													f.write("  - []")
@@ -539,8 +543,8 @@ class Saver:
 								continue
 							except BaseException as e:
 								flag = False
-								print("Saver: Failed to save the results to {0} in the {1} format due to the following exception(s). \n\t{2}".format(	\
-									repr(self.__outputFilePath), self.__extensionName, repr(e)															\
+								print("Saver: Failed to save the results to {0} in the {1} format due to the following exception(s). \n\t{2}".format(
+									repr(self.__outputFilePath), self.__extensionName, repr(e)
 								))
 						else:
 							try:
@@ -601,9 +605,9 @@ class SchemeAAIBME:
 		except Exception:
 			return self.__group.init(ZR, 1)
 	def __computePolynomial(self:object, x:Element|int|float, coefficients:tuple|list) -> Element|int|float|None:
-		if isinstance(coefficients, (tuple, list)) and coefficients and (																		\
-			isinstance(x, Element) and all(isinstance(coefficient, Element) and coefficient.type == x.type for coefficient in coefficients)		\
-			or isinstance(x, (int, float)) and all(isinstance(coefficient, (int, float)) for coefficient in coefficients)						\
+		if isinstance(coefficients, (tuple, list)) and coefficients and (
+			isinstance(x, Element) and all(isinstance(coefficient, Element) and coefficient.type == x.type for coefficient in coefficients)
+			or isinstance(x, (int, float)) and all(isinstance(coefficient, (int, float)) for coefficient in coefficients)
 		):
 			n, eleResult = len(coefficients) - 1, coefficients[0]
 			for i in range(1, n):
@@ -625,9 +629,9 @@ class SchemeAAIBME:
 			self.__n, self.__k, self.__d = n, k, d
 		else:
 			self.__n, self.__k, self.__d = SchemeAAIBME.__DefaultN, SchemeAAIBME.__DefaultK, SchemeAAIBME.__DefaultD
-			print(																																							\
-				"Setup: The variables $n$, $k$, and $d$ should be three positive integers satisfying $1 \\leqslant d \\leqslant k \\leqslant n$, but they are not, "			\
-				+ "which have been defaulted to ${0}$, ${1}$, and ${2}$, respectively. ".format(SchemeAAIBME.__DefaultN, SchemeAAIBME.__DefaultK, SchemeAAIBME.__DefaultD)	\
+			print(
+				"Setup: The variables $n$, $k$, and $d$ should be three positive integers satisfying $1 \\leqslant d \\leqslant k \\leqslant n$, but they are not, "
+				+ "which have been defaulted to ${0}$, ${1}$, and ${2}$, respectively. ".format(SchemeAAIBME.__DefaultN, SchemeAAIBME.__DefaultK, SchemeAAIBME.__DefaultD)
 			)
 		
 		# Scheme #
@@ -647,8 +651,8 @@ class SchemeAAIBME:
 		v2 = g ** t2 # $v_2 \gets g^{t_2}$
 		v3 = g ** t3 # $v_3 \gets g^{t_3}$
 		v4 = g ** t4 # $v_4 \gets g^{t_4}$
-		self.__mpk = (												\
-			g1, g1Prime, g2, g3, Y1, Y2, v1, v2, v3, v4, uVec, TVec, uPrimeVec, TPrimeVec, H1		\
+		self.__mpk = (
+			g1, g1Prime, g2, g3, Y1, Y2, v1, v2, v3, v4, uVec, TVec, uPrimeVec, TPrimeVec, H1
 		) # $ \textit{mpk} \gets (g_1, g'_1, g_2, g_3, Y_1, Y_2, v_1, v_2, v_3, v_4, \bm{u}, \bm{T}, \bm{u}', \bm{T}', H_1)$
 		self.__msk = (g2 ** alpha, beta, t1, t2, t3, t4) # $\textit{msk} \gets (g_2^\alpha, \beta, t_1, t_2, t_3, t_4)$
 		
@@ -685,8 +689,8 @@ class SchemeAAIBME:
 		H = lambda vec, ID:vec[0] * self.__product( # $H: (\bm{u} \gets (\bm{u}_0, \bm{u}_1, \cdots, \bm{u}_n), 
 			tuple(vec[j + 1] ** ID[j] for j in range(self.__n)) # \textit{ID} \gets (\textit{ID}_1, \textit{ID}_2, \cdots, \textit{ID}_n)) 
 		) # \to \bm{u}_0\prod\limits_{j \in \{1, 2, \cdots, n\}} \bm{u}_j^{\textit{ID}_j}$
-		ek_ID_A = tuple(																										\
-			(g3 ** q(self.__group.init(ZR, i)) * (H(uVec, ID_A) * TVec[i]) ** rVec[i], g ** rVec[i]) for i in range(self.__n)	\
+		ek_ID_A = tuple(
+			(g3 ** q(self.__group.init(ZR, i)) * (H(uVec, ID_A) * TVec[i]) ** rVec[i], g ** rVec[i]) for i in range(self.__n)
 		) # $\textit{ek}_{\textit{ID}_{A_i}} \gets (g_3^{q(i)} [H(\bm{u}', \textit{ID}_A)T'_i]^{r_i}, g^{r_i}), \forall i \in \{1, 2, \cdots, n\}$
 		ek_ID_A_S = {i:ek_ID_A[i] for i in S} # generate $\textit{ek}_{\textit{ID}_A}(S) \subset \textit{ek}_{\textit{ID}_A}$ s.t. $\|\textit{ek}_{\textit{ID}_A}(S)\| = d$ randomly
 		
@@ -780,8 +784,8 @@ class SchemeAAIBME:
 			print("Enc: The variable $M$ should be an element of $\\mathbb{G}_T$, but it is not, which has been generated randomly. ")
 		
 		# Unpack #
-		Y1, Y2, v1, v2, v3, v4, uVec, TVec, uPrimeVec, TPrimeVec, H1 = (																												\
-			self.__mpk[4], self.__mpk[5], self.__mpk[6], self.__mpk[7], self.__mpk[8], self.__mpk[9], self.__mpk[10], self.__mpk[11], self.__mpk[12], self.__mpk[13], self.__mpk[14]	\
+		Y1, Y2, v1, v2, v3, v4, uVec, TVec, uPrimeVec, TPrimeVec, H1 = (
+			self.__mpk[4], self.__mpk[5], self.__mpk[6], self.__mpk[7], self.__mpk[8], self.__mpk[9], self.__mpk[10], self.__mpk[11], self.__mpk[12], self.__mpk[13], self.__mpk[14]
 		)
 		
 		# Scheme #
@@ -820,8 +824,8 @@ class SchemeAAIBME:
 			while len(IStar) < self.__d: # \quad generate $I^* \gets I \cup x$ s.t. $x \subset \{0, 1, \cdots, n - 1\} \land \|x\| = d - \|I\| \land I \cap x = \emptyset$ randomly
 				IStar.add(randbelow(self.__n))
 		# \textbf{end if}
-		CT = (																		\
-			S, IStar, C, C1Vec, C2Vec, C3Vec, C4Vec, C5Vec, C6Vec, C7Vec, C8Vec		\
+		CT = (
+			S, IStar, C, C1Vec, C2Vec, C3Vec, C4Vec, C5Vec, C6Vec, C7Vec, C8Vec
 		) # $\textit{CT} \gets (S, I^*, C, \vec{C}_1, \vec{C}_2, \vec{C}_3, \vec{C}_4, \vec{C}_5, \vec{C}_6, \vec{C}_7, \vec{C}_8)$
 		
 		# Return #
@@ -851,9 +855,9 @@ class SchemeAAIBME:
 			print("Dec: The variable $S'$ has been generated accordingly. ")
 		if isinstance(IDB, tuple) and len(IDB) == self.__n and all(isinstance(ele, Element) and ele.type == ZR for ele in IDB): # hybrid check
 			ID_B = IDB
-			if (																															\
-				isinstance(dkIDBSPrime, dict) and len(dkIDBSPrime) == self.__d and all(isinstance(ele, int) for ele in dkIDBSPrime.keys())	\
-				and all(isinstance(ele, tuple) and len(ele) == 5 for ele in dkIDBSPrime.values())											\
+			if (
+				isinstance(dkIDBSPrime, dict) and len(dkIDBSPrime) == self.__d and all(isinstance(ele, int) for ele in dkIDBSPrime.keys())
+				and all(isinstance(ele, tuple) and len(ele) == 5 for ele in dkIDBSPrime.values())
 			): # hybrid check
 				dk_ID_B_SPrime = dkIDBSPrime
 			else:
@@ -869,11 +873,11 @@ class SchemeAAIBME:
 		else:
 			ID_A = tuple(self.__group.random(ZR) for _ in range(self.__n))
 			print("Dec: The variable $\\textit{ID}_A$ should be a tuple containing $n$ elements of $\\mathbb{Z}_r$, but it is not, which has been generated randomly. ")
-		if (																							\
-			isinstance(cipherText, tuple) and len(cipherText) == 11 and isinstance(cipherText[0], set)	\
-			and isinstance(cipherText[1], set) and isinstance(cipherText[2], Element)					\
-			and all(isinstance(ele, dict) and len(ele) == self.__k for ele in cipherText[3:8])			\
-			and all(isinstance(ele, dict) and len(ele) == self.__d for ele in cipherText[8:])			\
+		if (
+			isinstance(cipherText, tuple) and len(cipherText) == 11 and isinstance(cipherText[0], set)
+			and isinstance(cipherText[1], set) and isinstance(cipherText[2], Element)
+			and all(isinstance(ele, dict) and len(ele) == self.__k for ele in cipherText[3:8])
+			and all(isinstance(ele, dict) and len(ele) == self.__d for ele in cipherText[8:])
 		): # hybrid check
 			CT = cipherText
 		else:
@@ -889,9 +893,9 @@ class SchemeAAIBME:
 		S, IStar, C, C1Vec, C2Vec, C3Vec, C4Vec, C5Vec, C6Vec, C7Vec, C8Vec = CT[0], CT[1], CT[2], CT[3], CT[4], CT[5], CT[6], CT[7], CT[8], CT[9], CT[10]
 		
 		# Scheme #
-		CTVec = {																																										\
-			i:self.__group.serialize(C) + self.__group.serialize(C1Vec[i]) + self.__group.serialize(C2Vec[i]) + self.__group.serialize(C3Vec[i]) + self.__group.serialize(C4Vec[i])		\
-			+ self.__group.serialize(C5Vec[i]) + self.__group.serialize(C6Vec[i]) + self.__group.serialize(C7Vec[i]) for i in IStar														\
+		CTVec = {
+			i:self.__group.serialize(C) + self.__group.serialize(C1Vec[i]) + self.__group.serialize(C2Vec[i]) + self.__group.serialize(C3Vec[i]) + self.__group.serialize(C4Vec[i])
+			+ self.__group.serialize(C5Vec[i]) + self.__group.serialize(C6Vec[i]) + self.__group.serialize(C7Vec[i]) for i in IStar
 		} # $\textit{CT}_i \gets C || C_{1, i} || C_{2, i} || C_{3, i} || C_{4, i} || C_{5, i} || C_{6, i} || C{7, i}, \forall i \in I^*$
 		g = self.__group.init(G1, 1) # $g \gets 1_{\mathbb{G}_1}$
 		Delta = lambda i, S, x:self.__product(tuple((x - j) / (i - j) for j in S if j != i)) # $\Delta_{i, S}(x) := \prod\limits_{j \in S, j \neq i} \frac{x - j}{i - j}$
@@ -910,11 +914,11 @@ class SchemeAAIBME:
 		KlPrime = self.__product(
 			tuple((pair(C8Vec[i], g) / (pair(H(uPrimeVec, ID_A) * TPrimeVec[i], C7Vec[i]) *pair(H1(CTVec[i]), C6Vec[i]))) ** Delta(i, IStar, 0) for i in IStar)
 		) # $K'_l \gets \prod\limits_{i \in I^*} \left(\frac{e(C_{8, i}, g)}{e([H(\bm{u}', \textit{ID}_A) T'_i] e(H_1(\textit{CT}_i), C_{6, i})}\right)^{\Delta_{i, I^*}(0)}$
-		KsPrime = self.__product(																										\
-			tuple((																														\
-				(pair(C1Vec[i], dk_ID_B_SPrime[i][0]) * pair(C2Vec[i], dk_ID_B_SPrime[i][1]) * pair(C3Vec[i], dk_ID_B_SPrime[i][2]))	\
-				/ (pair(C4Vec[i], dk_ID_B_SPrime[i][3]) * pair(C5Vec[i], dk_ID_B_SPrime[i][4]))											\
-			) ** Delta(i, I, 0) for i in I)																								\
+		KsPrime = self.__product(
+			tuple((
+				(pair(C1Vec[i], dk_ID_B_SPrime[i][0]) * pair(C2Vec[i], dk_ID_B_SPrime[i][1]) * pair(C3Vec[i], dk_ID_B_SPrime[i][2]))
+				/ (pair(C4Vec[i], dk_ID_B_SPrime[i][3]) * pair(C5Vec[i], dk_ID_B_SPrime[i][4]))
+			) ** Delta(i, I, 0) for i in I)
 		) # $K'_s \gets \prod\limits_{i \in I} \left(\right)^{\Delta_{i, j}(0)}$
 		if len(S.intersection(SPrimePrime)) >= self.__d and len(SPrime.intersection(SPrimePrime)) >= self.__d: # \textbf{if} $|S \cap S''| \leqslant d \land |S' \cap S''| \leqslant d$ \textbf{then}
 			M = C * KsPrime * KlPrime # \quad$M \gets C \cdot K'_s \cdot K'_l$
@@ -969,8 +973,8 @@ class SchemeAAIBME:
 		) # \to \bm{u}_0\prod\limits_{j \in \{1, 2, \cdots, n\}} \bm{u}_j^{\textit{ID}_j}$
 		
 		# Return #
-		return self.__product(tuple(																															\
-			(pair(ek_ID_A_S[i][0], g) / (pair(H(uPrimeVec, ID_A) * TPrimeVec[i], ek_ID_A_S[i][1]))) ** Delta(i, SPrimePrimePrime, 0) for i in SPrimePrimePrime	\
+		return self.__product(tuple(
+			(pair(ek_ID_A_S[i][0], g) / (pair(H(uPrimeVec, ID_A) * TPrimeVec[i], ek_ID_A_S[i][1]))) ** Delta(i, SPrimePrimePrime, 0) for i in SPrimePrimePrime
 		)) == pair(g3, g1Prime) # \textbf{return} $\prod\limits_{i \in S'''} \left(\frac{e(g_3^{j(i)}[H'(\textbf{u}', \textit{ID}_A)T'_i]^{r_i}, g)}{e([H'(\bm{u}', \textit{ID}_A) T'_i, g^{r'_i})}\right)^{\Delta_{i, S}(0)} = \mathbb{S}e(g_3, g'_1)$
 	def DKeySanity(self:object, dkIDBSPrime:dict, IDB:tuple, _SPrime:set) -> bool: # $\textbf{DKeySanity}(\textit{dk}_{\textit{ID}_B}(S'), \textit{ID}_B, S') \to y, y \in \{0, 1\}$
 		# Checks #
@@ -986,9 +990,9 @@ class SchemeAAIBME:
 			print("DKeySanity: The variable $S'$ should be a set containing $d$ integers in $[0, n)$, but it is not, which has been generated randomly. ")
 		if isinstance(IDB, tuple) and len(IDB) == self.__n and all(isinstance(ele, Element) and ele.type == ZR for ele in IDB): # hybrid check
 			ID_B = IDB
-			if (																															\
-				isinstance(dkIDBSPrime, dict) and len(dkIDBSPrime) == self.__d and all(isinstance(ele, int) for ele in dkIDBSPrime.keys())	\
-				and all(isinstance(ele, tuple) and len(ele) == 5 for ele in dkIDBSPrime.values())											\
+			if (
+				isinstance(dkIDBSPrime, dict) and len(dkIDBSPrime) == self.__d and all(isinstance(ele, int) for ele in dkIDBSPrime.keys())
+				and all(isinstance(ele, tuple) and len(ele) == 5 for ele in dkIDBSPrime.values())
 			): # hybrid check
 				dk_ID_B_SPrime = dkIDBSPrime
 			else:
@@ -1283,12 +1287,12 @@ def conductScheme(curveParameter:tuple|list|dict|str, n:int = 30, k:int = 20, d:
 			print()
 	
 	# End #
-	return [																										\
-		curveName, securityParameter, nString, kString, dString, runString, 										\
-		isSystemValid, isSchemeCorrect, isEKeySanity, isDKeySanity, isTracing1Verified, isTracing2Verified, 		\
-		timeSetup, timeEKGen, timeDKGen, timeEnc, timeDec, timeEKeySanity, timeDKeySanity, timeTrace1, timeTrace2, 	\
-		sizeZR, sizeG1G2, sizeGT, 																					\
-		sizeMpk, sizeMsk, sizeEkIDAS, sizeDkIDBSPrime, sizeCT														\
+	return [
+		curveName, securityParameter, nString, kString, dString, runString, 
+		isSystemValid, isSchemeCorrect, isEKeySanity, isDKeySanity, isTracing1Verified, isTracing2Verified, 
+		timeSetup, timeEKGen, timeDKGen, timeEnc, timeDec, timeEKeySanity, timeDKeySanity, timeTrace1, timeTrace2, 
+		sizeZR, sizeG1G2, sizeGT, 
+		sizeMpk, sizeMsk, sizeEkIDAS, sizeDkIDBSPrime, sizeCT
 	]
 
 def main() -> int:
@@ -1310,10 +1314,10 @@ def main() -> int:
 			curveParameters = (("SS512", 128), ("SS512", 160), ("SS512", 224), ("SS512", 256), ("SS512", 384), ("SS512", 512))
 			queries = ("curveParameter", "secparam", "n", "k", "d", "runCount")
 			validators = ("isSystemValid", "isSchemeCorrect", "isEKeySanity", "isDKeySanity", "isTracing1Verified", "isTracing2Verified")
-			metrics = (																															\
-				"Setup (s)", "EKGen (s)", "DKGen (s)", "Enc (s)", "Dec (s)", "EKeySanity (s)", "DKeySanity (s)", "Trace1 (s)", "Trace2 (s)", 	\
-				"elementOfZR (B)", "elementOfG1G2 (B)", "elementOfGT (B)", 																		\
-				"mpk (B)", "msk (B)", "ek_ID_A_S (B)", "dk_ID_B_SPrime (B)", "CT (B)"															\
+			metrics = (
+				"Setup (s)", "EKGen (s)", "DKGen (s)", "Enc (s)", "Dec (s)", "EKeySanity (s)", "DKeySanity (s)", "Trace1 (s)", "Trace2 (s)", 
+				"elementOfZR (B)", "elementOfG1G2 (B)", "elementOfGT (B)", 
+				"mpk (B)", "msk (B)", "ek_ID_A_S (B)", "dk_ID_B_SPrime (B)", "CT (B)"
 			)
 			getValidatorJudges = lambda x:x[queryLength:queryValidatorLength]
 			getMetricJudges = lambda x:x[queryValidatorLength:]
@@ -1356,10 +1360,10 @@ def main() -> int:
 			except BaseException as e:
 				print()
 				print("The experiments were interrupted by {0}. Saved results are retained. ".format(repr(e)))
-			errorLevel = EXIT_SUCCESS if results and all(											\
-				all(r == runCount for r in getValidatorJudges(result))								\
-				and all(isinstance(r, (float, int)) and r > 0 for r in getMetricJudges(result))		\
-				for result in results																\
+			errorLevel = EXIT_SUCCESS if results and all(
+				all(r == runCount for r in getValidatorJudges(result))
+				and all(isinstance(r, (float, int)) and r > 0 for r in getMetricJudges(result))
+				for result in results
 			) else EXIT_FAILURE
 	elif EXIT_SUCCESS == flag:
 		errorLevel = flag
