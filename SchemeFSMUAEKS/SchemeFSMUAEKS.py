@@ -2,11 +2,15 @@ from os import chdir, makedirs, name, sep
 from os.path import abspath, dirname, exists, isfile, isdir, join, split, splitext
 from sys import argv, exit
 from codecs import lookup
+from getpass import getpass
 from hashlib import sha3_256
-from numpy import arange, asarray, concatenate, dot, eye, fill_diagonal, kron, ndarray, triu_indices, zeros
-from numpy.linalg import lstsq
-from numpy.random import randint
-from sympy import Matrix
+try:
+	from numpy import arange, asarray, concatenate, dot, eye, fill_diagonal, kron, ndarray, triu_indices, zeros
+	from numpy.linalg import lstsq
+	from numpy.random import randint
+	from sympy import Matrix
+except:
+	arange, asarray, concatenate, dot, eye, fill_diagonal, kron, ndarray, triu_indices, zeros, lstsq, randint, Matrix = (None, ) * 13
 from time import perf_counter, sleep
 try:
 	chdir(abspath(dirname(__file__)))
@@ -49,7 +53,7 @@ class Parser:
 		else:
 			return ""
 	def __printHelp(self:object) -> None:
-		print("This is the official implementation of the FS-MUAEKS cryptographic scheme in Python programming language based on NumPy and SymPy. ")
+		print("This is the official implementation of the FS-MUAEKS cryptographic scheme in Python programming language based on the Python NumPy and SymPy libraries. ")
 		print()
 		print("Options (case-insensitive): ")
 		print("\t{0} [utf-8|utf-16|...]\t\tSpecify the encoding mode for CSV and TXT outputs. The default value is {1}. ".format(self.__formatOption(Parser.__OptionEncoding), Parser.__DefaultEncoding))
@@ -64,7 +68,7 @@ class Parser:
 		print("\t{0} [1|2|5|10|20|50|100|...]\t\tSpecify the run count, which must be a positive integer. The default value is {1}. ".format(self.__formatOption(Parser.__OptionRun), Parser.__DefaultRun))
 		print(																																							\
 			"\t{0} [0|0.1|1|10|...|inf]\t\tSpecify the waiting time before exiting, which should be non-negative. ".format(self.__formatOption(Parser.__OptionTime))	\
-			+ "Passing inf requires users to manually press the enter key before exiting. The default value is {0}. ".format(Parser.__DefaultTime)						\
+			+ "Passing inf requires users to manually press the Enter key before exiting. The default value is {0}. ".format(Parser.__DefaultTime)						\
 		)
 		print("\t{0}\t\tIndicate to confirm the overwriting of the existing output file. ".format(self.__formatOption(Parser.__OptionYes)))
 		print()
@@ -799,45 +803,58 @@ def main() -> int:
 	parser = Parser(argv)
 	flag, encoding, outputFilePath, decimalPlace, isVerbose, runCount, waitingTime, overwritingConfirmed = parser.parse()
 	if flag > EXIT_SUCCESS and flag > EOF:
-		outputFilePath, overwritingConfirmed = parser.checkOverwriting(outputFilePath, overwritingConfirmed)
-		parser.disableConsoleEchoes()
-		print("The execution has started. ")
-		print()
-		parameters = ((2, 8, 16, 2, 2), (4, 16, 16, 4, 2))
-		queries = ("n", "m", "q", "lS", "lR", "runCount")
-		validators = ("isSystemValid", "isSchemeCorrect")
-		metrics = (
-			"Setup (s)", "KeyGenS (s)", "KeyGenR (s)", "KeyUpdate (s)", "Encryption (s)", "Trapdoor (s)", "Test (s)",
-			"params (B)", "pkS (B)", "skS (B)", "pkR (B)", "skR (B)", "forwardKey (B)", "cipherText (B)", "trapdoor (B)"
-		)
-		columns, queryLength, results = queries + validators + metrics, len(queries), []
-		queryValidatorLength, runCountIndex = queryLength + len(validators), queryLength - 1
-		saver = Saver(outputFilePath, columns, decimalPlace = decimalPlace, encoding = encoding)
-		try:
-			for parameter in parameters:
-				runs = [conductScheme(parameter, run = run, isVerbose = isVerbose) for run in range(1, runCount + 1)]
-				averages = list(runs[0])
-				for index in range(queryLength, queryValidatorLength):
-					averages[index] = sum(int(result[index]) for result in runs)
-				for index in range(queryValidatorLength, len(columns)):
-					values = tuple(result[index] for result in runs)
-					averages[index] = sum(values) / runCount if all(isinstance(value, (float, int)) and value > 0 for value in values) else "N/A"
-					if isinstance(averages[index], float) and averages[index].is_integer():
-						averages[index] = int(averages[index])
-				averages[runCountIndex] = runCount
-				results.append(averages)
-				saver.save(results)
-		except KeyboardInterrupt:
+		if any((
+			arange is None, asarray is None, concatenate is None, dot is None, eye is None, fill_diagonal is None, 
+			kron is None, ndarray is None, triu_indices is None, zeros is None, lstsq is None, randint is None, Matrix is None
+		)):
+			parser.disableConsoleEchoes()
+			print("The runtime environment of the Python NumPy and SymPy libraries is not correctly configured. ")
+			print("Please install the libraries via the active Python package manager (e.g., pip). ")
+			errorLevel = EOF
+		else:
+			outputFilePath, overwritingConfirmed = parser.checkOverwriting(outputFilePath, overwritingConfirmed)
+			parser.disableConsoleEchoes()
+			print("The execution has started. ")
 			print()
-			print("The experiments were interrupted by users. Saved results are retained. ")
-		except BaseException as e:
-			print()
-			print("The experiments were interrupted by {0}. Saved results are retained. ".format(repr(e)))
-		errorLevel = EXIT_SUCCESS if results and all(
-			all(result[index] == runCount for index in range(queryLength, queryValidatorLength))
-			and all(isinstance(result[index], (float, int)) and result[index] > 0 for index in range(queryValidatorLength, len(columns)))
-			for result in results
-		) else EXIT_FAILURE
+			
+			# Parameters #
+			parameters = ((2, 8, 16, 2, 2), (4, 16, 16, 4, 2))
+			queries = ("n", "m", "q", "lS", "lR", "runCount")
+			validators = ("isSystemValid", "isSchemeCorrect")
+			metrics = (
+				"Setup (s)", "KeyGenS (s)", "KeyGenR (s)", "KeyUpdate (s)", "Encryption (s)", "Trapdoor (s)", "Test (s)",
+				"params (B)", "pkS (B)", "skS (B)", "pkR (B)", "skR (B)", "forwardKey (B)", "cipherText (B)", "trapdoor (B)"
+			)
+			
+			# Scheme #
+			columns, queryLength, results = queries + validators + metrics, len(queries), []
+			queryValidatorLength, runCountIndex = queryLength + len(validators), queryLength - 1
+			saver = Saver(outputFilePath, columns, decimalPlace = decimalPlace, encoding = encoding)
+			try:
+				for parameter in parameters:
+					runs = [conductScheme(parameter, run = run, isVerbose = isVerbose) for run in range(1, runCount + 1)]
+					averages = list(runs[0])
+					for index in range(queryLength, queryValidatorLength):
+						averages[index] = sum(int(result[index]) for result in runs)
+					for index in range(queryValidatorLength, len(columns)):
+						values = tuple(result[index] for result in runs)
+						averages[index] = sum(values) / runCount if all(isinstance(value, (float, int)) and value > 0 for value in values) else "N/A"
+						if isinstance(averages[index], float) and averages[index].is_integer():
+							averages[index] = int(averages[index])
+					averages[runCountIndex] = runCount
+					results.append(averages)
+					saver.save(results)
+			except KeyboardInterrupt:
+				print()
+				print("The experiments were interrupted by users. Saved results are retained. ")
+			except BaseException as e:
+				print()
+				print("The experiments were interrupted by {0}. Saved results are retained. ".format(repr(e)))
+			errorLevel = EXIT_SUCCESS if results and all(
+				all(result[index] == runCount for index in range(queryLength, queryValidatorLength))
+				and all(isinstance(result[index], (float, int)) and result[index] > 0 for index in range(queryValidatorLength, len(columns)))
+				for result in results
+			) else EXIT_FAILURE
 	elif EXIT_SUCCESS == flag:
 		errorLevel = flag
 		parser.disableConsoleEchoes()
@@ -848,20 +865,34 @@ def main() -> int:
 		print("The execution has finished ({0}). ".format(errorLevel))
 		print()
 	elif isinstance(waitingTime, (float, int)) and 0 < waitingTime < float("inf"):
+		integerTime, timeString = int(waitingTime), str(waitingTime)
+		decimalTime = waitingTime - integerTime
+		if "e" in timeString:
+			timeString = str(integerTime) + ("{{0:.{0}f}}".format(decimalPlace).format(decimalTime).strip("0").rstrip(".") if decimalTime >= 10 ** (-decimalPlace) else "")
+		timeStringLength = len(timeString)
+		print("Please wait {0} second(s) for automatic exit, or exit manually, for example by pressing ``Ctrl + C`` ({1}). ".format(timeString, errorLevel))
 		try:
-			sleep(waitingTime)
+			print("\rThe countdown is {0} second(s). ".format(timeString, errorLevel), end = "")
+			sleep(decimalTime)
+			while integerTime >= 1:
+				print("\rThe countdown is {{0:>{0}}} second(s). ".format(timeStringLength).format(integerTime, errorLevel), end = "")
+				sleep(1)
+				integerTime -= 1
 		except:
 			pass
+		print("\rThe countdown is {{0:>{0}}} second(s). ".format(timeStringLength).format(0, errorLevel))
 		print("The execution has finished ({0}). ".format(errorLevel))
 		print()
 	else:
-		print("Please press the enter key to exit ({0}). ".format(errorLevel))
+		print("Please press the Enter key to exit ({0}). ".format(errorLevel))
 		try:
-			input()
+			getpass("")
 		except:
 			print()
 	parser.restoreConsoleEchoes()
+	del parser
 	return errorLevel
+
 
 
 if "__main__" == __name__:

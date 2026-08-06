@@ -1,17 +1,13 @@
 ## SchemeVPSICA
 
-This is the category of the proposed VPSI-CA cryptographic scheme, whose baseline is the PSI-CA cryptographic scheme.
+This is the category of the proposed VPSI-CA cryptographic scheme, whose baseline is the PSI-CA cryptographic scheme. 
 
 ### SchemeVPSICA
 
-- ``SchemeVPSICAAlg2.cpp``: This is the official implementation of Algorithm 2 of the VPSI-CA cryptographic scheme in the C++ programming language based on the C++17 standard library and POSIX APIs.
-- ``SchemeVPSICAAlg3.cpp``: This is the official implementation of Algorithm 3 of the VPSI-CA cryptographic scheme in the C++ programming language based on the C++17 standard library and POSIX APIs.
-- ``SchemeVPSICAAlg4.cpp``: This is the official implementation of Algorithm 4 of the VPSI-CA cryptographic scheme in the C++ programming language based on the C++17 standard library and POSIX APIs.
-- ``SchemeVPSICAAlg5.cpp``: This is the official implementation of Algorithm 5 of the VPSI-CA cryptographic scheme in the C++ programming language based on the C++17 standard library and POSIX APIs.
-
-### SchemePSICA
-
-- ``SchemePSICA.cpp``: This is a possible implementation of the PSI-CA baseline cryptographic scheme in the C++ programming language based on the C++17 standard library and POSIX APIs.
+- ``SchemeVPSICAAlg2.cpp``: This is the official implementation of Algorithm 2 of the VPSI-CA cryptographic scheme in the C++ programming language. 
+- ``SchemeVPSICAAlg3.cpp``: This is the official implementation of Algorithm 3 of the VPSI-CA cryptographic scheme in the C++ programming language. 
+- ``SchemeVPSICAAlg4.cpp``: This is the official implementation of Algorithm 4 of the VPSI-CA cryptographic scheme in the C++ programming language. 
+- ``SchemeVPSICAAlg5.cpp``: This is the official implementation of Algorithm 5 of the VPSI-CA cryptographic scheme in the C++ programming language. 
 
 ```bibtex
 @article{chen2024efficient,
@@ -26,4 +22,8 @@ This is the category of the proposed VPSI-CA cryptographic scheme, whose baselin
 }
 ```
 
-We would like to express our sincere gratitude to everyone who has cited this work. Readers who wish to cite this work may use the BibTeX entry above.
+We would like to express our sincere gratitude to everyone who has cited this work. Readers who wish to cite this work may use the BibTeX entry above. 
+
+### SchemePSICA
+
+- ``SchemePSICA.cpp``: This is a possible implementation of the PSI-CA cryptographic scheme in the C++ programming language. 

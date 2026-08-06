@@ -136,7 +136,7 @@ class Builder:
 			"", "\t{0}\t\tDisable the verbose console outputs. ", "\t{0}\t\tIndicate to confirm the overwriting of the existing output file. ", 
 			"\t{0}\t\tPrint this help document. ", "\t{0} [1|2|5|10|20|50|100|...]\t\tSpecify the run count, which must be a positive integer. The default value is {1}. ", (
 				"\t{0} [0|0.1|1|10|...|inf]\t\tSpecify the waiting time before exiting, which should be non-negative. "
-				+ "Passing inf requires users to manually press the enter key before exiting. The default value is {0}. "
+				+ "Passing inf requires users to manually press the Enter key before exiting. The default value is {0}. "
 			), "\t{0} [s|ms|microsecond|ns|ps|0|3|6|9|12|...]\t\tSpecify the decimal place, which should be a non-negative integer. The default value is {1}. ", 
 			"\t{0} [utf-8|utf-16|...]\t\tSpecify the encoding mode for CSV and TXT outputs. The default value is {1}. ", 
 			"\t{0} [|.|./{1}.xlsx|./{1}.csv|...]\t\tSpecify the output file path, leaving it empty for console output. The default value is {2}. ", 
@@ -156,9 +156,11 @@ class Builder:
 			"No experiments were conducted. ", "Options (case-insensitive): ", "Original:", 
 			"Parser: The extension name of the output file path passed is one of the protected extension names, which would be reset to the default extension {0}. ", 
 			"Parser: The output file path passed looks like a folder, which would be connected with the default file name {0}. ", 
-			"Parser: The path {0} exists not to be a regular file. ", "Please press the enter key to exit ({0}). ", "Please refer to https://github.com/JHUISI/charm if necessary. ", 
+			"Parser: The path {0} exists not to be a regular file. ", "Please press the Enter key to exit ({0}). ", 
+			"Please install the libraries via the active Python package manager (e.g., pip). ", "Please refer to https://github.com/JHUISI/charm if necessary. ", 
 			"Please wait {0} second(s) for automatic exit, or exit manually, for example by pressing ``Ctrl + C`` ({1}). ", "Space:", 
-			"The execution environment of the Python Charm-Crypto framework is not handled correctly. ", "The execution has finished ({0}). ", 
+			"The runtime environment of the Python Charm-Crypto framework is not correctly configured. ", 
+			"The runtime environment of the Python NumPy and SymPy libraries is not correctly configured. ", "The execution has finished ({0}). ", 
 			"The execution has started. ", "The experiments were interrupted by users. Saved results are retained. ", "The experiments were interrupted by {0}. Saved results are retained. ", 
 			"This is a possible implementation of the AIBE cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. ", 
 			"This is a possible implementation of the ARES cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. ", 
@@ -171,10 +173,12 @@ class Builder:
 			"This is the official implementation of the AA-IB-ME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. ", 
 			"This is the official implementation of the AnonymousME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. ", 
 			"This is the official implementation of the CA-NI-FPPCT cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. ", 
+			"This is the official implementation of the FS-MUAEKS cryptographic scheme in Python programming language based on the Python NumPy and SymPy libraries. ", 
 			"This is the official implementation of the HIB-ME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. ", 
 			"This is the official implementation of the IBMEMR cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. ", 
 			"This is the official implementation of the IBMETR cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. ", 
 			"This is the official implementation of the IBPRME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. ", 
+			"This is the official implementation of the LB-PEAKS cryptographic scheme in Python programming language based on the Python NumPy and SymPy libraries. ", 
 			"This is the official implementation of the PBAC cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. ", 
 			"This is the official implementation of the VL-PSI-CA cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. ", 
 			"Time:", "Verify:", "bys:", "identities:", "run:", "ys:"
@@ -603,7 +607,7 @@ def main() -> int:
 		print("The execution has finished ({0}). ".format(errorLevel))
 		print()
 	else:
-		print("Please press the enter key to exit ({0}). ".format(errorLevel))
+		print("Please press the Enter key to exit ({0}). ".format(errorLevel))
 		try:
 			getpass("")
 		except:

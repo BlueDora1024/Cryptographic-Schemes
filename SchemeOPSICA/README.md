@@ -1,14 +1,10 @@
 ## SchemeOPSICA
 
-This is the category of the proposed OPSI-CA cryptographic scheme, whose baseline is the PSI-CA cryptographic scheme.
+This is the category of the proposed OPSI-CA cryptographic scheme, whose baseline is the PSI-CA cryptographic scheme. 
 
 ### SchemeOPSICA
 
-- ``SchemeOPSICA.cpp``: This is the official implementation of the OPSI-CA cryptographic scheme in the C++ programming language based on the C++17 standard library and POSIX APIs.
-
-### SchemePSICA
-
-- ``SchemePSICA.cpp``: This symbolic link provides the PSI-CA baseline implementation from ``../SchemeVPSICA/SchemePSICA.cpp``.
+- ``SchemeOPSICA.cpp``: This is the official implementation of the OPSI-CA cryptographic scheme in the C++ programming language. 
 
 ```bibtex
 @article{yang2024ppct,
@@ -23,4 +19,8 @@ This is the category of the proposed OPSI-CA cryptographic scheme, whose baselin
 }
 ```
 
-We would like to express our sincere gratitude to everyone who has cited this work. Readers who wish to cite this work may use the BibTeX entry above.
+We would like to express our sincere gratitude to everyone who has cited this work. Readers who wish to cite this work may use the BibTeX entry above. 
+
+### SchemePSICA (symbolic link)
+
+- ``SchemePSICA.cpp``: This is a possible implementation of the PSI-CA cryptographic scheme in the C++ programming language. 

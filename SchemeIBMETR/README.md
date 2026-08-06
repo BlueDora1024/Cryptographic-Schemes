@@ -2,19 +2,15 @@
 
 This is the category of the proposed IBMETR cryptographic scheme, whose baselines are the AIBE, ARES, IBME, and IBMECH cryptographic schemes. 
 
----
-
 ### SchemeIBMETR
 
-- ``SchemeIBMETR.py``: This is the official implementation of the IBMETR cryptographic scheme in Python programming language based on the Python Charm-Crypto framework.
-- ``SchemeIBMETR.java``: This is the official implementation of the IBMETR cryptographic scheme in Java programming language based on the JPBC library.
-
----
+- ``SchemeIBMETR.py``: This is the official implementation of the IBMETR cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. 
+- ``SchemeIBMETR.java``: This is the official implementation of the IBMETR cryptographic scheme in Java programming language based on the JPBC library. 
 
 ### SchemeAIBE
 
-- ``SchemeAIBE.py``: This is a possible implementation of the AIBE cryptographic scheme in Python programming language based on the Python Charm-Crypto framework.
-- ``SchemeAIBE.java``: This is a possible implementation of the AIBE cryptographic scheme in Java programming language based on the JPBC library.
+- ``SchemeAIBE.py``: This is a possible implementation of the AIBE cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. 
+- ``SchemeAIBE.java``: This is a possible implementation of the AIBE cryptographic scheme in Java programming language based on the JPBC library. 
 
 ```bibtex
 @inproceedings{boyen2006anonymous,
@@ -29,8 +25,8 @@ This is the category of the proposed IBMETR cryptographic scheme, whose baseline
 
 ### SchemeARES
 
-- ``SchemeARES.py``: This is a possible implementation of the ARES cryptographic scheme in Python programming language based on the Python Charm-Crypto framework.
-- ``SchemeARES.java``: This is a possible implementation of the ARES cryptographic scheme in Java programming language based on the JPBC library.
+- ``SchemeARES.py``: This is a possible implementation of the ARES cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. 
+- ``SchemeARES.java``: This is a possible implementation of the ARES cryptographic scheme in Java programming language based on the JPBC library. 
 
 ```bibtex
 @inproceedings{blazy2019anonymous,
@@ -44,8 +40,8 @@ This is the category of the proposed IBMETR cryptographic scheme, whose baseline
 
 ### SchemeIBME
 
-- ``SchemeIBME.py``: This is a possible implementation of the IBME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. This implementation refers to the official implementation at [https://github.com/xuehuan-yang/PSME/blob/main/src/04_ibme/04_ibme.py](https://github.com/xuehuan-yang/PSME/blob/main/src/04_ibme/04_ibme.py).
-- ``SchemeIBME.java``: This is a possible implementation of the IBME cryptographic scheme in Java programming language based on the JPBC library. This implementation refers to the official implementation at [https://github.com/xuehuan-yang/PSME/blob/main/src/04_ibme/04_ibme.py](https://github.com/xuehuan-yang/PSME/blob/main/src/04_ibme/04_ibme.py).
+- ``SchemeIBME.py``: This is a possible implementation of the IBME cryptographic scheme in Python programming language based on the Python Charm-Crypto framework by referring to the official implementation at [https://github.com/xuehuan-yang/PSME/blob/main/src/04_ibme/04_ibme.py](https://github.com/xuehuan-yang/PSME/blob/main/src/04_ibme/04_ibme.py). 
+- ``SchemeIBME.java``: This is a possible implementation of the IBME cryptographic scheme in Java programming language based on the JPBC library by referring to the official implementation at [https://github.com/xuehuan-yang/PSME/blob/main/src/04_ibme/04_ibme.py](https://github.com/xuehuan-yang/PSME/blob/main/src/04_ibme/04_ibme.py). 
 
 ```bibtex
 @inproceedings{ateniese2019match,
@@ -60,8 +56,8 @@ This is the category of the proposed IBMETR cryptographic scheme, whose baseline
 
 ### SchemeIBMECH
 
-- ``SchemeIBMECH.py``: This is a possible implementation of the IBMECH cryptographic scheme in Python programming language based on the Python Charm-Crypto framework. This implementation refers to the official implementation at [https://github.com/xuehuan-yang/PSME/blob/main/src/02_ibmech/02_ibmech_v2.py](https://github.com/xuehuan-yang/PSME/blob/main/src/02_ibmech/02_ibmech_v2.py).
-- ``SchemeIBMECH.java``: This is a possible implementation of the IBMECH cryptographic scheme in Java programming language based on the JPBC library. This implementation refers to the official implementation at [https://github.com/xuehuan-yang/PSME/blob/main/src/02_ibmech/02_ibmech_v2.py](https://github.com/xuehuan-yang/PSME/blob/main/src/02_ibmech/02_ibmech_v2.py).
+- ``SchemeIBMECH.py``: This is a possible implementation of the IBMECH cryptographic scheme in Python programming language based on the Python Charm-Crypto framework by referring to the official implementation at [https://github.com/xuehuan-yang/PSME/blob/main/src/02_ibmech/02_ibmech_v2.py](https://github.com/xuehuan-yang/PSME/blob/main/src/02_ibmech/02_ibmech_v2.py). 
+- ``SchemeIBMECH.java``: This is a possible implementation of the IBMECH cryptographic scheme in Java programming language based on the JPBC library by referring to the official implementation at [https://github.com/xuehuan-yang/PSME/blob/main/src/02_ibmech/02_ibmech_v2.py](https://github.com/xuehuan-yang/PSME/blob/main/src/02_ibmech/02_ibmech_v2.py). 
 
 ```bibtex
 @inproceedings{chen2022identity,
@@ -76,4 +72,4 @@ This is the category of the proposed IBMETR cryptographic scheme, whose baseline
 
 ### Others
 
-Please also consider testing the Python scripts in [https://github.com/xuehuan-yang/PSME/tree/main/src](https://github.com/xuehuan-yang/PSME/tree/main/src) as the baselines if necessary. 
+Please also consider testing the Python implementations in [https://github.com/xuehuan-yang/PSME/tree/main/src](https://github.com/xuehuan-yang/PSME/tree/main/src) as the baselines if necessary. 

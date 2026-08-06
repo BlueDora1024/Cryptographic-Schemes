@@ -29,6 +29,11 @@ on:
         required: true
         default: true
         type: boolean
+      executeSchemeFSMUAEKS:
+        description: 'SchemeFSMUAEKS'
+        required: true
+        default: true
+        type: boolean
       executeSchemeHIBME:
         description: 'SchemeHIBME'
         required: true
@@ -46,6 +51,11 @@ on:
         type: boolean
       executeSchemeIBPRME:
         description: 'SchemeIBPRME'
+        required: true
+        default: true
+        type: boolean
+      executeSchemeLBPEAKS:
+        description: 'SchemeLBPEAKS'
         required: true
         default: true
         type: boolean
@@ -131,27 +141,33 @@ jobs:
           then
             executeSchemeAAIBME="${{ github.event.inputs.executeSchemeAAIBME }}"
             executeSchemeCANIFPPCT="${{ github.event.inputs.executeSchemeCANIFPPCT }}"
+            executeSchemeFSMUAEKS="${{ github.event.inputs.executeSchemeFSMUAEKS }}"
             executeSchemeHIBME="${{ github.event.inputs.executeSchemeHIBME }}"
             executeSchemeIBMEMR="${{ github.event.inputs.executeSchemeIBMEMR }}"
             executeSchemeIBMETR="${{ github.event.inputs.executeSchemeIBMETR }}"
             executeSchemeIBPRME="${{ github.event.inputs.executeSchemeIBPRME }}"
+            executeSchemeLBPEAKS="${{ github.event.inputs.executeSchemeLBPEAKS }}"
             executeSchemeVLPSICA="${{ github.event.inputs.executeSchemeVLPSICA }}"
           else
             executeSchemeAAIBME="true"
             executeSchemeCANIFPPCT="true"
+            executeSchemeFSMUAEKS="true"
             executeSchemeHIBME="true"
             executeSchemeIBMEMR="true"
             executeSchemeIBMETR="true"
             executeSchemeIBPRME="true"
+            executeSchemeLBPEAKS="true"
             executeSchemeVLPSICA="false"
           fi
           matrix=()
           [[ "true" == "${executeSchemeAAIBME}" ]] && matrix+=("SchemeAAIBME/SchemeAAIBME.py" "SchemeAAIBME/SchemeFuzzyME.py" "SchemeIBMETR/SchemeIBMECH.py")
           [[ "true" == "${executeSchemeCANIFPPCT}" ]] && matrix+=("SchemeCANIFPPCT/SchemeCANIFPPCT.py" "SchemeCANIFPPCT/SchemeCANIPSI.py")
+          [[ "true" == "${executeSchemeFSMUAEKS}" ]] && matrix+=("SchemeFSMUAEKS/SchemeFSMUAEKS.py")
           [[ "true" == "${executeSchemeHIBME}" ]] && matrix+=("SchemeHIBME/SchemeAnonymousME.py" "SchemeHIBME/SchemeHIBME.py")
           [[ "true" == "${executeSchemeIBMEMR}" ]] && matrix+=("SchemeIBMEMR/SchemeIBBME.py" "SchemeIBMETR/SchemeIBME.py" "SchemeIBMEMR/SchemeIBMEMR.py")
           [[ "true" == "${executeSchemeIBMETR}" ]] && matrix+=("SchemeIBMETR/SchemeAIBE.py" "SchemeIBMETR/SchemeARES.py" "SchemeIBMETR/SchemeIBME.py" "SchemeIBMETR/SchemeIBMECH.py" "SchemeIBMETR/SchemeIBMETR.py")
           [[ "true" == "${executeSchemeIBPRME}" ]] && matrix+=("SchemeIBMETR/SchemeIBME.py" "SchemeIBMETR/SchemeIBMECH.py" "SchemeIBPRME/SchemeIBPME.py" "SchemeIBPRME/SchemeIBPRME.py" "SchemeIBPRME/SchemePBAC.py")
+          [[ "true" == "${executeSchemeLBPEAKS}" ]] && matrix+=("SchemeLBPEAKS/SchemeLBPEAKS.py")
           [[ "true" == "${executeSchemeVLPSICA}" ]] && matrix+=("SchemeVLPSICA/SchemeVLPSICA.py")
           if [[ ${#matrix[@]} -ge 1 ]];
           then

@@ -2,5 +2,7 @@
 # Python Charm-Crypto framework
 libcst
 setuptools
+numPy
+symPy
 xlwt # XLS
 openpyxl # XLSX

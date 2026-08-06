@@ -1589,7 +1589,7 @@ public final class SchemeFSMUAEKS
 		}
 		else
 		{
-			System.out.println("Please press the enter key to exit (" + errorLevel + ").");
+			System.out.println("Please press the Enter key to exit (" + errorLevel + ").");
 			try (Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8))
 			{
 				if (scanner.hasNextLine())

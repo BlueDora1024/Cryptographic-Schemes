@@ -12,8 +12,13 @@ We are currently merging cryptographic schemes from our other repositories. Cryp
   - [SchemeIBMECH.java](./SchemeAAIBME/SchemeIBMECH.java) -> [SchemeIBMECH.java](./SchemeIBMETR/SchemeIBMECH.java)
   - [SchemeIBMECH.py](./SchemeAAIBME/SchemeIBMECH.py) -> [SchemeIBMECH.py](./SchemeIBMETR/SchemeIBMECH.py)
 - [SchemeCANIFPPCT](./SchemeCANIFPPCT/)
+  - [SchemeCANIPSI.java](./SchemeCANIFPPCT/SchemeCANIPSI.java)
+  - [SchemeCANIPSI.py](./SchemeCANIFPPCT/SchemeCANIPSI.py)
   - [SchemeCANIFPPCT.java](./SchemeCANIFPPCT/SchemeCANIFPPCT.java)
   - [SchemeCANIFPPCT.py](./SchemeCANIFPPCT/SchemeCANIFPPCT.py)
+- [SchemeFSMUAEKS](./SchemeFSMUAEKS/)
+  - [SchemeFSMUAEKS.java](./SchemeFSMUAEKS/SchemeFSMUAEKS.java)
+  - [SchemeFSMUAEKS.py](./SchemeFSMUAEKS/SchemeFSMUAEKS.py)
 - [SchemeHIBME](./SchemeHIBME/)
   - [SchemeAnonymousME.java](./SchemeHIBME/SchemeAnonymousME.java)
   - [SchemeAnonymousME.py](./SchemeHIBME/SchemeAnonymousME.py)
@@ -48,34 +53,30 @@ We are currently merging cryptographic schemes from our other repositories. Cryp
   - [SchemeIBPRME.py](./SchemeIBPRME/SchemeIBPRME.py)
   - [SchemePBAC.java](./SchemeIBPRME/SchemePBAC.java)
   - [SchemePBAC.py](./SchemeIBPRME/SchemePBAC.py)
-- [SchemeVLPSICA](./SchemeVLPSICA/)
-  - [SchemeVLPSICA.java](./SchemeVLPSICA/SchemeVLPSICA.java)
-  - [SchemeVLPSICA.py](./SchemeVLPSICA/SchemeVLPSICA.py)
-- [SchemeFSMUAEKS](./SchemeFSMUAEKS/)
-  - [SchemeFSMUAEKS.java](./SchemeFSMUAEKS/SchemeFSMUAEKS.java)
-  - [SchemeFSMUAEKS.py](./SchemeFSMUAEKS/SchemeFSMUAEKS.py)
 - [SchemeLBPEAKS](./SchemeLBPEAKS/)
   - [SchemeLBPEAKS.java](./SchemeLBPEAKS/SchemeLBPEAKS.java)
   - [SchemeLBPEAKS.py](./SchemeLBPEAKS/SchemeLBPEAKS.py)
+- [SchemeOPSICA](./SchemeOPSICA/)
+  - [SchemeOPSICA.cpp](./SchemeOPSICA/SchemeOPSICA.cpp)
+  - [SchemePSICA.cpp](./SchemeOPSICA/SchemePSICA.cpp) -> [SchemePSICA.cpp](./SchemeVPSICA/SchemePSICA.cpp)
+- [SchemeSPSICA](./SchemeSPSICA/)
+  - [SchemeSPSICA.cpp](./SchemeSPSICA/SchemeSPSICA.cpp)
+  - [SchemePSICA.cpp](./SchemeSPSICA/SchemePSICA.cpp) -> [SchemePSICA.cpp](./SchemeVPSICA/SchemePSICA.cpp)
+- [SchemeVLPSICA](./SchemeVLPSICA/)
+  - [SchemeVLPSICA.java](./SchemeVLPSICA/SchemeVLPSICA.java)
+  - [SchemeVLPSICA.py](./SchemeVLPSICA/SchemeVLPSICA.py)
 - [SchemeVPSICA](./SchemeVPSICA/)
   - [SchemePSICA.cpp](./SchemeVPSICA/SchemePSICA.cpp)
   - [SchemeVPSICAAlg2.cpp](./SchemeVPSICA/SchemeVPSICAAlg2.cpp)
   - [SchemeVPSICAAlg3.cpp](./SchemeVPSICA/SchemeVPSICAAlg3.cpp)
   - [SchemeVPSICAAlg4.cpp](./SchemeVPSICA/SchemeVPSICAAlg4.cpp)
   - [SchemeVPSICAAlg5.cpp](./SchemeVPSICA/SchemeVPSICAAlg5.cpp)
-- [SchemeOPSICA](./SchemeOPSICA/)
-  - [SchemeOPSICA.cpp](./SchemeOPSICA/SchemeOPSICA.cpp)
-  - [SchemePSICA.cpp](./SchemeOPSICA/SchemePSICA.cpp)
-- [SchemeSPSICA](./SchemeSPSICA/)
-  - [SchemeSPSICA.cpp](./SchemeSPSICA/SchemeSPSICA.cpp)
-  - [SchemePSICA.cpp](./SchemeSPSICA/SchemePSICA.cpp)
 
 Most of the cryptographic schemes here are pairing-based, which are implemented based on the PBC library and its variants. 
 
-| Programming language | Dependency |
+| Programming language | Third-party dependencies |
 | - | - |
-| C++ (SchemeVPSICA, SchemeOPSICA, and SchemeSPSICA) | C++17 standard library for algorithms and formatting; Ubuntu/POSIX APIs for file publication (Windows compilation is rejected); no third-party libraries |
-| C (and pairing-based C/C++) | [PBC](https://crypto.stanford.edu/pbc/download.html) |
+| C/C++ | [PBC](https://crypto.stanford.edu/pbc/download.html) |
 | Python (3.12 or above) | [Python Charm-Crypto framework](https://github.com/JHUISI/charm) |
 | Java | JPBC |
 
@@ -810,7 +811,7 @@ def main():
 		d[func] = timeDelta
 		print("Finished executing {0} in {1:.9f} second(s). ".format(func, timeDelta))
 	print("The optimal algorithm is {0}. ".format(sorted(d.items(), key = lambda x:x[1])[0][0]))
-	print("Please press the enter key to exit. ")
+	print("Please press the Enter key to exit. ")
 	try:
 		input()
 	except:
@@ -872,7 +873,7 @@ try:
 except:
 	print("Cannot compute the memory via ``psutil.Process``. ")
 	print("Please try to install the ``psutil`` library via ``python -m pip install psutil``. ")
-	print("Please press the enter key to exit. ")
+	print("Please press the Enter key to exit. ")
 	input()
 	exit(-1)
 

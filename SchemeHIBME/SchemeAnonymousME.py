@@ -6,6 +6,7 @@ try:
 except:
 	PairingGroup, G1, G2, GT, ZR, pair, Element = (None, ) * 7
 from codecs import lookup
+from getpass import getpass
 from time import perf_counter, sleep
 from warnings import filterwarnings
 filterwarnings(																																												\
@@ -68,7 +69,7 @@ class Parser:
 		print("\t{0} [1|2|5|10|20|50|100|...]\t\tSpecify the run count, which must be a positive integer. The default value is {1}. ".format(self.__formatOption(Parser.__OptionRun), Parser.__DefaultRun))
 		print(																																							\
 			"\t{0} [0|0.1|1|10|...|inf]\t\tSpecify the waiting time before exiting, which should be non-negative. ".format(self.__formatOption(Parser.__OptionTime))	\
-			+ "Passing inf requires users to manually press the enter key before exiting. The default value is {0}. ".format(Parser.__DefaultTime)						\
+			+ "Passing inf requires users to manually press the Enter key before exiting. The default value is {0}. ".format(Parser.__DefaultTime)						\
 		)
 		print("\t{0}\t\tIndicate to confirm the overwriting of the existing output file. ".format(self.__formatOption(Parser.__OptionYes)))
 		print()
@@ -912,7 +913,7 @@ def main() -> int:
 	if flag > EXIT_SUCCESS and flag > EOF:
 		if any((PairingGroup is None, G1 is None, G2 is None, GT is None, ZR is None, pair is None, Element is None)):
 			parser.disableConsoleEchoes()
-			print("The execution environment of the Python Charm-Crypto framework is not handled correctly. ")
+			print("The runtime environment of the Python Charm-Crypto framework is not correctly configured. ")
 			print("Please refer to https://github.com/JHUISI/charm if necessary. ")
 			errorLevel = EOF
 		else:
@@ -1004,7 +1005,7 @@ def main() -> int:
 		print("The execution has finished ({0}). ".format(errorLevel))
 		print()
 	else:
-		print("Please press the enter key to exit ({0}). ".format(errorLevel))
+		print("Please press the Enter key to exit ({0}). ".format(errorLevel))
 		try:
 			getpass("")
 		except:

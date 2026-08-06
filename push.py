@@ -72,7 +72,7 @@ def main() -> int:
 		errorLevel = EXIT_SUCCESS if gitPusher.push() else EXIT_FAILURE
 	else:
 		errorLevel = EOF
-	print("Please press the enter key to exit ({0}). ".format(errorLevel))
+	print("Please press the Enter key to exit ({0}). ".format(errorLevel))
 	try:
 		input()
 	except:

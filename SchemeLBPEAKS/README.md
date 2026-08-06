@@ -1,13 +1,13 @@
 ## LB-PEAKS
 
-This is the category of the proposed LB-PEAKS cryptographic scheme.
+This is the category of the proposed LB-PEAKS cryptographic scheme. 
 
 ### SchemeLBPEAKS
 
-- ``SchemeLBPEAKS.py``: This is the official implementation of the LB-PEAKS cryptographic scheme in Python programming language based on NumPy and SymPy.
-- ``SchemeLBPEAKS.java``: This is the official implementation of the LB-PEAKS cryptographic scheme in Java programming language.
+- ``SchemeLBPEAKS.py``: This is the official implementation of the LB-PEAKS cryptographic scheme in Python programming language based on the Python NumPy and SymPy libraries. 
+- ``SchemeLBPEAKS.java``: This is the official implementation of the LB-PEAKS cryptographic scheme in Java programming language. 
 
-Initially, this paper was entitled ``Lattice-based Public Key Encryption with Authorized Keyword Search: Construction, Implementation, and Applications`` whose BibTeX is as follows.
+Initially, this paper was entitled ``Lattice-based Public Key Encryption with Authorized Keyword Search: Construction, Implementation, and Applications`` whose BibTeX is as follows. 
 
 ```bibtex
 @article{xu2023lattice,
@@ -18,7 +18,7 @@ Initially, this paper was entitled ``Lattice-based Public Key Encryption with Au
 }
 ```
 
-Subsequently, the title was changed to ``Post-Quantum Searchable Encryption Supporting User-Authorization for Outsourced Data Management``.
+Subsequently, the title was changed to ``Post-Quantum Searchable Encryption Supporting User-Authorization for Outsourced Data Management``. 
 
 ```bibtex
 @inproceedings{xu2024post,
@@ -30,4 +30,4 @@ Subsequently, the title was changed to ``Post-Quantum Searchable Encryption Supp
 }
 ```
 
-We would like to express our sincere gratitude to everyone who has cited this work. Readers who wish to cite this work may use the BibTeX entry above.
+We would like to express our sincere gratitude to everyone who has cited this work. Readers who wish to cite this work may use the BibTeX entry above. 

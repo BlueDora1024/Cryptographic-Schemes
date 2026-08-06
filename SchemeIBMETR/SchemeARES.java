@@ -1481,7 +1481,7 @@ public final class SchemeARES
 		}
 		else
 		{
-			System.out.println("Please press the enter key to exit (" + errorLevel + ").");
+			System.out.println("Please press the Enter key to exit (" + errorLevel + ").");
 			final Console console = System.console();
 			if (console != null)
 				console.readLine();

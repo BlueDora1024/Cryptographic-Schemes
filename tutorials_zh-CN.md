@@ -488,7 +488,7 @@ try:
 except:
 	print("Cannot compute the memory via ``psutil.Process``. ")
 	print("Please try to install the ``psutil`` library via ``python -m pip install psutil`` or ``apt-get install python3-psutil``. ")
-	print("Please press the enter key to exit. ")
+	print("Please press the Enter key to exit. ")
 	input()
 	exit(-1)
 
