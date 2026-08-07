@@ -1191,6 +1191,7 @@ public final class SchemeFSMUAEKS
 	private static final int EXIT_SUCCESS = 0;
 	private static final int EXIT_FAILURE = 1;
 	private static final int EOF = -1;
+	private static final int MAXIMUM_ATTEMPT_COUNT = 100;
 	private static final SecureRandom RANDOM = new SecureRandom();
 	private int n = 0;
 	private int m = 0;
@@ -1470,72 +1471,81 @@ public final class SchemeFSMUAEKS
 			FSMUAEKSMatrix.multiply(FSMUAEKSMatrix.transpose(tA), eS, this.q), this.q);
 		for (final long[] row : value)
 			for (final long element : row)
-				if (element >= this.q >> 2)
+				if (Math.min(element, this.q - element) >= this.q >> 2)
 					return false;
 		return true;
 	}
 
 	public static RunResult conductScheme(final Parameters parameters, final Integer run, final boolean verbose)
 	{
-		boolean systemValid = false;
-		boolean schemeCorrect = false;
-		final List<Object> metrics = new ArrayList<>(Collections.nCopies(15, "N/A"));
-		if (verbose)
+		RunResult result = null;
+		for (int attempt = 0; attempt < MAXIMUM_ATTEMPT_COUNT; ++attempt)
 		{
-			System.out.println("Parameters: " + parameters);
-			System.out.println("run: " + (run == null ? "N/A" : run));
-		}
-		try
-		{
-			final SchemeFSMUAEKS scheme = new SchemeFSMUAEKS();
-			long start = System.nanoTime();
-			final Object[] publicParameters = scheme.Setup(parameters.n(), parameters.m(), parameters.q(), parameters.lS(), parameters.lR());
-			metrics.set(0, Double.valueOf(elapsedSeconds(start)));
-			systemValid = true;
-			start = System.nanoTime();
-			final Object[] senderKeys = scheme.KeyGenS();
-			metrics.set(1, Double.valueOf(elapsedSeconds(start)));
-			start = System.nanoTime();
-			final Object[] receiverKeys = scheme.KeyGenR();
-			metrics.set(2, Double.valueOf(elapsedSeconds(start)));
-			start = System.nanoTime();
-			final Object[] forwardKey = scheme.KeyUpdate();
-			metrics.set(3, Double.valueOf(elapsedSeconds(start)));
-			start = System.nanoTime();
-			final Object[] generatedCipherText = scheme.Encryption();
-			metrics.set(4, Double.valueOf(elapsedSeconds(start)));
-			start = System.nanoTime();
-			final Object[] generatedTrapdoor = scheme.Trapdoor();
-			metrics.set(5, Double.valueOf(elapsedSeconds(start)));
-			start = System.nanoTime();
-			schemeCorrect = scheme.Test();
-			metrics.set(6, Double.valueOf(elapsedSeconds(start)));
-			metrics.set(7, Integer.valueOf(lengthOf(publicParameters)));
-			metrics.set(8, Integer.valueOf(lengthOf(senderKeys[0])));
-			metrics.set(9, Integer.valueOf(lengthOf(senderKeys[1])));
-			metrics.set(10, Integer.valueOf(lengthOf(receiverKeys[0])));
-			metrics.set(11, Integer.valueOf(lengthOf(receiverKeys[1])));
-			metrics.set(12, Integer.valueOf(lengthOf(forwardKey)));
-			metrics.set(13, Integer.valueOf(lengthOf(generatedCipherText)));
-			metrics.set(14, Integer.valueOf(lengthOf(generatedTrapdoor)));
+			boolean systemValid = false;
+			boolean schemeCorrect = false;
+			boolean completed = false;
+			final List<Object> metrics = new ArrayList<>(Collections.nCopies(15, "N/A"));
 			if (verbose)
 			{
-				System.out.println("Is the system valid? Yes.");
-				System.out.println("Is the scheme correct? " + (schemeCorrect ? "Yes." : "No."));
-				System.out.println("Time: " + metrics.subList(0, 7));
-				System.out.println("Space: " + metrics.subList(7, metrics.size()));
-				System.out.println();
+				System.out.println("Parameters: " + parameters);
+				System.out.println("run: " + (run == null ? "N/A" : run));
 			}
-		}
-		catch (final RuntimeException exception)
-		{
-			if (verbose)
+			try
 			{
-				System.out.println("Is the system valid? No. The execution failed due to " + exception + '.');
-				System.out.println();
+				final SchemeFSMUAEKS scheme = new SchemeFSMUAEKS();
+				long start = System.nanoTime();
+				final Object[] publicParameters = scheme.Setup(parameters.n(), parameters.m(), parameters.q(), parameters.lS(), parameters.lR());
+				metrics.set(0, Double.valueOf(elapsedSeconds(start)));
+				systemValid = true;
+				start = System.nanoTime();
+				final Object[] senderKeys = scheme.KeyGenS();
+				metrics.set(1, Double.valueOf(elapsedSeconds(start)));
+				start = System.nanoTime();
+				final Object[] receiverKeys = scheme.KeyGenR();
+				metrics.set(2, Double.valueOf(elapsedSeconds(start)));
+				start = System.nanoTime();
+				final Object[] forwardKey = scheme.KeyUpdate();
+				metrics.set(3, Double.valueOf(elapsedSeconds(start)));
+				start = System.nanoTime();
+				final Object[] generatedCipherText = scheme.Encryption();
+				metrics.set(4, Double.valueOf(elapsedSeconds(start)));
+				start = System.nanoTime();
+				final Object[] generatedTrapdoor = scheme.Trapdoor();
+				metrics.set(5, Double.valueOf(elapsedSeconds(start)));
+				start = System.nanoTime();
+				schemeCorrect = scheme.Test();
+				metrics.set(6, Double.valueOf(elapsedSeconds(start)));
+				metrics.set(7, Integer.valueOf(lengthOf(publicParameters)));
+				metrics.set(8, Integer.valueOf(lengthOf(senderKeys[0])));
+				metrics.set(9, Integer.valueOf(lengthOf(senderKeys[1])));
+				metrics.set(10, Integer.valueOf(lengthOf(receiverKeys[0])));
+				metrics.set(11, Integer.valueOf(lengthOf(receiverKeys[1])));
+				metrics.set(12, Integer.valueOf(lengthOf(forwardKey)));
+				metrics.set(13, Integer.valueOf(lengthOf(generatedCipherText)));
+				metrics.set(14, Integer.valueOf(lengthOf(generatedTrapdoor)));
+				completed = true;
+				if (verbose)
+				{
+					System.out.println("Is the system valid? Yes.");
+					System.out.println("Is the scheme correct? " + (schemeCorrect ? "Yes." : "No."));
+					System.out.println("Time: " + metrics.subList(0, 7));
+					System.out.println("Space: " + metrics.subList(7, metrics.size()));
+					System.out.println();
+				}
 			}
+			catch (final RuntimeException exception)
+			{
+				if (verbose)
+				{
+					System.out.println("Is the system valid? No. The execution failed due to " + exception + '.');
+					System.out.println();
+				}
+			}
+			result = new RunResult(parameters.n(), parameters.m(), parameters.q(), parameters.lS(), parameters.lR(), run, systemValid, schemeCorrect, metrics);
+			if (!completed || schemeCorrect)
+				break;
 		}
-		return new RunResult(parameters.n(), parameters.m(), parameters.q(), parameters.lS(), parameters.lR(), run, systemValid, schemeCorrect, metrics);
+		return result;
 	}
 
 	public static void main(final String[] arguments)
