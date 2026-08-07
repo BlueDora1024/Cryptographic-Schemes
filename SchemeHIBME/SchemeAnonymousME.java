@@ -932,6 +932,14 @@ public final class SchemeAnonymousME
 		return this.immutable(this.pairing.getZr().newRandomElement());
 	}
 
+	private Element generateRandomNonZeroZRElement()
+	{
+		Element element = this.randomScalar();
+		while (element.isZero())
+			element = this.randomScalar();
+		return element;
+	}
+
 	private Element randomG1()
 	{
 		return this.immutable(this.pairing.getG1().newRandomElement());
@@ -1188,8 +1196,8 @@ public final class SchemeAnonymousME
 		this.maximumDepth = l >= 3 ? l : DEFAULT_L;
 		final Element g = this.oneG1();
 		final Element alpha = this.randomScalar();
-		final Element b1 = this.randomScalar();
-		final Element b2 = this.randomScalar();
+		final Element b1 = this.generateRandomNonZeroZRElement();
+		final Element b2 = this.generateRandomNonZeroZRElement();
 		final Element g2 = this.randomG2();
 		final Element g3 = this.randomG2();
 		final Element[] h = new Element[this.maximumDepth];

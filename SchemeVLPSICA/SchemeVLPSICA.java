@@ -986,6 +986,14 @@ public final class SchemeVLPSICA
 		return this.immutable(this.pairing.getZr().newRandomElement());
 	}
 
+	private Element generateRandomNonZeroZRElement()
+	{
+		Element element = this.randomScalar();
+		while (element.isZero())
+			element = this.randomScalar();
+		return element;
+	}
+
 	private Element randomG1()
 	{
 		return this.immutable(this.pairing.getG1().newRandomElement());
@@ -1254,7 +1262,7 @@ public final class SchemeVLPSICA
 		this.d = requestedD >= 1 ? requestedD : DEFAULT_D;
 		final Element g1 = this.oneG1();
 		final Element g2 = this.oneG2();
-		final Element s = this.randomScalar();
+		final Element s = this.generateRandomNonZeroZRElement();
 		final List<Element> sValues = new ArrayList<>();
 		for (int index = 0; index <= this.m + this.d; ++index)
 			sValues.add(power(g2, scalarPower(s, index)));

@@ -640,6 +640,11 @@ class SchemeIBBME:
 			return eleResult
 		else:
 			return None
+	def __generateRandomNonZeroZRElement(self:object) -> Element:
+		element = self.__group.random(ZR)
+		while element == self.__group.init(ZR, 0):
+			element = self.__group.random(ZR)
+		return element
 	def Setup(self:object, l:int = __DefaultL) -> tuple: # $\textbf{Setup}() \to (\textit{mpk}, \textit{msk})$
 		# Checks #
 		self.__flag = False
@@ -654,7 +659,8 @@ class SchemeIBBME:
 		h = self.__group.random(G2) # generate $h \in \mathbb{G}_2$ randomly
 		rVec1 = tuple(self.__group.random(ZR) for _ in range(self.__l + 1)) # generate $\vec{r}_1 = (r_{1, 0}, r_{1, 1}, \cdots, r{1, l}) \in \mathbb{Z}_r^{l + 1}$ randomly
 		rVec2 = tuple(self.__group.random(ZR) for _ in range(self.__l + 1)) # generate $\vec{r}_2 = (r_{2, 0}, r_{2, 1}, \cdots, r{2, l}) \in \mathbb{Z}_r^{l + 1}$ randomly
-		t1, t2, beta1, beta2, alpha, rho, b, tau = self.__group.random(ZR, 8) # generate $t_1, t_2, \beta_1, \beta_2, \alpha, \rho, b, \tau \in \mathbb{Z}_r$ randomly
+		t1, t2, beta1, beta2, alpha, rho, b = self.__group.random(ZR, 7) # generate $t_1, t_2, \beta_1, \beta_2, \alpha, \rho, b \in \mathbb{Z}_r$ randomly
+		tau = self.__generateRandomNonZeroZRElement() # generate $\tau \in \mathbb{Z}_r^*$ randomly
 		rVec = tuple(rVec1[i] + b * rVec2[i] for i in range(self.__l + 1)) # $\vec{r} \gets (r_0, r_1, \cdots, r_l) = \vec{r}_1 + b\vec{r}_2 = (r_{1, 0} + br_{2, 0}, r_{1, 1} + br_{2, 1}, \cdots, r_{1, l} + br_{2, l})$
 		t = t1 + b * t2 # $t \gets t_1 + bt_2$
 		beta = beta1 + b * beta2 # $\beta \gets \beta_1 + b\beta_2$
@@ -755,7 +761,8 @@ class SchemeIBBME:
 		y = self.__computeCoefficients(tuple(H2(ele) for ele in S)) # Compute $y_0, y_1, y_2, \cdots y_n$ that satisfy $\forall x \in \mathbb{Z}_r$, we have $F(x) = \prod\limits_{\textit{id}_j \in S} (x - H_2(\textit{id}_j)) = y_0 + \sum\limits_{i = 1}^n y_i x^i$
 		yVec = y + (self.__group.init(ZR, 0), ) * (self.__l - n) # $\vec{y} \gets (y_0, y_1, \cdots, y_n, y_{n + 1}, y_{n + 2}, \cdots, y_l) = (y_0, y_1, \cdots, y_n, 0, 0, \cdots, 0)$
 		del y
-		s, d2, ctag = self.__group.random(ZR, 3) # generate $s, d_2, \textit{ctag} \in \mathbb{Z}_r$ randomly
+		s, ctag = self.__group.random(ZR, 2) # generate $s, \textit{ctag} \in \mathbb{Z}_r$ randomly
+		d2 = self.__generateRandomNonZeroZRElement() # generate $d_2 \in \mathbb{Z}_r^*$ randomly
 		C0 = m * eGHToThePowerOfBeta ** s # $C_0 \gets m \cdot e(g, h)^{\beta s}$
 		C1 = g ** s # $C_1 \gets g^s$
 		C2 = gToThePowerOfB ** s # $C_2 \gets g^{bs}$
@@ -804,6 +811,8 @@ class SchemeIBBME:
 		# Scheme #
 		V_id_i = H3(pair(dki3, C2) * pair(dki2, H1(idStar)) * pair(dki1, C4)) # $V(\textit{id}_i) \gets H_3(e(\textit{dk}_{i, 3}, C_2)e(\textit{dk}_{i, 2}, H_1(\textit{id}^*))e(\textit{dk}_{i, 1}, C_4))$
 		d2 = self.__computePolynomial(V_id_i, bVec) # $d_2 \gets g(V_{\textit{id}_i}) = b_0 + \sum\limits_{j = 1}^n b_j V_{\textit{id}_i}^j$
+		if not (isinstance(d2, Element) and d2.type == ZR) or d2 == self.__group.init(ZR, 0):
+			return False
 		rtag = sum((yVec[i + 1] * rtags[i] for i in range(1, self.__l)), start = yVec[1] * rtags[0]) # $\textit{rtag} \gets \sum\limits_{i = 1}^l y_i \textit{rtags}_i$
 		if rtag == ctag: # \textbf{if} $\textit{rtag} = \textit{ctag}$ \textbf{then}
 			m = False # \quad$m \gets \perp$

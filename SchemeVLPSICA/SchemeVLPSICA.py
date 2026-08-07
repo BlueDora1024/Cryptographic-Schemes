@@ -614,6 +614,11 @@ class SchemeVLPSICA:
 			return result
 		else:
 			return self.__init(ZR, 0)
+	def __generateRandomNonZeroZRElement(self:object) -> Element:
+		element = self.__group.random(ZR)
+		while element == self.__group.init(ZR, 0):
+			element = self.__group.random(ZR)
+		return element
 	def Setup(self:object, m:int = __DefaultM, n:int = __DefaultN, d:int = __DefaultD) -> tuple: # $\textbf{Setup}(m, n, d) \to (\textit{mpk}, \textit{msk})$
 		# Checks #
 		self.__flag = False
@@ -636,7 +641,7 @@ class SchemeVLPSICA:
 		# Scheme #
 		g1 = self.__group.init(G1, 1) # $g_1 \gets 1_{\mathbb{G}_1}$
 		g2 = self.__group.init(G2, 1) # $g_2 \gets 1_{\mathbb{G}_2}$
-		s = self.__group.random(ZR) # generate $s \in \mathbb{Z}_p^*$ randomly
+		s = self.__generateRandomNonZeroZRElement() # generate $s \in \mathbb{Z}_p^*$ randomly
 		SVec = tuple(g2 ** (s ** i) for i in range(self.__m + self.__d + 1)) # $\vec{S} \gets (S_0, S_1, \cdots, S_{m + d}) = (g_2^{s_0}, g_2^{s_1}, \cdots, g_2^{s^{m + d}})$
 		SPrime = g1 ** s # $S' \gets g_1^s \in \mathbb{G}_1$
 		if 512 == self.__group.secparam:

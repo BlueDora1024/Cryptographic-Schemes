@@ -5,12 +5,12 @@ from codecs import lookup
 from getpass import getpass
 from hashlib import sha3_256
 try:
-	from numpy import arange, asarray, concatenate, dot, eye, fill_diagonal, kron, ndarray, triu_indices, zeros
+	from numpy import arange, asarray, concatenate, dot, eye, fill_diagonal, kron, minimum, ndarray, triu_indices, zeros
 	from numpy.linalg import lstsq
 	from numpy.random import randint
 	from sympy import Matrix
 except:
-	arange, asarray, concatenate, dot, eye, fill_diagonal, kron, ndarray, triu_indices, zeros, lstsq, randint, Matrix = (None, ) * 13
+	arange, asarray, concatenate, dot, eye, fill_diagonal, kron, minimum, ndarray, triu_indices, zeros, lstsq, randint, Matrix = (None, ) * 14
 from time import perf_counter, sleep
 try:
 	chdir(abspath(dirname(__file__)))
@@ -19,6 +19,7 @@ except:
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 1
 EOF = (-1)
+MAXIMUM_ATTEMPT_COUNT = 100
 
 
 class Parser:
@@ -715,7 +716,8 @@ class SchemeFSMUAEKS:
 		Cb, ES = self.__cipherText[2], self.__cipherText[4]
 		Ta, ER = self.__trapdoor[1], self.__trapdoor[4]
 		value = (dot(ER.T, Cb) % self.__q - dot(Ta.T, ES) % self.__q) % self.__q
-		return bool((value < self.__q >> 2).all())
+		centeredValue = minimum(value, self.__q - value)
+		return bool((centeredValue < self.__q >> 2).all())
 	def getLengthOf(self:object, obj:object) -> int|str:
 		if isinstance(obj, ndarray):
 			return int(obj.nbytes)
@@ -737,9 +739,9 @@ class SchemeFSMUAEKS:
 			return "N/A"
 
 
-def conductScheme(parameter:tuple|list|dict, run:int|None = None, isVerbose:bool = False) -> list:
+def __conductScheme(parameter:tuple|list|dict, run:int|None = None, isVerbose:bool = False) -> tuple:
 	nString, mString, qString, lSString, lRString, runString = ("N/A", ) * 6
-	isSystemValid, isSchemeCorrect = (False, ) * 2
+	isSystemValid, isSchemeCorrect, isCompleted = (False, ) * 3
 	timeSetup, timeKeyGenS, timeKeyGenR, timeKeyUpdate, timeEncryption, timeTrapdoor, timeTest = ("N/A", ) * 7
 	sizeParams, sizePkS, sizeSkS, sizePkR, sizeSkR, sizeForwardKey, sizeCipherText, sizeTrapdoor = ("N/A", ) * 8
 	if isinstance(parameter, (tuple, list)) and len(parameter) >= 5:
@@ -786,6 +788,7 @@ def conductScheme(parameter:tuple|list|dict, run:int|None = None, isVerbose:bool
 		sizePkR, sizeSkR = scheme.getLengthOf(pkR), scheme.getLengthOf(skR)
 		sizeForwardKey = scheme.getLengthOf((forwardSecretKey, forwardKey))
 		sizeCipherText, sizeTrapdoor = scheme.getLengthOf(cipherText), scheme.getLengthOf(trapdoor)
+		isCompleted = True
 		if not isinstance(isVerbose, bool) or isVerbose:
 			print("Is the system valid? Yes. ")
 			print("Is the scheme correct? {0}. ".format("Yes" if isSchemeCorrect else "No"))
@@ -796,12 +799,20 @@ def conductScheme(parameter:tuple|list|dict, run:int|None = None, isVerbose:bool
 		if not isinstance(isVerbose, bool) or isVerbose:
 			print("Is the system valid? No. The execution failed due to {0}. ".format(repr(e)))
 			print()
-	return [
+	return ([
 		nString, mString, qString, lSString, lRString, runString,
 		isSystemValid, isSchemeCorrect,
 		timeSetup, timeKeyGenS, timeKeyGenR, timeKeyUpdate, timeEncryption, timeTrapdoor, timeTest,
 		sizeParams, sizePkS, sizeSkS, sizePkR, sizeSkR, sizeForwardKey, sizeCipherText, sizeTrapdoor
-	]
+	], isCompleted)
+
+def conductScheme(parameter:tuple|list|dict, run:int|None = None, isVerbose:bool = False) -> list:
+	result, isCompleted = __conductScheme(parameter, run, isVerbose)
+	attempt = 1
+	while isCompleted and not result[7] and attempt < MAXIMUM_ATTEMPT_COUNT:
+		result, isCompleted = __conductScheme(parameter, run, isVerbose)
+		attempt += 1
+	return result
 
 def main() -> int:
 	parser = Parser(argv)

@@ -893,6 +893,14 @@ public final class SchemeIBMETR
 		return this.immutable(this.pairing.getZr().newRandomElement());
 	}
 
+	private Element generateRandomNonZeroZRElement()
+	{
+		Element element = this.randomScalar();
+		while (element.isZero())
+			element = this.randomScalar();
+		return element;
+	}
+
 	private Element randomG1()
 	{
 		return this.immutable(this.pairing.getG1().newRandomElement());
@@ -1127,8 +1135,8 @@ public final class SchemeIBMETR
 		final Element g1 = this.randomG1();
 		final Element w = this.randomScalar();
 		final Element alpha = this.randomScalar();
-		final Element t1 = this.randomScalar();
-		final Element t2 = this.randomScalar();
+		final Element t1 = this.generateRandomNonZeroZRElement();
+		final Element t2 = this.generateRandomNonZeroZRElement();
 		this.masterPublicKey = new MasterPublicKey(g, g0, g1, power(g, t1), power(g, t2), power(this.pair(g, g), w));
 		this.masterSecretKey = new MasterSecretKey(w, alpha, t1, t2);
 		this.setUp = true;

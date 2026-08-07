@@ -932,6 +932,14 @@ public final class SchemeIBMECH
 		return this.immutable(this.pairing.getZr().newRandomElement());
 	}
 
+	private Element generateRandomNonZeroZRElement()
+	{
+		Element element = this.randomScalar();
+		while (element.isZero())
+			element = this.randomScalar();
+		return element;
+	}
+
 	private Element randomG1()
 	{
 		return this.immutable(this.pairing.getG1().newRandomElement());
@@ -1207,7 +1215,7 @@ public final class SchemeIBMECH
 		final Element g2 = this.oneG2();
 		final Element alpha = this.randomScalar();
 		final Element eta = this.randomScalar();
-		final Element scale = this.randomScalar();
+		final Element scale = this.generateRandomNonZeroZRElement();
 		Element[][] matrix = null;
 		Element[][] dual = null;
 		while (dual == null)

@@ -595,6 +595,11 @@ class SchemeAnonymousME:
 			return result if isinstance(result, Element) else self.__group.init(ZR, result)
 		except Exception:
 			return self.__group.init(ZR, 1)
+	def __generateRandomNonZeroZRElement(self:object) -> Element:
+		element = self.__group.random(ZR)
+		while element == self.__group.init(ZR, 0):
+			element = self.__group.random(ZR)
+		return element
 	def Setup(self:object, l:int = __DefaultL) -> tuple: # $\textbf{Setup}(l) \to (\textit{mpk}, \textit{msk})$
 		# Checks #
 		self.__flag = False
@@ -606,7 +611,8 @@ class SchemeAnonymousME:
 		
 		# Scheme #
 		g = self.__group.init(G1, 1) # $g \gets 1_{\mathbb{G}_1}$
-		alpha, b1, b2 = self.__group.random(ZR), self.__group.random(ZR), self.__group.random(ZR) # generate $\alpha, b_1, b_2, \in \mathbb{Z}_r$ randomly
+		alpha = self.__group.random(ZR) # generate $\alpha \in \mathbb{Z}_r$ randomly
+		b1, b2 = tuple(self.__generateRandomNonZeroZRElement() for _ in range(2)) # generate $b_1, b_2 \in \mathbb{Z}_r^*$ randomly
 		g2, g3 = self.__group.random(G2), self.__group.random(G2) # generate $g_2, g_3 \in \mathbb{G}_2$ randomly
 		h = tuple(self.__group.random(G2) for _ in range(self.__l)) # generate $h_1, h_2, \cdots, h_l \in \mathbb{G}_2$ randomly (Note that the indexes in implementations are 1 smaller than those in theory)
 		g1 = g ** alpha # $g_1 \gets g^\alpha$

@@ -971,12 +971,12 @@ public final class SchemeCANIPSI
 		return this.immutable(this.pairing.getZr().newRandomElement());
 	}
 
-	private Element randomNonZeroScalar()
+	private Element generateRandomNonZeroZRElement()
 	{
-		Element scalar = this.randomScalar();
-		while (scalar.isZero())
-			scalar = this.randomScalar();
-		return scalar;
+		Element element = this.randomScalar();
+		while (element.isZero())
+			element = this.randomScalar();
+		return element;
 	}
 
 	private Element randomG1()
@@ -1252,10 +1252,10 @@ public final class SchemeCANIPSI
 		}
 		final Element g = this.randomG1();
 		final Element omega = this.randomScalar();
-		final Element t1 = this.randomNonZeroScalar();
-		final Element t2 = this.randomNonZeroScalar();
-		final Element t3 = this.randomNonZeroScalar();
-		final Element t4 = this.randomNonZeroScalar();
+		final Element t1 = this.generateRandomNonZeroZRElement();
+		final Element t2 = this.generateRandomNonZeroZRElement();
+		final Element t3 = this.generateRandomNonZeroZRElement();
+		final Element t4 = this.generateRandomNonZeroZRElement();
 		final Element omegaPublic = power(this.pair(g, g), scalarProduct(scalarProduct(t1, t2), omega));
 		this.basicPublicKey = new BasicPublicKey(g, this.randomG1(), omegaPublic, power(g, t1), power(g, t2), power(g, t3), power(g, t4));
 		this.basicSecretKey = new BasicSecretKey(omega, t1, t2, t3, t4);
@@ -1335,13 +1335,13 @@ public final class SchemeCANIPSI
 		final Element g1 = this.randomG1();
 		final Element g2 = this.randomG2();
 		final Element r = this.randomScalar();
-		final Element s = this.randomNonZeroScalar();
+		final Element s = this.generateRandomNonZeroZRElement();
 		final Element t = this.randomScalar();
 		final Element omega = this.randomScalar();
-		final Element t1 = this.randomNonZeroScalar();
-		final Element t2 = this.randomNonZeroScalar();
-		final Element t3 = this.randomNonZeroScalar();
-		final Element t4 = this.randomNonZeroScalar();
+		final Element t1 = this.generateRandomNonZeroZRElement();
+		final Element t2 = this.generateRandomNonZeroZRElement();
+		final Element t3 = this.generateRandomNonZeroZRElement();
+		final Element t4 = this.generateRandomNonZeroZRElement();
 		this.masterPublicKey = new MasterPublicKey(
 			g1, g2, this.randomG1(), power(g1, r), power(g2, s), power(g1, t),
 			power(this.pair(g1, g2), scalarProduct(scalarProduct(t1, t2), omega)),
@@ -1357,7 +1357,7 @@ public final class SchemeCANIPSI
 			this.Setup(this.n, this.m);
 		final List<TraceEntry> entries = tracingList == null ? new ArrayList<>() : tracingList;
 		final Element secretKey = this.randomScalar();
-		final Element x = this.randomNonZeroScalar();
+		final Element x = this.generateRandomNonZeroZRElement();
 		final Element denominator = scalarProduct(this.masterSecretKey.s(), x);
 		final Element z = scalarProduct(subtract(this.masterSecretKey.r(), x), denominator.duplicate().invert().getImmutable());
 		final Element zPublic = power(this.masterPublicKey.g1(), z);

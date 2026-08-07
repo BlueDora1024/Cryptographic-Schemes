@@ -942,6 +942,14 @@ public final class SchemeIBBME
 		return this.immutable(this.pairing.getZr().newRandomElement());
 	}
 
+	private Element generateRandomNonZeroZRElement()
+	{
+		Element element = this.randomScalar();
+		while (element.isZero())
+			element = this.randomScalar();
+		return element;
+	}
+
 	private Element randomG1()
 	{
 		return this.immutable(this.pairing.getG1().newRandomElement());
@@ -1276,7 +1284,7 @@ public final class SchemeIBBME
 		final Element alpha = this.randomScalar();
 		final Element rho = this.randomScalar();
 		final Element b = this.randomScalar();
-		final Element tau = this.randomScalar();
+		final Element tau = this.generateRandomNonZeroZRElement();
 		final Element[] r = new Element[r1.length];
 		final Element[] rVector = new Element[r1.length];
 		final Element[] hR1 = new Element[r1.length];
@@ -1340,7 +1348,7 @@ public final class SchemeIBBME
 		for (int index = 0; index < yVector.length; ++index)
 			yVector[index] = index < coefficients.length ? coefficients[index] : this.zeroZR();
 		final Element s = this.randomScalar();
-		final Element d2 = this.randomScalar();
+		final Element d2 = this.generateRandomNonZeroZRElement();
 		final Element ctag = this.randomScalar();
 		final Element c0 = multiply(message, power(this.masterPublicKey.eGhBeta(), s));
 		final Element c1 = power(this.masterPublicKey.g(), s);
