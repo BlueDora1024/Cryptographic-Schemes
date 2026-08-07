@@ -307,7 +307,6 @@ jobs:
           sparse-checkout: |
             ${{ matrix.cryptographicScheme }}
             buildSchemeLaTeXPDFs.py
-            requirements.txt
           persist-credentials: false
       
       - name: Get ready
@@ -315,12 +314,14 @@ jobs:
         run: |
           cd "${{ github.workspace }}"
           directoryPath="$(dirname -- "${{ matrix.cryptographicScheme }}")"
+          requirementFilePath="${directoryPath}/requirements.txt"
           mainFileName="$(basename -- "${{ matrix.cryptographicScheme }}" | sed "s/\.[^.]*\$//g")"
           outputFilePath="${directoryPath}/${mainFileName}-Python${pythonVersion}-p${decimalPlace}-r${runCount}-${timeString}${outputFormat}"
           outputFileName="$(basename "${outputFilePath}")"
           schemeLaTeXFilePath="${directoryPath}/${mainFileName}LaTeX/${mainFileName}-${timeString}.tex"
           schemePDFFilePath="${directoryPath}/${mainFileName}LaTeX/${mainFileName}-${timeString}.pdf"
           echo "Cryptographic scheme: ${{ matrix.cryptographicScheme }}"
+          echo "Requirement file path: ${requirementFilePath}"
           echo "Python version: ${pythonVersion}"
           echo "Decimal place: ${decimalPlaceString} (${decimalPlace})"
           echo "Run count: ${runCount}"
@@ -330,6 +331,7 @@ jobs:
           echo "Output file name: ${outputFileName}"
           echo "Scheme LaTeX file path: ${schemeLaTeXFilePath}"
           echo "Scheme PDF file path: ${schemePDFFilePath}"
+          echo "requirementFilePath=${requirementFilePath}" >> "${GITHUB_OUTPUT}"
           echo "outputFilePath=${outputFilePath}" >> "${GITHUB_OUTPUT}"
           echo "outputFileName=${outputFileName}" >> "${GITHUB_OUTPUT}"
           echo "schemeLaTeXFilePath=${schemeLaTeXFilePath}" >> "${GITHUB_OUTPUT}"
@@ -358,7 +360,7 @@ jobs:
           cd "${{ github.workspace }}"
           python -m pip install --upgrade pip
           python -m pip install wheel
-          python -m pip install -r requirements.txt
+          python -m pip install -r "${{ steps.ready.outputs.requirementFilePath }}"
       
       - name: Build LaTeX and the PDF for the cryptographic scheme
         run: |
